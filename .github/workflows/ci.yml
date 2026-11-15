@@ -1,0 +1,66 @@
+# FEM Lab sürekli entegrasyon: depodaki üç test grubunu yerelde çalıştırılan komutların aynısıyla koşar.
+#   python3 tests.py                                 (kâğıt testleri; LaTeX derlemesi ve verification --quick/--compare dahil)
+#   node tests.js                                    (tarayıcı çekirdeği testleri; npm bağımlılığı yok, yalnız Node)
+#   python3 verification/run_verification.py --full (bağımsız doğrulama, n = 4…32)
+# Herhangi biri sıfırdan farklı çıkış kodu verirse iş başarısız olur.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Testler (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9: geliştirme makinesindeki sürüm (sözdizimi uyumu); 3.12: güncel sürüm
+        python: ['3.9', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Python bağımlılıkları (requirements.txt)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -c "import sympy, mpmath; print('sympy', sympy.__version__, '· mpmath', mpmath.__version__)"
+
+      # tests.py, pdflatex yoksa LaTeX derleme kontrollerini SESSİZCE atlar; CI'da atlanmasın diye kurulur ve
+      # kâğıdın kullandığı paketlerin varlığı ayrıca denetlenir.
+      - name: LaTeX (pdflatex ve kâğıdın paketleri)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended \
+            texlive-latex-extra texlive-fonts-recommended lmodern
+          pdflatex --version | head -1
+          for f in inputenc.sty fontenc.sty lmodern.sty amsmath.sty amssymb.sty graphicx.sty geometry.sty; do
+            kpsewhich "$f" || { echo "eksik LaTeX paketi: $f"; exit 1; }
+          done
+
+      - name: Python testleri (tests.py)
+        run: python tests.py
+
+      - name: JavaScript testleri (tests.js)
+        run: node tests.js
+
+      - name: Bağımsız doğrulama (--full)
+        run: python verification/run_verification.py --full
