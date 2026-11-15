@@ -264,4 +264,10 @@ check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equat
   check('dalga: k = 20, h = 1/2 → kh = 10, uyarı (< 4 aralık)', Math.abs(wave.value - 10) < 1e-9 && wave.warn && wave.text.includes('< 4'));
   check('dalga: k = 1 ince ağda uyarı yok; difüzyon-reaksiyonda (γ/α < 0) dalga göstergesi yok',
     !st('1', '0', '1', 16, 2).find((s) => s.kind === 'wave').warn && !st('1', '0', '-100', 4, 1).some((s) => s.kind === 'wave')); }
+// 10. Ayrık K1 mesajı: sürekli hüküm vermez; saf Neumann örneği yalnız u hiç verilmemişse (fem_sheet ile aynı kural)
+{ const message = (fn) => { try { fn(); return ''; } catch (e) { return e.message; } };
+  const withU = message(() => solve(problem('x-0.5', '0', '0', '1', D(0), D(0)), 4, 1));
+  const pureNeumann = message(() => solve(problem('1', '0', '0', '1', NONE, NONE), 4, 1));
+  check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('AYRIK') && !withU.includes('saf Neumann'), withU.slice(0, 70));
+  check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('AYRIK') && pureNeumann.includes('saf Neumann')); }
 process.exit(fail ? 1 : 0);

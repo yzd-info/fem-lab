@@ -625,7 +625,9 @@ function classifyDiscrete(A, b, ivp, hasDirichlet) {
     return a.compatible
       ? new Diagnosis('K2', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf uyumlu (η = ${a.eta.toExponential(1)}), boş uzay boyutu ${a.size - a.rank}, örnek: ${shape}.`
           + (hasDirichlet ? '' : " Bir uçta u değeri vermek ya da γ'yı değiştirmek boş uzayı kaldırabilir."))   // öneri yalnız u hiç verilmemişse anlamlı
-      : new Diagnosis('K1', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf değer uzayında değil (η = ${a.eta.toExponential(1)} > ${COMPAT_TOL}). Örn. saf Neumann'da ∫f ≠ akı farkı.`);
+      : new Diagnosis('K1', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf değer uzayında değil (η = ${a.eta.toExponential(1)} > ${COMPAT_TOL}). `
+          + 'Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma.'
+          + (hasDirichlet ? '' : " Örn. saf Neumann'da ∫f ≠ akı farkı."));   // örnek yalnız u hiç verilmemişse ilgili (fem_sheet ile aynı)
   }
   return new Diagnosis('K3', 'ayrık sistem', `sayısal olarak tekil: tam rank ama κ ≈ ${a.cond.toExponential(1)} (σ_min/σ_max = ${(1 / a.cond).toExponential(1)}); sonuç güvenilmez.`);
 }
