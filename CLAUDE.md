@@ -25,7 +25,7 @@ Kullanıcı akışı:
 1. Denklemi (α, β, γ, f), aralığı ve uç koşullarını kendisi yazar (hazır örnek yok; sayfa boş başlar).
 2. n ve p sürgülerini sürükler; çözüm eğrisi, noktasal hata ve yakınsama grafiği canlı güncellenir.
 3. Çiplerle hangi derecelerin aynı grafikte üst üste görüneceğini seçer.
-4. "Çözüm kâğıdını yaz"a basar; kâğıdı PDF ya da `.tex` olarak indirir.
+4. "Çözüm kâğıdını aç"a (ya da kâğıt başlığına) basar; açık kâğıt problem değişince kendiliğinden yenilenir; kâğıdı PDF ya da `.tex` olarak indirir.
 
 ## 2. Dosyalar
 
@@ -35,7 +35,7 @@ Kullanıcı akışı:
 | `fem_sheet.py` | Katman 1 (define_problem), 2 (validate_problem), 3 (fem_engine: **sembolik/tam** FEM, SymPy), 5 (build_sheet: yalnız biçimleme) ve hat (run_pipeline) |
 | `fem_verify.py` | Katman 4: bağımsız doğrulama; motorun fonksiyonlarını ÇAĞIRMAZ (tests.py kaynakta denetler) |
 | `server.py` | Yerel sunucu (yalnızca standart kütüphane): sayfayı sunar, kâğıdı hesaplatır, PDF'e derler |
-| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 161 kontrol) |
+| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 163 kontrol) |
 | `tests.py` | Kâğıt testleri (`python3 tests.py`, 186 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
 | `requirements.txt` | `sympy` |
 
@@ -105,11 +105,11 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 
 ## 5. Yapılacaklar
 
-1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (161 OK); `python3 tests.py` (186 OK,
+1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (163 OK); `python3 tests.py` (186 OK,
    pdflatex yoksa derleme kontrolleri atlanır). Bir test başarısızsa nedeni ortam mı kod mu ayır; kodu "düzeltmeden"
    önce raporla.
 2. **Gerçek tarayıcıda uçtan uca kontrol.** `python3 server.py`, http://localhost:8000. Altı örneğin her biri için:
-   grafikler çiziliyor, "Çözüm kâğıdını yaz" kâğıdı getiriyor, ham `$…$` kalmıyor, çapraz kontrol farkı < 1e-8,
+   grafikler çiziliyor, "Çözüm kâğıdını aç" kâğıdı getiriyor, ham `$…$` kalmıyor, çapraz kontrol farkı < 1e-8,
    "PDF indir" ve ".tex indir" çalışıyor. Konsol temiz olmalı.
 3. **Windows uyumu.** Kullanıcının işletim sisteminde `python` / `python3` ve `node` adlarını kontrol et; gerekiyorsa
    yalnızca README'deki komutları ona göre yaz (koda işletim sistemi dalı ekleme).
