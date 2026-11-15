@@ -53,6 +53,8 @@ def solve(prob, n, p):
             c = prob[side]
             if c[0] == 'neumann':
                 F[idx] += sgn * a_(xb) * c[1]
+            if c[0] == 'flux':                     # akı koşulu α u' = q: Q = q (türev koşuluna çevrilmez)
+                F[idx] += sgn * c[1]
             if c[0] == 'both':
                 F[idx] += sgn * a_(xb) * c[2]
     fixed = {i: mp.mpf(prob[s][1]) for s, i in (('left', 0), ('right', dofs - 1)) if prob[s][0] in ('dirichlet', 'both')}

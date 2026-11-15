@@ -52,7 +52,7 @@ node tests.js
 python3 tests.py
 ```
 
-`tests.js` tarayıcıdaki sayısal çekirdeği (153 kontrol), `tests.py` çözüm kâğıdını (155 kontrol) sınar:
+`tests.js` tarayıcıdaki sayısal çekirdeği (161 kontrol), `tests.py` çözüm kâğıdını (186 kontrol) sınar:
 SymPy sonucu ↔ JavaScript sonucu ↔ analitik çözüm ↔ LaTeX derlemesi. `pdflatex` yoksa derleme kontrolleri atlanır.
 
 ## Kullanım
@@ -62,7 +62,9 @@ SymPy sonucu ↔ JavaScript sonucu ↔ analitik çözüm ↔ LaTeX derlemesi. `p
    `2x` gibi örtük çarpım. Örnekler: `u'' + u = x` → α = `1`, γ = `1`, f = `x`;
    `-u'' = sin(πx)` → α = `-1`, f = `sin(pi*x)`; `u' + 2u = 0` → α boş, β = `1`, γ = `2`.
 2. **Aralık:** x₀ ve x₁.
-3. **Uç koşulları:** her uç için tür (`u =`, `u′ =`, `u ve u′`, `verilmedi`) ve değer seç.
+3. **Uç koşulları:** her uç için tür (`u =`, `u′ =`, `α u′ =`, `u ve u′`, `verilmedi`) ve değer seç.
+   - `u′ =` **türev** koşuludur, `α u′ =` **akı** koşuludur; birbirine çevrilmez. Ör. α = 1 + x iken `u′(1) = 4`
+     akı Q = α(1)·4 = 8 demektir; `(1+x)u′(1) = 4` istiyorsan `α u′ =` seçip `4` yaz (Q = 4).
    - Sınır değer problemi: iki koşulu farklı uçlara ver, ör. `u(0) = 0`, `u(1) = 0`.
    - Başlangıç değer problemi: bir uçta `u ve u′` seç (konum ve hız), diğer ucu `verilmedi` bırak.
      Ör. yay: α = `1`, γ = `1`, x₀'da u = `0`, u′ = `1`, aralık [0, 10] → u = sin x.
@@ -70,7 +72,10 @@ SymPy sonucu ↔ JavaScript sonucu ↔ analitik çözüm ↔ LaTeX derlemesi. `p
 4. **n ve p sürgüleri:** eleman sayısı 1–64, polinom derecesi 1–4. n sürgüsü odaktayken ok tuşları, Home/End
    da çalışır; sürgünün altındaki 1 / 8 / 16 / 32 / 64 etiketlerine tıklayarak doğrudan o değere geçebilirsin.
 5. **Çipler:** hangi derecelerin aynı grafikte üst üste görüneceğini seç. Kesikli siyah/beyaz çizgi referanstır.
-6. **Çözüm kâğıdını yaz:** kâğıt sunucuda SymPy ile hesaplanır. Hesap sürerken düğme kilitlenir.
+6. **Çözüm kâğıdını aç / kapat:** kâğıt sayfada sürekli durmaz. "Çözüm kâğıdı" başlığına ya da sol taraftaki
+   "Çözüm kâğıdını aç" düğmesine tıkla; aynı yere yeniden tıklayınca kapanır. Açıkken denklemi, koşulları, n ya da p'yi
+   değiştirdiğinde kâğıt kendiliğinden (≈ 0,7 s bekleyip) yeniden hesaplanır; kapalıyken sunucuya istek gitmez.
+   **PDF indir** ve **.tex indir** düğmeleri kâğıt açıkken başlığın sağındadır.
 
 ### Referans: analitik mi, ince ağ mı?
 Hata ölçmek için bir "doğru" çözüm gerekir. Sunucu açıksa her problem için SymPy ile **analitik çözüm** aranır
@@ -162,7 +167,8 @@ yöntemin kendi hatasıdır.
 | Dosya | Görev |
 |---|---|
 | `index.html` | Arayüz + canlı grafikler için **sayısal** FEM çekirdeği (JavaScript, bağımlılıksız; MathJax CDN'den) |
-| `fem_sheet.py` | Çözüm kâğıdı: **sembolik/tam** FEM (SymPy). Kâğıttaki her sayı ve integral buradan gelir |
+| `fem_sheet.py` | Katman 1–3 ve 5: problem tanımı, problem doğrulaması, **sembolik/tam** FEM motoru (SymPy), çözüm kâğıdı (yalnız biçimleme) |
+| `fem_verify.py` | Katman 4: bağımsız doğrulama (analitik çözüm, yama testi, bağımsız yeniden montaj, çözücü kalıntısı, dağılımsal kalıntı, hata ve yakınsama, kararlılık göstergeleri) |
 | `server.py` | Yerel sunucu (yalnızca standart kütüphane): sayfayı sunar, kâğıdı hesaplatır, PDF'e derler |
 | `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`) |
 | `tests.py` | Kâğıt testleri (`python3 tests.py`) |
@@ -174,13 +180,48 @@ yöntemin kendi hatasıdır.
 İki çekirdek bilinçli olarak bağımsızdır: JavaScript anlık grafikler için sayısal çözer, SymPy kâğıt için tam
 çözer; her kâğıtta ikisinin düğüm değerleri karşılaştırılır.
 
+## Mimari: beş katman
+
+Veri yalnız aşağı doğru akar; her katman bir öncekinin **yapılandırılmış** çıktısını alır. Bir katman başarısız olursa
+sonrakiler çalışmaz ve neden Türkçe bildirilir (kâğıt üretilmez, desteklenmeyen bir iddia yazılmaz).
+
+| Katman | Nerede | Sorumluluk | Ne yapmaz |
+|---|---|---|---|
+| 1 Problem tanımı | `fem_sheet.define_problem` | Kullanıcının metnini olduğu gibi saklar (tek kaynak) | Yorumlamaz, düzeltmez |
+| 2 Problem doğrulaması | `fem_sheet.validate_problem` | Her alanı iki bağımsız ayrıştırıcıdan geçirir (simge simge çevirici + SymPy dilbilgisi), eşdeğerliği iz tablosuna yazar; koşulların anlamını (temel / türev / akı / başlangıç) ve akı kuralını açıkça kaydeder; kural ihlalinde durdurur. Tarayıcı üçüncü ayrıştırıcıyla aynı 9 noktayı karşılaştırır | Çözümün varlığını/tekliğini sormaz; girdiyi sessizce değiştirmez |
+| 3 FEM motoru | `fem_sheet.fem_engine` | Şekil fonksiyonu kurulumu ve sınanması, Galerkin formülasyonu, eleman integralleri, montaj, sınır koşulları, çözüm, yeniden kurulum | LaTeX metni üretmez |
+| 4 Bağımsız doğrulama | `fem_verify.verify` | Motorun fonksiyonlarını çağırmadan çıktısını sınar (aşağıda) | Motorun "çözdüm" demesine güvenmez |
+| 5 Çözüm kâğıdı | `fem_sheet.build_sheet` | Yalnız 2–4'ün verisini biçimler | Hiçbir sayı hesaplamaz |
+
+Katman 4'ün denetimleri (her biri `geçti` / `başarısız` / `uyarı` / `yapılmadı` durumuyla kâğıtta ve arayüzde listelenir):
+
+- **Analitik çözüm:** genel çözüm + koşul sistemi; aday denklemle ve **her** koşulla (u, u′, α u′) sınanır, geçmezse kullanılmaz.
+- **Operatör tutarlılığı (yama testi):** V_h'deki uₚ = 1 + t + … + tᵖ için K a, kullanıcının operatörü L(u)'nun doğrudan
+  türevle alınıp 24 noktalı Gauss ile integrallenmesine eşit olmalı (terim düşmesi, işaret, değişken katsayı, montaj).
+- **Bağımsız yeniden montaj ve çözüm:** `verification/ifem.py` (Vandermonde tabanı, Gauss–Legendre, 30 basamak LU);
+  ≤ 129 bilinmeyende yapılır, üstünde "yapılmadı" yazılır.
+- **Çözücü kalıntısı:** ‖F − K a‖∞, geriye hata η = ‖F − K a‖/(‖K‖‖a‖ + ‖F‖) ve κ∞, 30 basamakta.
+- **Dağılımsal kalıntı (2. mertebe):** eleman içi klasik kalıntı Rₑ ve iç düğümlerde akı sıçraması Jₖ = α[u_h′];
+  iç satırlarda ∫φᵢRₑ dx + φᵢJ = 0 özdeşliği sınanır.
+- **Hata ölçüleri:** düğüm, noktasal (örneklenmiş, alt tahmin), L², H¹; mutlak ve göreli.
+- **Yakınsama çalışması:** ifem ile ardışık üç ağ; gözlenen hız, beklenen hız (yalnız varsayımları sağlanan sınıfta:
+  2. mertebe sınır değer problemi, α ≠ 0 → L² p+1, H¹ p) ve asimptotik bölge ölçütü ayrı yazılır. İki değerin
+  azalması "hız kanıtlandı" sayılmaz; uyumsuz hız tek başına yöntem hatası sayılmaz (uyarı).
+- **Kararlılık göstergeleri:** eleman Péclet sayısı, dalga sayısı × h (dalga boyu başına düğüm aralığı), 1. mertebede λh/p.
+
+Eşikler sezgiseldir (evrensel değildir) ve `fem_verify.py` başında gerekçeleriyle tanımlıdır: yama testi 1e-10 (göreli,
+köşeli katsayıda Gauss hata tahminiyle genişler), bağımsız çözüm 1e-9 (κ büyükse κ·1e-14), geriye hata 1e-12,
+Péclet Pe/p > 1, dalga boyu başına < 10 aralık (uyarı) / < 4 (çözümsüz), ardışık hız farkı 0,2, beklenen hızdan sapma 0,3.
+
 ## Desteklenen problem sınıfı
 
     (α(x) u')' + β(x) u' + γ(x) u = f(x),    x ∈ (x₀, x₁)
 
 - α, β, γ, f serbest ifadelerdir (polinom, trigonometrik, üstel …). α = 0 ise denklem birinci mertebedir.
-- Her uç için koşul: `u = değer` (temel), `u' = değer` (doğal), `u ve u'` (aynı uçta ikisi: başlangıç/son değer
-  problemi) ya da "verilmedi" (sınır değer probleminde o uçta α u' = 0; başlangıç değer probleminde o uç serbest).
+- Her uç için koşul: `u = değer` (temel), `u' = değer` (türev koşulu, doğal; akı Q = α(x_b)·değer), `α u' = değer`
+  (akı koşulu, doğal; Q = değer), `u ve u'` (aynı uçta ikisi: başlangıç/son değer problemi) ya da "verilmedi" (sınır
+  değer probleminde o uçta α u' = 0; başlangıç değer probleminde o uç serbest). Robin (karışık, a u + b u′ = c)
+  koşulu **desteklenmez**.
 - Birinci mertebe denklem tam olarak bir `u = değer` koşulu alır.
 - Eleman: eşit aralıklı düğümlü Lagrange, p = 1…4; n = 1…64 eşit eleman.
 
@@ -238,8 +279,10 @@ düğüm hatası 1/12, ‖e‖_L² = 0.030429, |e|_H¹ = 1/3; P2 ve P3 x²'yi ma
   Galerkin ağırlıklı kalıntı (R(u_h, x), w_i = φ_i) → **yalnız 2. mertebede** kısmi integrasyonla zayıf form (her uçtaki
   sınır teriminin neden düştüğü ya da bilindiği yazılır) → K_ij ve F_i'nin a_j katsayıları olarak tanımı, boyutlar →
   eleman integralleri (tam ya da adı yazılmış sayısal kural) → montaj katkıları → indirgenmiş sistem (hangi satır/sütun,
-  neden) → çözüm → eleman eleman yeniden kurulum → doğrulanmış tam çözümle düğüm, noktasal (örneklenmiş; alt tahmin),
-  L² ve H¹ hatası. Birinci mertebede ∫φᵢR dx doğrudan alınır ve K'nin satırıyla eşitliği denetlenir; birinci mertebe
+  neden) → çözüm → eleman eleman yeniden kurulum → hata ölçüleri (doğrulanmış analitik çözüm varsa: düğüm, noktasal,
+  L², H¹, mutlak ve göreli; yakınsama tablosu) → doğrulama ve sayısal tanılar → uyarılar ve sınırlar. Kâğıdın başında
+  girdi → iç gösterim iz tablosu ve analitik çözümün durumu yer alır. 2. mertebede eleman içi klasik kalıntı,
+  dağılımsal kalıntı (düğüm sıçramaları) ve zayıf form ayrı yazılır. Birinci mertebede ∫φᵢR dx doğrudan alınır ve K'nin satırıyla eşitliği denetlenir; birinci mertebe
   kâğıdında "zayıf form" başlığı yoktur. Eleman başına ayrıntı ilk iki elemanda, satır denklemleri 9 bilinmeyene kadar.
 - SymPy kapalı biçim bulamadığı integrali sayısal alır ve kâğıtta "≈" ile işaretler (ör. `abs` içeren yük).
 - Sembolik hesap 60 saniyeyi aşarsa kâğıt sayısal integrallerle yeniden üretilir (integral adımları yazılmaz).
@@ -247,6 +290,16 @@ düğüm hatası 1/12, ‖e‖_L² = 0.030429, |e|_H¹ = 1/3; P2 ve P3 x²'yi ma
 - Birinci mertebe denklemlerde standart Galerkin kararlılık garantisi vermez; sert problemlerde salınım görülebilir.
 - Baskın taşınımda (ör. `−0.05u'' + u' = 1`, kaba ağ) çözüm salınır; bu yöntemin bilinen davranışıdır, hata değildir.
 - p > 4 eklenirse eşit aralıklı düğümler kötü koşullanma üretir (o zaman Gauss–Lobatto düğümleri gerekir).
+
+- **Doğrulama katmanının sınırları:** bağımsız yeniden montaj ve yakınsama çalışması ≤ 129 bilinmeyende yapılır
+  (yoğun 30 basamaklı LU süresi); büyük ağda bu maddeler "yapılmadı" olarak yazılır, yapılmış gibi sunulmaz. Yakınsama
+  çalışması yalnız doğrulanmış analitik çözüm varsa yapılır. Köşeli katsayı/yükte (ör. `abs`) Gauss kuralı yaklaşıktır;
+  yama testi ve bağımsız çözüm o zaman "uyarı" verir (hata değil, kuadratür sınırı).
+- **İşaret değiştiren α:** sürekli sınıflandırma yapılmaz ("belirlenemedi"); ayrık sistem tekilse bu yalnız AYRIK
+  sistemin hükmü olarak bildirilir, diferansiyel problemin çözümsüz olduğu iddia edilmez.
+- **Robin koşulu** (a u + b u′ = c) desteklenmez.
+- **Kâğıt süresi:** her kâğıtta bağımsız doğrulama da çalışır; n = 40, p = 4 gibi büyük ağlarda kâğıt ≈ 15–20 s sürer
+  (sembolik integraller ≈ 10 s). `python3 tests.py` bu yüzden birkaç dakika sürer.
 
 ## Yeni yöntem ekleme
 

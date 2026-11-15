@@ -3,7 +3,7 @@
 const fs = require('fs');
 const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
 const core = html.split('/*CORE-START*/')[1].split('/*CORE-END*/')[0];
-const api = new Function(core + '; return { parseExpression, gaussLegendre, shapeFunctions, shapeDerivatives, makeMesh, buildProblem, METHODS, evaluate, referenceSolution, errorNorms, maxErrorRefined, evaluateDerivative, convergenceStudy, observedRate, equationTex, conditionsTex, QUADRATURE_WARNING, leadingDegeneracy, parseExact, analyzeSystem, conditionEstimate, solveLinear, Diagnosis, RANK_TOL, COMPAT_TOL };')();
+const api = new Function(core + '; return { parseExpression, gaussLegendre, shapeFunctions, shapeDerivatives, makeMesh, buildProblem, METHODS, evaluate, referenceSolution, errorNorms, maxErrorRefined, evaluateDerivative, convergenceStudy, observedRate, equationTex, conditionsTex, QUADRATURE_WARNING, leadingDegeneracy, parseExact, analyzeSystem, conditionEstimate, solveLinear, Diagnosis, RANK_TOL, COMPAT_TOL, stabilityIndicators };')();
 
 const D = (value) => ({ type: 'dirichlet', value: String(value) }), Nm = (value) => ({ type: 'neumann', value: String(value) }), NONE = { type: 'none', value: '' };
 const problem = (alpha, beta, gamma, f, left, right, x0 = 0, x1 = 1) => api.buildProblem({ alpha, beta, gamma, f, x0, x1, left, right });
@@ -248,4 +248,20 @@ check('kuadratür: abs(x-0.3) işaretlenir', solve(problem('1', '0', '0', 'abs(x
 
 // 8. Önizleme metni
 check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equationTex(cases[4][1]).startsWith("-0.05\\,u'' + u'"), api.equationTex(cases[3][1]));
+// 9. Akı koşulu (α u′ = q) türev koşulundan (u′ = g) ayrıdır; kararlılık göstergeleri
+{ const Fl = (value) => ({ type: 'flux', value: String(value) });
+  const flux = solve(problem('1+x', '0', '0', '4x+2', D(0), Fl(4)), 4, 1).c, slope2 = solve(problem('1+x', '0', '0', '4x+2', D(0), Nm(2)), 4, 1).c;
+  const slope4 = solve(problem('1+x', '0', '0', '4x+2', D(0), Nm(4)), 4, 1).c;
+  check('akı α u′(1) = 4 ≡ u′(1) = 2 (α(1) = 2) ve ≠ u′(1) = 4', flux.every((v, i) => Math.abs(v - slope2[i]) < 1e-12) && Math.abs(flux[4] - slope4[4]) > 0.5);
+  check('akı: P2 ile x² düğümlerde tam', solve(problem('1+x', '0', '0', '4x+2', D(0), Fl(4)), 4, 2).c.every((v, i) => Math.abs(v - (i / 8) ** 2) < 1e-12));
+  check('akı: 1. mertebede reddedilir', throws(() => problem('0', '1', '0', '1', D(0), Fl(1))));
+  check('akı: α(uç) = 0 iken reddedilir', throws(() => problem('x', '0', '0', '1', Fl(1), D(0))));
+  const st = (a, b, g, n, p) => api.stabilityIndicators(problem(a, b, g, '1', D(0), D(0)), 1 / n, p);
+  const pe = st('-0.01', '1', '0', 4, 1).find((s) => s.kind === 'peclet');
+  check('Péclet: −0.01u″ + u′, n = 4 → Pe = 12.5, uyarı', Math.abs(pe.value - 12.5) < 1e-9 && pe.warn);
+  check('Péclet: n = 64, p = 4 → Pe/p < 1, uyarı yok', !st('-0.01', '1', '0', 64, 4).find((s) => s.kind === 'peclet').warn);
+  const wave = st('1', '0', '400', 2, 1).find((s) => s.kind === 'wave');
+  check('dalga: k = 20, h = 1/2 → kh = 10, uyarı (< 4 aralık)', Math.abs(wave.value - 10) < 1e-9 && wave.warn && wave.text.includes('< 4'));
+  check('dalga: k = 1 ince ağda uyarı yok; difüzyon-reaksiyonda (γ/α < 0) dalga göstergesi yok',
+    !st('1', '0', '1', 16, 2).find((s) => s.kind === 'wave').warn && !st('1', '0', '-100', 4, 1).some((s) => s.kind === 'wave')); }
 process.exit(fail ? 1 : 0);
