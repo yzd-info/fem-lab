@@ -160,7 +160,7 @@ python3 verification/run_verification.py --full
 ```
 
 `tests.js` checks the browser kernel (163 checks), `tests.py` the server pipeline and every sheet's LaTeX compilation
-(186 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
+(190 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
 against an independent solver and analytical solutions. GitHub Actions runs all three on every pull request and every
 push to `main`, with Python 3.9 and 3.12.
 
