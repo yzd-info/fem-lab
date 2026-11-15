@@ -1,0 +1,10 @@
+# Yerel yedekler ve ortam dosyaları
+backup/
+.claude/
+__pycache__/
+*.pyc
+.DS_Store
+# LaTeX ara dosyaları
+*.aux
+*.log
+*.out

@@ -1,0 +1,83 @@
+OK   T1 [1. mertebe] ödev kıyası
+  p=1: L2(son)=0.000672 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 3.5e-16 ✓
+  p=2: L2(son)=4.59e-15 hız=— beklenen≥exact | app−bağımsız göreli 2.3e-15 ✓
+  p=3: L2(son)=1.04e-14 hız=— beklenen≥exact | app−bağımsız göreli 4.9e-15 ✓
+  p=4: L2(son)=5.22e-14 hız=— beklenen≥exact | app−bağımsız göreli 1.1e-14 ✓
+OK   T2 [1. mertebe] 1. mertebede P2 hızı 2 (garanti yok)
+  p=1: L2(son)=0.000578 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 3.3e-16 ✓
+  p=2: L2(son)=0.000101 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 1.8e-15 ✓
+  p=3: L2(son)=1.24e-15 hız=— beklenen≥exact | app−bağımsız göreli 3.8e-15 ✓
+  p=4: L2(son)=6.61e-15 hız=— beklenen≥exact | app−bağımsız göreli 8.2e-15 ✓
+OK   T3 [1. mertebe, reaksiyonlu] çift p optimal değil
+  p=1: L2(son)=0.000167 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 1.3e-15 ✓
+  p=2: L2(son)=2.64e-5 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 1.2e-14 ✓
+  p=3: L2(son)=4.33e-9 hız=4.0 beklenen≥3.6 | app−bağımsız göreli 4.8e-15 ✓
+  p=4: L2(son)=4.19e-10 hız=4.0 beklenen≥3.6 | app−bağımsız göreli 6.5e-15 ✓
+OK   T4 [1. mertebe, sağ uç] 
+  p=1: L2(son)=0.000672 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 3.5e-16 ✓
+  p=2: L2(son)=1.05e-14 hız=— beklenen≥exact | app−bağımsız göreli 2.3e-15 ✓
+  p=3: L2(son)=2.38e-14 hız=— beklenen≥exact | app−bağımsız göreli 5.3e-15 ✓
+  p=4: L2(son)=5.74e-14 hız=— beklenen≥exact | app−bağımsız göreli 1.2e-14 ✓
+OK   T5 [2. mertebe BVP] 
+  p=1: L2(son)=0.000622 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 2.9e-15 ✓
+  p=2: L2(son)=3.85e-6 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 8.8e-14 ✓
+  p=3: L2(son)=2.18e-8 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 4.1e-13 ✓
+  p=4: L2(son)=1.03e-10 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 9.3e-14 ✓
+OK   T6 [karışık D–N] 
+  p=1: L2(son)=4.6e-5 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 3.6e-14 ✓
+  p=2: L2(son)=3.69e-7 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 6.6e-14 ✓
+  p=3: L2(son)=1.15e-9 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 9.1e-14 ✓
+  p=4: L2(son)=4.01e-12 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 3.3e-13 ✓
+OK   T7 [değişken katsayı] üretilmiş çözüm
+  p=1: L2(son)=0.000478 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 3.5e-14 ✓
+  p=2: L2(son)=3.85e-6 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 1.2e-13 ✓
+  p=3: L2(son)=2.18e-8 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 8.6e-14 ✓
+  p=4: L2(son)=1.03e-10 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 1.9e-13 ✓
+OK   T8 [taşınım baskın] ön-asimptotik; hız iddiası yok
+  p=1: L2(son)=0.00426 hız=1.95 beklenen≥None | app−bağımsız göreli 2.6e-15 ✓
+  p=2: L2(son)=0.000216 hız=2.89 beklenen≥None | app−bağımsız göreli 6.3e-14 ✓
+  p=3: L2(son)=7.8e-6 hız=3.89 beklenen≥None | app−bağımsız göreli 7.6e-14 ✓
+  p=4: L2(son)=2.35e-7 hız=4.89 beklenen≥None | app−bağımsız göreli 4.2e-13 ✓
+OK   T9 [reaksiyon–difüzyon] 
+  p=1: L2(son)=0.00233 hız=1.98 beklenen≥1.8 | app−bağımsız göreli 3.4e-15 ✓
+  p=2: L2(son)=5.51e-5 hız=2.97 beklenen≥2.8 | app−bağımsız göreli 1.3e-14 ✓
+  p=3: L2(son)=9.94e-7 hız=3.97 beklenen≥3.8 | app−bağımsız göreli 9.5e-14 ✓
+  p=4: L2(son)=1.49e-8 hız=4.97 beklenen≥4.8 | app−bağımsız göreli 7.8e-14 ✓
+OK   T10 [Helmholtz tipi, k=1] 
+  p=1: L2(son)=5.9e-5 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 1.1e-14 ✓
+  p=2: L2(son)=1.78e-7 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 7.6e-15 ✓
+  p=3: L2(son)=1.96e-10 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 2.3e-14 ✓
+  p=4: L2(son)=4.83e-13 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 4.8e-14 ✓
+OK   T11 [iki uç doğal, γ≠0] 
+  p=1: L2(son)=0.000575 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 7.8e-14 ✓
+  p=2: L2(son)=3.85e-6 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 1.8e-13 ✓
+  p=3: L2(son)=2.18e-8 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 1.6e-13 ✓
+  p=4: L2(son)=1.03e-10 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 1.6e-12 ✓
+OK   T12 [dejenere uç, serbest] sınırlı tek çözüm
+  p=1: L2(son)=2.12e-15 hız=— beklenen≥exact | app−bağımsız göreli 3.2e-15 ✓
+  p=2: L2(son)=4.96e-14 hız=— beklenen≥exact | app−bağımsız göreli 7.0e-14 ✓
+  p=3: L2(son)=1.49e-13 hız=— beklenen≥exact | app−bağımsız göreli 2.9e-13 ✓
+  p=4: L2(son)=6.54e-13 hız=— beklenen≥exact | app−bağımsız göreli 9.1e-13 ✓
+OK   T13 [dejenere uç, serbest] 
+  p=1: L2(son)=8.82e-5 hız=1.98 beklenen≥1.8 | app−bağımsız göreli 2.5e-15 ✓
+  p=2: L2(son)=3.53e-14 hız=— beklenen≥exact | app−bağımsız göreli 4.8e-14 ✓
+  p=3: L2(son)=1.36e-13 hız=— beklenen≥exact | app−bağımsız göreli 4.3e-13 ✓
+  p=4: L2(son)=4.79e-13 hız=— beklenen≥exact | app−bağımsız göreli 6.7e-13 ✓
+OK   T14 [2. mertebe IVP] gözlenen; kanıt yok
+  p=1: L2(son)=4.27e-5 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 2.0e-13 ✓
+  p=2: L2(son)=1.5e-7 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 1.4e-13 ✓
+  p=3: L2(son)=1.65e-10 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 4.2e-13 ✓
+  p=4: L2(son)=4.59e-13 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 9.0e-13 ✓
+OK   T15 [2. mertebe IVP, değişken α] gözlenen; kanıt yok
+  p=1: L2(son)=6.46e-5 hız=2.0 beklenen≥1.8 | app−bağımsız göreli 2.6e-15 ✓
+  p=2: L2(son)=1.54e-7 hız=3.0 beklenen≥2.8 | app−bağımsız göreli 2.3e-14 ✓
+  p=3: L2(son)=7.15e-10 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 5.3e-14 ✓
+  p=4: L2(son)=3.8e-12 hız=4.97 beklenen≥4.8 | app−bağımsız göreli 9.2e-14 ✓
+OK   T16 [Helmholtz k=10] P1 ön-asimptotik (kh büyük)
+  p=1: L2(son)=0.164 hız=2.3 beklenen≥None | app−bağımsız göreli 4.6e-14 ✓
+  p=2: L2(son)=0.000513 hız=3.37 beklenen≥2.8 | app−bağımsız göreli 1.6e-13 ✓
+  p=3: L2(son)=7.67e-6 hız=4.0 beklenen≥3.8 | app−bağımsız göreli 1.5e-13 ✓
+  p=4: L2(son)=1.22e-7 hız=5.0 beklenen≥4.8 | app−bağımsız göreli 1.5e-12 ✓
+
+16/16 benchmark geçti (--full)
+full exit 0

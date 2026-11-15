@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FEM Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Yerleşim fikri: solda sabit kontrol rayı, sağda özet → grafikler → çözüm akışı.
+   Tüm renkler aşağıdaki tokenlardan gelir; açık/koyu tema yalnızca bu blokları değiştirir. */
+:root {
+  --page: #f9f9f7;  --surface: #fcfcfb;  --ink: #0b0b0b;  --ink-2: #52514e;  --muted: #898781;
+  --grid: #e1e0d9;  --axis: #c3c2b7;  --border: rgba(11,11,11,0.10);  --critical: #d03b3b;  --warning: #fab219;
+  /* Seri renkleri dereceye bağlıdır (1=lineer … 4=kuartik); filtre değişse de renk değişmez. */
+  --series-1: #2a78d6;  --series-2: #eb6834;  --series-3: #1baf7a;  --series-4: #eda100;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;  --surface: #1a1a19;  --ink: #f0efec;  --ink-2: #c3c2b7;  --muted: #898781;
+    --grid: #2c2c2a;  --axis: #383835;  --border: rgba(255,255,255,0.10);  --critical: #e66767;
+    --series-1: #3987e5;  --series-2: #d95926;  --series-3: #199e70;  --series-4: #c98500;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;  --surface: #1a1a19;  --ink: #f0efec;  --ink-2: #c3c2b7;  --muted: #898781;
+  --grid: #2c2c2a;  --axis: #383835;  --border: rgba(255,255,255,0.10);  --critical: #e66767;
+  --series-1: #3987e5;  --series-2: #d95926;  --series-3: #199e70;  --series-4: #c98500;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* display veren sınıflar hidden özniteliğini ezmesin */
+html, body { margin: 0; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; font-weight: 600; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.top { padding: 28px 24px 20px; max-width: 1280px; margin: 0 auto; }
+.top h1 { font-size: 26px; letter-spacing: -0.01em; }
+.top p { margin: 6px 0 0; color: var(--ink-2); max-width: 65ch; }
+
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; max-width: 1280px; margin: 0 auto; padding: 0 24px 48px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.controls { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-row { display: flex; gap: 8px; align-items: center; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; }
+
+input[type="text"], input[type="number"], select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--axis); border-radius: 6px;
+  background: var(--page); color: var(--ink); font: 14px var(--font-mono);
+}
+input[type="range"] { width: 100%; accent-color: var(--active-color, var(--ink)); }
+:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+#fn-preview { min-height: 30px; overflow-x: auto; color: var(--ink-2); }
+.error { color: var(--critical); font-size: 13px; }
+.error:empty { display: none; }
+
+button { font: 500 14px var(--font-body); cursor: pointer; border-radius: 6px; }
+.primary { padding: 10px 14px; border: 1px solid var(--ink); background: var(--ink); color: var(--surface); }
+.ghost { padding: 6px 10px; border: 1px solid var(--axis); background: transparent; color: var(--ink-2); }
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+
+main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* 8 kutu: geniş ekranda 4+4, dar ekranda 2'şerli (yarım satır kalmasın). */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#sheet-check { font-size: 12.5px; color: var(--muted); margin: 4px 0; }
+.tile { min-width: 0; }
+.tile .value { overflow-wrap: anywhere; }
+.empty-state h3 { font-size: 16px; }
+.empty-state .hint { margin-top: 6px; font-size: 14px; max-width: 70ch; }
+
+/* n sürgüsünün altındaki işaretler: 1/2/4/8/16/32/64 konumunda çizgi; etiketi tıklamak n'yi o değere getirir.
+   Sürgü doğrusal olduğu için 1, 2, 4 birbirine çok yakın; çakışmasınlar diye yalnız 1, 8, 16, 32, 64 yazılır. */
+.ticks { position: relative; height: 22px; margin: -2px 8px 0; font-size: 10.5px; color: var(--muted); }
+.ticks span { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+.ticks span::before { content: ""; width: 1px; height: 5px; background: var(--axis); margin-bottom: 1px; }
+.ticks button { all: unset; cursor: pointer; padding: 0 2px; border-radius: 3px; }
+.ticks button:hover, .ticks button:focus-visible { color: var(--ink); }
+.ticks .on::before { background: var(--active-color, var(--ink)); }
+.ticks .on button { color: var(--ink); }
+
+.primary:disabled { opacity: 0.6; cursor: progress; }
+/* Girdi geçersizken grafikler son geçerli problemi gösterir; yanlışlıkla güncel sanılmasın diye soluklaştırılır. */
+.outdated { opacity: 0.35; transition: opacity 0.15s; }
+#empty-reason { color: var(--ink-2); }
+.chart .band { fill: var(--grid); opacity: 0.55; }
+.chart .axis-title { fill: var(--ink-2); }
+.chart .end-label { font-weight: 500; }
+/* Kart başlığı + küçük görünüm seçici (işaretli/mutlak, L²/H¹): aynı grafik kartında iki farklı büyüklük karışmasın. */
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 3px 9px; font: 12px var(--font-mono); }
+.seg button + button { border-left: 1px solid var(--axis); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.seg-row { display: inline-flex; gap: 6px; }
+#node-legend { margin: 6px 0 0; }
+.check-list { margin: 6px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--ink-2); }
+.check-list li { margin: 2px 0; }
+.check-list .bad { color: var(--critical); }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .value { font: 500 20px var(--font-mono); margin-top: 2px; }
+.tile .sub { font-size: 12px; color: var(--muted); }
+
+/* Filtre çipleri aynı zamanda grafiklerin lejantıdır: renkli çizgi + ad. */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--axis); border-radius: 999px; background: transparent; color: var(--muted); }
+.chip::before { content: ""; width: 16px; height: 3px; border-radius: 2px; background: var(--chip-color); opacity: 0.35; }
+.chip[aria-pressed="true"] { color: var(--ink); background: var(--surface); border-color: var(--ink-2); }
+.chip[aria-pressed="true"]::before { opacity: 1; }
+.chip.active { border-color: var(--chip-color); box-shadow: inset 0 0 0 1px var(--chip-color); }
+
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.chart-card h3 { font-size: 14px; }
+.chart-card .hint { margin: 2px 0 8px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; touch-action: pan-y; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .axis { stroke: var(--axis); stroke-width: 1; }
+.chart .vline { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 2 3; }
+.chart .cross { stroke: var(--muted); stroke-width: 1; }
+.chart text { fill: var(--muted); font: 11px var(--font-mono); }
+.chart .ring { stroke: var(--surface); stroke-width: 2; }
+.tip { position: absolute; top: 8px; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 6px; padding: 6px 9px; font: 12px var(--font-mono); white-space: nowrap; }
+.tip[hidden] { display: none; }
+.tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+.solution-head { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.solution h2 { font-size: 18px; }
+.solution h3 { font-size: 15px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--grid); }
+.solution h4 { font-size: 15px; margin: 18px 0 6px; }
+.solution p { margin: 6px 0; max-width: 75ch; }
+.math-text { overflow-wrap: anywhere; }
+.math-text mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.streaming { white-space: pre-wrap; font: 13px var(--font-mono); color: var(--ink-2); }
+.stale { border-left: 3px solid var(--series-4); padding: 6px 10px; font-size: 13px; color: var(--ink-2); }
+.stale[hidden] { display: none; }
+
+.tile.warn { border-left: 3px solid var(--warning); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Denklem girişi: katsayı adı solda, ifade sağda. Uç koşulu satırı: uç · tür · değer. */
+.coef-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 8px; align-items: center; }
+.coef-grid label, .bc-row > span { font: 13px var(--font-mono); color: var(--ink-2); }
+.bc-row { display: grid; grid-template-columns: 22px 118px minmax(0, 1fr); gap: 6px; align-items: center; }
+/* 'u ve u′' seçilince aynı ucun ikinci değeri (u′) bir alt satırda, tür kutusunun hizasında etiketle gelir. */
+.slope-label { font: 13px var(--font-mono); color: var(--ink-2); text-align: right; padding-right: 4px; }
+#eq-preview, #bc-preview { min-height: 26px; overflow-x: auto; color: var(--ink); }
+#eq-preview:empty, #bc-preview:empty { min-height: 0; }
+.form-hint { font-size: 13px; color: var(--ink-2); }
+input:disabled { opacity: 0.45; }
+
+/* Çözüm kâğıdı: ekranda da kâğıt gibi durur (her temada beyaz, bilinçli tek tema); uzunluğu serbesttir. */
+.sheet { max-width: 210mm; margin: 12px auto 0; padding: 14mm; background: #fff; color: #111; border: 1px solid var(--axis); font: 14px/1.5 "STIX Two Text", "Times New Roman", serif; }
+.sheet .sheet-title { font-size: 21px; font-weight: 700; margin: 0 0 6px; padding: 0 0 6px; border-top: 0; border-bottom: 1.5px solid #111; }
+.sheet h4 { font-size: 15px; font-weight: 700; margin: 16px 0 4px; break-after: avoid; }
+.sheet p { margin: 4px 0; max-width: none; }
+.sheet mjx-container[display="true"] { margin: 7px 0 !important; overflow: visible; break-inside: avoid; }
+.sheet mjx-container svg { max-width: 100%; height: auto; }   /* satıra sığmayan formül orantılı küçülür, kırpılmaz */
+
+/* Yazdırma: sayfada yalnızca kâğıt kalır; sayfa sayısı içeriğe göre uzar. */
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: #fff; }
+  .top, .controls, .tiles, .chart-card, .chart-grid, .no-print { display: none !important; }
+  .layout { display: block; padding: 0; max-width: none; }
+  main { display: block; }
+  .solution { border: 0; padding: 0; background: none; }
+  .sheet { border: 0; margin: 0; padding: 0; max-width: none; }
+}
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding: 0 16px 32px; }
+  .controls { position: static; }
+  .top { padding: 20px 16px 14px; }
+}
+</style>
+
+<!-- MathJax (SVG çıktısı): LaTeX'i yazı tipi dosyası indirmeden çizer. -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$']], processEscapes: true },
+  svg: { fontCache: 'local' },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <h1>FEM Lab</h1>
+  <p>Diferansiyel denklemi ve uç koşullarını gir. Eleman sayısını ve polinom derecesini sürükle; çözüm, hata ve yakınsama anında güncellenir.</p>
+</header>
+
+<div class="layout">
+  <aside class="panel controls">
+    <div class="field">
+      <span class="label">Denklem</span>
+      <div class="mono form-hint">(α u′)′ + β u′ + γ u = f</div>
+      <div class="coef-grid">
+        <label for="in-alpha">α(x)</label><input type="text" id="in-alpha" placeholder="0" spellcheck="false" autocomplete="off">
+        <label for="in-beta">β(x)</label><input type="text" id="in-beta" placeholder="0" spellcheck="false" autocomplete="off">
+        <label for="in-gamma">γ(x)</label><input type="text" id="in-gamma" placeholder="0" spellcheck="false" autocomplete="off">
+        <label for="in-f">f(x)</label><input type="text" id="in-f" placeholder="0" spellcheck="false" autocomplete="off">
+      </div>
+      <p class="hint">Boş kutu 0 sayılır. Yazılabilenler: x, pi, e, + − * / ^, sin cos tan asin acos atan sinh cosh tanh exp ln sqrt abs; 2x gibi örtük çarpım. α = 0 ise denklem birinci mertebedir.</p>
+      <div id="eq-preview" class="math-text"></div>
+      <div id="bc-preview" class="math-text"></div>
+      <div id="fn-error" class="error" role="alert"></div>
+    </div>
+    <div class="field">
+      <span class="label">Aralık [x₀, x₁]</span>
+      <div class="field-row">
+        <input type="number" id="range-a" step="any" placeholder="x₀" aria-label="x₀">
+        <input type="number" id="range-b" step="any" placeholder="x₁" aria-label="x₁">
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">Uç koşulları</span>
+      <div class="bc-row"><span>x₀</span><select id="bc-left-type" aria-label="x₀ koşul türü"></select><input type="text" id="bc-left-value" placeholder="değer" aria-label="x₀ koşul değeri" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row slope-row" id="bc-left-slope-row" hidden><span></span><label class="slope-label" for="bc-left-slope">u′(x₀) =</label><input type="text" id="bc-left-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row"><span>x₁</span><select id="bc-right-type" aria-label="x₁ koşul türü"></select><input type="text" id="bc-right-value" placeholder="değer" aria-label="x₁ koşul değeri" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row slope-row" id="bc-right-slope-row" hidden><span></span><label class="slope-label" for="bc-right-slope">u′(x₁) =</label><input type="text" id="bc-right-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
+      <p class="hint">Her uç için tür ve değer seç. <b>Sınır değer problemi:</b> iki koşulu farklı uçlara ver; koşul verilmeyen uçta doğal koşul α u′ = 0 uygulanır. <b>Başlangıç değer problemi:</b> bir uçta “u ve u′” seç (ör. konum ve hız), diğerini “verilmedi” bırak. Birinci mertebede yalnızca bir uçta u değeri verilir.</p>
+    </div>
+    <div class="field">
+      <label class="label" for="method">Yöntem</label>
+      <select id="method"></select>
+    </div>
+    <div class="field">
+      <div class="field-head"><label class="label" for="n-slider">Eleman sayısı n</label><output id="n-value" class="mono"></output></div>
+      <input type="range" id="n-slider" min="1" step="1" list="n-ticks">
+      <datalist id="n-ticks"></datalist>
+      <div class="ticks mono" id="n-tick-labels" aria-hidden="true"></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><label class="label" for="p-slider">Polinom derecesi p</label><output id="p-value" class="mono"></output></div>
+      <input type="range" id="p-slider" min="1" max="4" step="1">
+    </div>
+    <button class="primary" id="solve-btn" type="button">Çözüm kâğıdını yaz</button>
+  </aside>
+
+  <main>
+    <section class="panel empty-state" id="empty-state">
+      <h3>Denklemi yaz</h3>
+      <p class="hint">Soldaki kutulara α, β, γ, f katsayılarını, aralığı ve uç koşullarını gir. Girdi geçerli olduğu anda çözüm, hata ve yakınsama grafikleri burada çizilir.</p>
+      <p class="hint" id="empty-reason"></p>
+    </section>
+
+    <section class="tiles" id="tiles" aria-label="Özet"></section>
+    <div class="stale" id="diagnostics" role="status" hidden></div>
+
+    <section class="panel chart-card" id="main-chart">
+      <div class="chips" id="chips" role="group" aria-label="Grafikte gösterilecek eğriler"></div>
+      <div class="chart" id="chart-approx" style="margin-top:12px"></div>
+      <p class="hint" id="node-legend"></p>
+    </section>
+
+    <section class="chart-grid" id="chart-grid">
+      <div class="panel chart-card">
+        <div class="card-head"><h3 id="error-title">İşaretli noktasal hata</h3>
+          <div class="seg" role="group" aria-label="Hata görünümü"><button type="button" data-error-view="signed">işaretli</button><button type="button" data-error-view="abs">mutlak (log)</button></div></div>
+        <p class="hint" id="error-hint"></p>
+        <div class="chart" id="chart-error"></div>
+      </div>
+      <div class="panel chart-card">
+        <div class="card-head"><h3 id="conv-title">Yakınsama</h3>
+          <div class="seg-row"><div class="seg" role="group" aria-label="İnceltme türü"><button type="button" data-conv-mode="h">h</button><button type="button" data-conv-mode="p">p</button></div>
+          <div class="seg" role="group" aria-label="Norm"><button type="button" data-conv-norm="l2">L²</button><button type="button" data-conv-norm="h1">H¹</button></div></div></div>
+        <p class="hint" id="conv-hint"></p>
+        <div class="chart" id="chart-conv"></div>
+      </div>
+    </section>
+
+    <section class="panel solution">
+      <div class="solution-head no-print">
+        <h2>Çözüm kâğıdı</h2>
+        <div class="actions" id="sheet-actions" hidden>
+          <button class="ghost" id="pdf-btn" type="button">PDF indir</button>
+          <button class="ghost" id="tex-btn" type="button">.tex indir</button>
+          <button class="ghost" id="copy-btn" type="button">LaTeX kaynağını kopyala</button>
+        </div>
+      </div>
+      <div class="stale no-print" id="stale" hidden>Parametreler değişti. Güncel çözüm için “Çözüm kâğıdını yaz”a yeniden bas.</div>
+      <p class="hint no-print" id="sheet-hint">“Çözüm kâğıdını yaz”a bas: zayıf form, şekil fonksiyonları, tek tek alınmış integraller, K a = F sistemi ve çözüm, anlatımsız olarak yazılır.</p>
+      <div class="hint no-print" id="sheet-check"></div>
+      <article class="sheet" id="sheet" hidden>
+        <h3 class="sheet-title">Sonlu Eleman Çözüm Kâğıdı</h3>
+        <div id="derivation" class="math-text"></div>
+      </article>
+    </section>
+  </main>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   DOSYA HARİTASI  (yukarıdan aşağıya, her bölüm yalnızca üsttekileri kullanır)
+     1. AYARLAR        — sabitler tek yerde
+     2. AYRIŞTIRICI    — "sin(pi*x)" metni → hesaplanabilir fonksiyon + LaTeX
+     3. SAYISAL ARAÇLAR— Gauss kuadratürü, Lagrange tabanı ve türevi, doğrusal çözücü, ağ
+     4. PROBLEM VE YÖNTEM — diferansiyel denklemin okunması; Galerkin ile K a = F kurulup çözülmesi
+     5. ANALİZ         — çözümü değerlendirme, referans çözüm, hata normları, yakınsama
+     6. LATEX          — denklem önizlemesi
+     7. GRAFİK         — tek bir genel SVG çizici (üç grafik de bunu kullanır)
+     8. SUNUCU         — çözüm kâğıdı ve PDF istekleri (server.py)
+     9. ARAYÜZ         — durum (state), çizim döngüsü, olaylar
+   İş bölümü: bu dosya CANLI grafikler için sayısal çözer. Çözüm kâğıdındaki her sayı ve integral
+   fem_sheet.py içinde SymPy ile tam olarak hesaplanır; iki sonuç her kâğıtta birbiriyle karşılaştırılır.
+   1–6 arası bölümler DOM'a dokunmaz; bu yüzden tarayıcı olmadan test edilebilir (test-core.js).
+   ===================================================================== */
+/*CORE-START*/
+
+/* ---------- 1. AYARLAR ---------- */
+const DEGREE_NAMES = { 1: 'Lineer', 2: 'Kuadratik', 3: 'Kübik', 4: 'Kuartik' };
+const MAX_ELEMENTS = 64;
+const GAUSS_POINTS = 12;                       // tek kural derece 23'e kadar polinomu tam integre eder
+const PANELS = 8;                              // eleman integralleri için alt aralık sayısı (düzgün olmayan katsayılarda tek kural yetmez)
+const QUADRATURE_WARNING = 1e-8;               // tahmini bağıl kuadratür hatası bunu aşarsa kullanıcı uyarılır
+const CONVERGENCE_NS = [1, 2, 4, 8, 16, 32, 64]; // yakınsama grafiğinde denenen eleman sayıları (her adımda h yarılanır)
+const REFERENCE_MESH = { n: 128, p: 4 };       // hata ölçümünde "doğru" kabul edilen ince ağ çözümü
+const LOG_FLOOR = 1e-17;                       // log eksende sıfır hata çizilemez; makine hassasiyetinin altı bu tabana sabitlenir
+/* Teşhis kategorileri. Tek bir genel "tekil" mesajı yerine NEDEN ve DÜZEY (sürekli problem / ayrık sistem) söylenir:
+   ayrık sistemin tekilliği, diferansiyel problemin çözümsüz olduğu anlamına gelmez ve böyle sunulmaz. */
+const CATEGORY = {
+  K1: 'Çözüm yok (uyumsuz sistem)', K2: 'Tek olmayan çözüm (boş uzay ≠ {0})', K3: 'Neredeyse tekil / kötü koşullu',
+  K4: 'Dejenere katsayı', K5: 'Sayısal çözücü hatası'
+};
+class Diagnosis extends Error {
+  constructor(category, level, detail) { super(`${CATEGORY[category]} — ${level}: ${detail}`); this.category = category; this.level = level; }
+}
+/* Sezgisel sayısal toleranslar (evrensel matematiksel sınır DEĞİL; ölçekten bağımsız, göreli tanımlı, testlerle sınandı):
+   RANK_TOL: σ ≤ 1e-12·σ_max sıfır sayılır (64-bit SVD geriye hatası ~N·ε·σ_max ≈ 6e-14·σ_max, N ≤ 257).
+   COMPAT_TOL: normwise geriye hata η = ‖b − Ax̂‖/(‖A‖‖x̂‖ + ‖b‖) ≤ 1e-10 ise sistem uyumlu sayılır (Rigal–Gaches).
+   COND_WARN / COND_SINGULAR: κ₁ tahmini bunu aşarsa uyarı / sayısal tekil (göreli hata ~κ·ε ≈ 1e-6 / 1e-2). */
+const RANK_TOL = 1e-12, COMPAT_TOL = 1e-10, COND_WARN = 1e10, COND_SINGULAR = 1e14;
+/* Başlangıç değer probleminde sürekli problem (α ≠ 0 iken) tek çözümlüdür; ayrık tekillik ağdan gelir. */
+const IVP_COARSE_DETAIL = "sürekli problem tek çözümlü (lineer başlangıç değer problemi), ama ayrık sistem tekil ya da çok kötü koşullu: ağ bu çözüm için fazla kaba (salınımlı çözümde ωh küçük olmalı; p = 1 için ωh < 2√3). n ya da p'yi artır.";
+class PivotBreakdown extends Error {}
+
+/* ---------- 2. AYRIŞTIRICI ----------
+   Neden kendi ayrıştırıcımız: eval/new Function kullanmadan güvenli hesap yapmak ve
+   aynı geçişte fonksiyonun LaTeX yazımını da üretmek için.
+   Her düğüm { f: x → sayı, tex: LaTeX metni, prec: öncelik } taşır.
+   prec: 1 toplam, 2 çarpım, 3 kesir/üs/eksi, 4 atom — parantez gerekip gerekmediğine bununla karar verilir. */
+const FUNCTIONS = {
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, exp: Math.exp, ln: Math.log, log: Math.log,
+  sqrt: Math.sqrt, abs: Math.abs
+};
+const FUNCTION_TEX = { asin: 'arcsin', acos: 'arccos', atan: 'arctan', log: 'ln' };
+const CONSTANTS = { pi: [Math.PI, '\\pi'], e: [Math.E, 'e'] };
+
+function parseExpression(text) {
+  /* "1e-8" bilimsel gösterim DEĞİL, 1·e − 8 olarak okunurdu (e = Euler sayısı): sessizce yanlış katsayı. Reddedilir. */
+  if (/\d\.?e[+-]?\d/i.test(text)) throw new Error('Bilimsel gösterim (ör. 1e-8) desteklenmiyor: "e" Euler sayısı olarak okunur. 10^-8 biçiminde yaz.');
+  const tokens = text.toLowerCase().match(/\d+\.?\d*|\.\d+|[a-z]+|\S/g) || [];
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+  const expect = (t) => { if (next() !== t) throw new Error(`"${t}" bekleniyordu`); };
+  const wrap = (node, minPrec) => (node.prec < minPrec ? `\\left(${node.tex}\\right)` : node.tex);
+  const bare = (node) => node.bare ?? node.tex;   // kesir/üs/fonksiyon içinde dış parantez gereksizdir
+
+  function sum() {                                // a + b - c
+    let left = product();
+    while (peek() === '+' || peek() === '-') {
+      const op = next(), l = left, r = product();
+      left = op === '+'
+        ? { f: (x) => l.f(x) + r.f(x), tex: `${l.tex} + ${wrap(r, 2)}`, prec: 1 }
+        : { f: (x) => l.f(x) - r.f(x), tex: `${l.tex} - ${wrap(r, 2)}`, prec: 1 };
+    }
+    return left;
+  }
+  function product() {                            // a * b / c  ve örtük çarpım: 2x, 3sin(x)
+    let left = unary();
+    for (;;) {
+      const t = peek();
+      const implicit = t !== undefined && /^[\d.a-z(]/.test(t);
+      if (t === '*' || t === '/') next(); else if (!implicit) break;
+      const l = left, r = unary();
+      if (t === '/') {
+        left = { f: (x) => l.f(x) / r.f(x), tex: `\\frac{${bare(l)}}{${bare(r)}}`, prec: 3 };
+      } else {
+        const dot = l.isNumber && !r.isNumber ? '\\,' : ' \\cdot ';
+        left = { f: (x) => l.f(x) * r.f(x), tex: `${wrap(l, 2)}${dot}${wrap(r, 2)}`, prec: 2 };
+      }
+    }
+    return left;
+  }
+  function unary() {                              // -a  (üsten zayıf bağlar: -x^2 = -(x^2))
+    if (peek() !== '-') return power();
+    next();
+    const a = unary();
+    return { f: (x) => -a.f(x), tex: `-${wrap(a, 2)}`, prec: 1 };
+  }
+  function power() {                              // a ^ b
+    const base = atom();
+    if (peek() !== '^') return base;
+    next();
+    const exponent = unary();
+    return { f: (x) => Math.pow(base.f(x), exponent.f(x)), tex: `{${wrap(base, 4)}}^{${bare(exponent)}}`, prec: 3 };
+  }
+  function atom() {                               // sayı, x, sabit, fonksiyon çağrısı, parantez
+    const t = next();
+    if (t === undefined) throw new Error('İfade yarım kalmış');
+    if (/^[\d.]/.test(t)) { const v = parseFloat(t); return { f: () => v, tex: t, prec: 4, isNumber: true }; }
+    if (t === '(') { const inner = sum(); expect(')'); return { f: inner.f, tex: `\\left(${inner.tex}\\right)`, bare: inner.tex, prec: 4 }; }
+    if (t === 'x') return { f: (x) => x, tex: 'x', prec: 4 };
+    if (CONSTANTS[t]) { const [v, tex] = CONSTANTS[t]; return { f: () => v, tex, prec: 4 }; }
+    if (FUNCTIONS[t]) {
+      expect('(');
+      const arg = sum(), fn = FUNCTIONS[t];
+      expect(')');
+      const tex = t === 'sqrt' ? `\\sqrt{${arg.tex}}`
+                : t === 'abs'  ? `\\left|${arg.tex}\\right|`
+                : t === 'exp'  ? `e^{${arg.tex}}`
+                : `\\${FUNCTION_TEX[t] || t}\\left(${arg.tex}\\right)`;
+      return { f: (x) => fn(arg.f(x)), tex, prec: 4 };
+    }
+    throw new Error(`Tanınmayan simge: "${t}"`);
+  }
+
+  const root = sum();
+  if (pos < tokens.length) throw new Error(`Beklenmeyen simge: "${peek()}"`);
+  return { f: root.f, tex: root.tex };
+}
+
+/* ---------- 3. SAYISAL ARAÇLAR ---------- */
+
+/* m noktalı Gauss–Legendre: düğümler P_m Legendre polinomunun kökleridir (Newton ile bulunur).
+   Tablo gömmek yerine hesaplıyoruz ki nokta sayısı tek sabitle değişebilsin. */
+function gaussLegendre(m) {
+  const points = [], weights = [];
+  for (let i = 0; i < m; i++) {
+    let x = Math.cos(Math.PI * (i + 0.75) / (m + 0.5)), derivative = 1;
+    for (let iter = 0; iter < 50; iter++) {
+      let p0 = 1, p1 = x;
+      for (let k = 2; k <= m; k++) [p0, p1] = [p1, ((2 * k - 1) * x * p1 - (k - 1) * p0) / k];
+      derivative = m * (x * p1 - p0) / (x * x - 1);
+      const step = p1 / derivative;
+      x -= step;
+      if (Math.abs(step) < 1e-15) break;
+    }
+    points.push(x);
+    weights.push(2 / ((1 - x * x) * derivative * derivative));
+  }
+  return { points, weights };
+}
+const GAUSS = gaussLegendre(GAUSS_POINTS);
+
+/* Bileşik kural: referans aralık 'panels' eşit parçaya bölünür, her parçada aynı Gauss kuralı uygulanır.
+   Neden: f köşeli ya da uçta tekil türevliyse tek kuralın hatası büyür; parçalamak hatayı küçültür ve
+   iki farklı parça sayısının sonucu karşılaştırılarak hata TAHMİN edilebilir. */
+function compositeRule(panels) {
+  const points = [], weights = [];
+  for (let s = 0; s < panels; s++) {
+    GAUSS.points.forEach((t, q) => {
+      points.push(-1 + (2 * s + 1 + t) / panels);
+      weights.push(GAUSS.weights[q] / panels);
+    });
+  }
+  return { points, weights };
+}
+/* 'fine' hesapta kullanılır; 'coarse' yalnızca kuadratür hatasını ölçmek içindir (ikisinin farkı = hata tahmini). */
+const RULES = { fine: compositeRule(PANELS), coarse: compositeRule(PANELS / 2) };
+
+/* Referans eleman ξ ∈ [-1, 1] üzerinde eşit aralıklı p+1 düğüm ve Lagrange şekil fonksiyonları.
+   N_k(ξ_m) = δ_km olduğundan a_j katsayısı doğrudan "j. düğümdeki u değeri" anlamına gelir. */
+const referenceNodes = (p) => Array.from({ length: p + 1 }, (_, k) => -1 + 2 * k / p);
+function shapeFunctions(p, xi) {
+  const nodes = referenceNodes(p);
+  return nodes.map((xk, k) => nodes.reduce((prod, xm, m) => (m === k ? prod : prod * (xi - xm) / (xk - xm)), 1));
+}
+/* dN_k/dξ: çarpım kuralı. Zayıf formda u' ve v' geçtiği için gerekir. */
+function shapeDerivatives(p, xi) {
+  const nodes = referenceNodes(p);
+  return nodes.map((xk, k) => nodes.reduce((sum, xm, m) => {
+    if (m === k) return sum;
+    const others = nodes.reduce((prod, xl, l) => (l === k || l === m ? prod : prod * (xi - xl) / (xk - xl)), 1);
+    return sum + others / (xk - xm);
+  }, 0));
+}
+
+/* Her derece ve her kural için kuadratür noktalarındaki N ve dN/dξ değerleri bir kez hesaplanır:
+   REFERENCE[p].N[kural][q][i] = N_i(ξ_q),  REFERENCE[p].dN[kural][q][i] = N_i'(ξ_q). */
+const REFERENCE = {};
+for (const p of [1, 2, 3, 4]) {
+  REFERENCE[p] = { N: {}, dN: {} };
+  for (const name in RULES) {
+    REFERENCE[p].N[name] = RULES[name].points.map((xi) => shapeFunctions(p, xi));
+    REFERENCE[p].dN[name] = RULES[name].points.map((xi) => shapeDerivatives(p, xi));
+  }
+}
+
+/* Kısmi pivotlu Gauss eliminasyonu. Matris bantlı olduğu için çarpanların çoğu sıfırdır ve atlanır;
+   bu yüzden yoğun saklama 513 bilinmeyenli referans ağda bile yeterince hızlıdır.
+   Pivot matrisin ölçeğine göre çok küçükse PivotBreakdown fırlatılır; NEDENİ (rank, uyumluluk) çağıran analyzeSystem
+   ile ayrıca belirler. info verilirse LU çarpanları saklanır: eleme sonrası sıfırlanan ve bir daha okunmayan alt üçgen
+   hücrelerine çarpan yazılır, satır değişimleri kaydedilir (P A = L U). Eleme aritmetiği değişmez; bu yalnız koşul
+   sayısı tahmini için A ve Aᵀ ile ek çözümlere izin verir. */
+function solveLinear(A, b, info) {
+  const n = b.length, M = A.map((row, i) => [...row, b[i]]), perm = Array.from({ length: n }, (_, i) => i);
+  let scale = 0;
+  for (const row of A) for (const v of row) scale = Math.max(scale, Math.abs(v));
+  for (let col = 0; col < n; col++) {
+    let pivot = col;
+    for (let r = col + 1; r < n; r++) if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+    [M[col], M[pivot]] = [M[pivot], M[col]];
+    [perm[col], perm[pivot]] = [perm[pivot], perm[col]];
+    if (!(Math.abs(M[col][col]) > 1e-11 * scale)) throw new PivotBreakdown();
+    for (let r = col + 1; r < n; r++) {
+      const factor = M[r][col] / M[col][col];
+      if (factor !== 0) for (let c = col; c <= n; c++) M[r][c] -= factor * M[col][c];
+      M[r][col] = factor;                                   // L çarpanı (bu hücre bir daha okunmaz)
+    }
+  }
+  if (info) Object.assign(info, { M, perm, n });
+  const x = new Array(n);
+  for (let r = n - 1; r >= 0; r--) {
+    let s = M[r][n];
+    for (let c = r + 1; c < n; c++) s -= M[r][c] * x[c];
+    x[r] = s / M[r][r];
+  }
+  return x;
+}
+
+/* LU çarpanlarıyla A x = c ve Aᵀ y = d çözümleri (P A = L U, L birim alt üçgen). Koşul sayısı tahmini bunları kullanır. */
+function luSolve({ M, perm, n }, c) {
+  const y = perm.map((i) => c[i]);
+  for (let r = 0; r < n; r++) for (let k = 0; k < r; k++) y[r] -= M[r][k] * y[k];
+  for (let r = n - 1; r >= 0; r--) { for (let k = r + 1; k < n; k++) y[r] -= M[r][k] * y[k]; y[r] /= M[r][r]; }
+  return y;
+}
+function luSolveTransposed({ M, perm, n }, d) {
+  const z = [...d];
+  for (let r = 0; r < n; r++) { for (let k = 0; k < r; k++) z[r] -= M[k][r] * z[k]; z[r] /= M[r][r]; }      // Uᵀ
+  for (let r = n - 1; r >= 0; r--) for (let k = r + 1; k < n; k++) z[r] -= M[k][r] * z[k];                // Lᵀ
+  const y = new Array(n);
+  perm.forEach((i, k) => { y[i] = z[k]; });                                                                  // Pᵀ
+  return y;
+}
+/* κ₁(A) = ‖A‖₁‖A⁻¹‖₁ tahmini (Hager–Higham): ‖A⁻¹‖₁ birkaç A ve Aᵀ çözümüyle alttan tahmin edilir, O(N²).
+   Neden: her çözümde tam SVD (O(N³)) canlı sürgü için pahalı; tahmin genelde gerçek değerin 3 katı içindedir
+   (garanti değil, alt tahmindir). */
+function conditionEstimate(A, lu) {
+  const n = lu.n;
+  let normA = 0;
+  for (let j = 0; j < n; j++) { let s = 0; for (let i = 0; i < n; i++) s += Math.abs(A[i][j]); normA = Math.max(normA, s); }
+  let x = new Array(n).fill(1 / n), est = 0;
+  for (let it = 0; it < 5; it++) {
+    const y = luSolve(lu, x);
+    const norm = y.reduce((s, v) => s + Math.abs(v), 0);
+    if (!isFinite(norm)) return Infinity;
+    if (it > 0 && norm <= est) break;
+    est = norm;
+    const z = luSolveTransposed(lu, y.map((v) => (v >= 0 ? 1 : -1)));
+    let j = 0;
+    for (let k = 1; k < n; k++) if (Math.abs(z[k]) > Math.abs(z[j])) j = k;
+    if (Math.abs(z[j]) <= z.reduce((s, v, k) => s + v * x[k], 0)) break;
+    x = new Array(n).fill(0); x[j] = 1;
+  }
+  return normA * est;
+}
+/* Tekil ya da neredeyse tekil sistemin sınıflandırılması: tek taraflı Jacobi SVD (Hestenes), A ∈ R^{m×k}, m ≥ k.
+   Döner: tekil değerler, rank (σ > RANK_TOL·σ_max), boş uzay vektörleri, en küçük normlu en küçük kareler çözümü x̂ ve
+   normwise geriye hata η. η ≤ COMPAT_TOL → b, A'nın değer uzayında (uyumlu). Yalnız nadir yolda çağrılır (O(m·k²)). */
+function analyzeSystem(A, b) {
+  const m = A.length, k = A[0].length;
+  if (!A.every((row) => row.every(isFinite)) || !b.every(isFinite)) return { finite: false };
+  const U = A.map((row) => [...row]), V = Array.from({ length: k }, (_, i) => Array.from({ length: k }, (_, j) => (i === j ? 1 : 0)));
+  for (let sweep = 0; sweep < 60; sweep++) {
+    let off = 0;
+    for (let p = 0; p < k - 1; p++) for (let q = p + 1; q < k; q++) {
+      let alpha = 0, beta = 0, gamma = 0;
+      for (let i = 0; i < m; i++) { alpha += U[i][p] ** 2; beta += U[i][q] ** 2; gamma += U[i][p] * U[i][q]; }
+      if (gamma === 0 || Math.abs(gamma) <= 1e-15 * Math.sqrt(alpha * beta)) continue;
+      off = Math.max(off, Math.abs(gamma) / Math.sqrt(alpha * beta));
+      const zeta = (beta - alpha) / (2 * gamma), t = Math.sign(zeta || 1) / (Math.abs(zeta) + Math.sqrt(1 + zeta * zeta));
+      const c = 1 / Math.sqrt(1 + t * t), s = c * t;
+      for (let i = 0; i < m; i++) { const up = U[i][p], uq = U[i][q]; U[i][p] = c * up - s * uq; U[i][q] = s * up + c * uq; }
+      for (let i = 0; i < k; i++) { const vp = V[i][p], vq = V[i][q]; V[i][p] = c * vp - s * vq; V[i][q] = s * vp + c * vq; }
+    }
+    if (off < 1e-15) break;
+  }
+  const sigma = Array.from({ length: k }, (_, j) => Math.sqrt(U.reduce((s, row) => s + row[j] ** 2, 0)));
+  const smax = Math.max(...sigma), keep = sigma.map((v) => v > RANK_TOL * smax);
+  const rank = keep.filter(Boolean).length;
+  const xhat = new Array(k).fill(0);
+  sigma.forEach((sj, j) => {
+    if (!keep[j]) return;
+    const coef = U.reduce((s, row, i) => s + row[j] * b[i], 0) / (sj * sj);    // u_jᵀb/σ_j (U sütunu = σ_j u_j)
+    for (let i = 0; i < k; i++) xhat[i] += coef * V[i][j];
+  });
+  const r = A.map((row, i) => b[i] - row.reduce((s, v, j) => s + v * xhat[j], 0));
+  const norm2 = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+  const eta = norm2(r) / (smax * norm2(xhat) + norm2(b) || 1);
+  const nullVectors = sigma.map((sj, j) => (keep[j] ? null : V.map((row) => row[j]))).filter(Boolean);
+  return { finite: true, sigma, rank, size: k, nullVectors, eta, compatible: eta <= COMPAT_TOL, cond: smax / Math.min(...sigma) };
+}
+/* Pivot çöküşü ya da κ̂ > COND_SINGULAR durumunda ayrık sistemin NEDENİNİ söyler (düzey: ayrık sistem). */
+function classifyDiscrete(A, b, ivp, hasDirichlet) {
+  const a = analyzeSystem(A, b);
+  if (!a.finite) return new Diagnosis('K5', 'ayrık sistem', 'matriste ya da sağ tarafta sonlu olmayan değer (NaN/∞) var.');
+  if (ivp) return new Diagnosis('K3', 'ayrık sistem', IVP_COARSE_DETAIL);
+  if (a.rank < a.size) {
+    const sample = a.nullVectors[0], max = Math.max(...sample.map(Math.abs)), constant = sample.every((v) => Math.abs(Math.abs(v) - max) <= 1e-8 * max);
+    const shape = constant ? 'sabit vektör (u + c de çözüm)' : 'sabit olmayan bir vektör';
+    return a.compatible
+      ? new Diagnosis('K2', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf uyumlu (η = ${a.eta.toExponential(1)}), boş uzay boyutu ${a.size - a.rank}, örnek: ${shape}.`
+          + (hasDirichlet ? '' : " Bir uçta u değeri vermek ya da γ'yı değiştirmek boş uzayı kaldırabilir."))   // öneri yalnız u hiç verilmemişse anlamlı
+      : new Diagnosis('K1', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf değer uzayında değil (η = ${a.eta.toExponential(1)} > ${COMPAT_TOL}). Örn. saf Neumann'da ∫f ≠ akı farkı.`);
+  }
+  return new Diagnosis('K3', 'ayrık sistem', `sayısal olarak tekil: tam rank ama κ ≈ ${a.cond.toExponential(1)} (σ_min/σ_max = ${(1 / a.cond).toExponential(1)}); sonuç güvenilmez.`);
+}
+
+/* Ağ: [a,b] = [x₀,x₁] aralığı n eşit elemana bölünür; p polinom derecesidir. Eleman e'nin yerel düğümü k, global e·p + k numarasını alır;
+   komşu elemanlar uç düğümü paylaşır, süreklilik (C⁰) buradan gelir. */
+function makeMesh(a, b, n, p) {
+  const h = (b - a) / n;
+  return { a, b, n, p, h, dofs: n * p + 1, nodeX: (i) => a + i * h / p };
+}
+
+/* ---------- 4. PROBLEM VE YÖNTEM ----------
+   Problem:  (α(x) u')' + β(x) u' + γ(x) u = f(x),   x ∈ (x₀, x₁)
+   Bu biçim seçildi çünkü α u'' teriminin kısmi integrasyonu α'nın türevini gerektirmez ve
+   birinci mertebe denklemler (α = 0) aynı formülün özel halidir. */
+
+/* Uç koşulu: { type: 'none' | 'dirichlet' (u = değer) | 'neumann' (u' = değer) | 'both' (aynı uçta u ve u'), value, slope }.
+   'both' başlangıç (ya da son) değer problemidir: u değeri value'da, u' değeri slope'ta gelir. */
+function readNumber(text, label) {
+  let parsed;
+  try { parsed = parseExpression((text ?? '').trim() === '' ? '0' : text); } catch (err) { throw new Error(`${label} koşulu: ${err.message}`); }
+  const value = parsed.f(0);
+  if (!isFinite(value) || parsed.f(1) !== value) throw new Error(`${label} koşulu: değer sabit bir sayı olmalı.`);
+  return value;
+}
+function readCondition(raw, label) {
+  if (raw.type === 'none') return { type: 'none', value: 0 };
+  if (!['dirichlet', 'neumann', 'both'].includes(raw.type)) throw new Error(`${label} koşulu: bilinmeyen tür.`);
+  const condition = { type: raw.type, value: readNumber(raw.value, label) };
+  if (raw.type === 'both') condition.slope = readNumber(raw.slope, `${label} u′`);
+  return condition;
+}
+
+/* Önde gelen katsayının (2. mertebede α, 1. mertebede β) sıfırları, SAYISAL (2001 örnek, işaret değişiminde ikiye
+   bölme, |a|'nın yerel minimumunda altın oran araması; sıfır ölçütü |a| ≤ 1e-12·max|a|). Neden: düzgün eliptiklik
+   (|α| ≥ α₀ > 0) bozulursa standart yakınsama kuramı geçerli değildir; ama bu TEK BAŞINA çözümsüzlük değildir, bu yüzden
+   sonuç yalnız uyarıdır (K4). Çok dar bir değme sıfırı örneklemeyi kaçırabilir (bilinen sınır). */
+function leadingDegeneracy(fn, x0, x1) {
+  const N = 2000, L = x1 - x0, xs = Array.from({ length: N + 1 }, (_, i) => x0 + L * i / N), v = xs.map(fn);
+  const top = Math.max(...v.map(Math.abs)) || 1, tol = 1e-12 * top, points = [];
+  const push = (x, signChange) => { if (!points.some((q) => Math.abs(q.x - x) <= 1e-9 * L)) points.push({ x, signChange }); };
+  for (let i = 0; i <= N; i++) {
+    if (Math.abs(v[i]) <= tol) { const s = i > 0 && i < N && v[i - 1] * v[i + 1] < 0; push(xs[i], s); continue; }
+    if (i < N && v[i] * v[i + 1] < 0 && Math.abs(v[i + 1]) > tol) {
+      let a = xs[i], b = xs[i + 1];
+      for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (fn(a) * fn(m) <= 0) b = m; else a = m; }
+      push((a + b) / 2, true);
+    } else if (i > 0 && i < N && Math.abs(v[i]) < Math.abs(v[i - 1]) && Math.abs(v[i]) <= Math.abs(v[i + 1])) {
+      let a = xs[i - 1], b = xs[i + 1];
+      const g = (Math.sqrt(5) - 1) / 2;
+      for (let k = 0; k < 80; k++) { const m1 = b - g * (b - a), m2 = a + g * (b - a); if (Math.abs(fn(m1)) < Math.abs(fn(m2))) b = m2; else a = m1; }
+      const xm = (a + b) / 2;
+      if (Math.abs(fn(xm)) <= tol) push(xm, false);
+    }
+  }
+  points.sort((p, q) => p.x - q.x);
+  const interior = points.filter((q) => q.x > x0 + 1e-12 * L && q.x < x1 - 1e-12 * L);
+  return { kind: !points.length ? 'uniform' : interior.some((q) => q.signChange) ? 'sign_changing' : 'degenerate', points, interior };
+}
+
+/* Girdiyi doğrular ve hesaplanabilir bir problem nesnesine çevirir; hata varsa anlaşılır mesajla fırlatır. */
+function buildProblem({ alpha, beta, gamma, f, x0, x1, left, right }) {
+  const texts = { alpha, beta, gamma, f }, names = { alpha: 'α(x)', beta: 'β(x)', gamma: 'γ(x)', f: 'f(x)' };
+  if (!(x0 < x1)) throw new Error('Aralıkta x₀, x₁\'den küçük olmalı.');
+  const probe = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200);
+  const coef = {}, constant = {};                            // constant[k]: katsayı sabitse değeri, değilse null
+  for (const key in texts) {
+    try { coef[key] = parseExpression(texts[key].trim() === '' ? '0' : texts[key]); } catch (err) { throw new Error(`${names[key]}: ${err.message}`); }
+    const values = probe.map(coef[key].f);
+    if (!values.every(isFinite)) throw new Error(`${names[key]} aralığın bir noktasında tanımsız veya sonsuz.`);
+    constant[key] = values.every((v) => Math.abs(v - values[0]) < 1e-14) ? values[0] : null;
+  }
+  const order = constant.alpha !== 0 ? 2 : constant.beta !== 0 ? 1 : 0;
+  if (order === 0) throw new Error('α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil.');
+  const bc = { left: readCondition(left, 'x₀'), right: readCondition(right, 'x₁') };
+  const kinds = [bc.left.type, bc.right.type];
+  if (order === 1 && (kinds.includes('neumann') || kinds.includes('both') || kinds.filter((k) => k === 'dirichlet').length !== 1))
+    throw new Error('Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak.');
+  /* Başlangıç değer problemi: iki koşul aynı uçta; öbür uca koşul eklenirse 2. mertebe denklem 3 koşulla aşırı belirlenir. */
+  const ivp = kinds.includes('both');
+  if (ivp && [...kinds].sort().join() !== 'both,none')
+    throw new Error("Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez.");
+  /* u' koşulu zayıf forma yalnızca akı Q = α u' ile girer; α(uç) = 0 ise verilen u' değeri sessizce kaybolurdu. */
+  for (const [side, x] of [['left', x0], ['right', x1]])
+    if (['neumann', 'both'].includes(bc[side].type) && coef.alpha.f(x) === 0) throw new Error("α bu uçta sıfır: u' koşulu denkleme girmez (α u' akısı sıfır olur).");
+  const degeneracy = leadingDegeneracy(order === 2 ? coef.alpha.f : coef.beta.f, x0, x1);
+  return { coef, constant, x0, x1, order, bc, ivp, degeneracy };
+}
+
+/* Eleman matrisi ve yük vektörü, verilen bileşik kuralla:
+     K^e_ij = ∫ (N_i' α N_j' − N_i β N_j' − N_i γ N_j) dx,    F^e_i = −∫ N_i f dx
+   Ayrı fonksiyon: aynı integraller iki kuralla hesaplanıp karşılaştırılıyor (kuadratür hatası tahmini). */
+function elementSystem(problem, mesh, e, ruleName) {
+  const { a, h, p } = mesh, rule = RULES[ruleName], N = REFERENCE[p].N[ruleName], dN = REFERENCE[p].dN[ruleName];
+  const { alpha, beta, gamma, f } = problem.coef, size = p + 1, J = 2 / h;        // dN/dx = (dN/dξ)·(2/h)
+  const Ke = Array.from({ length: size }, () => new Array(size).fill(0)), Fe = new Array(size).fill(0);
+  rule.points.forEach((xi, q) => {
+    const x = a + e * h + h * (1 + xi) / 2, w = rule.weights[q] * h / 2;         // dx = (h/2) dξ
+    const av = alpha.f(x), bv = beta.f(x), gv = gamma.f(x), fv = f.f(x);
+    for (let i = 0; i < size; i++) {
+      Fe[i] -= w * fv * N[q][i];
+      for (let j = 0; j < size; j++)
+        Ke[i][j] += w * (dN[q][i] * J * av * dN[q][j] * J - N[q][i] * bv * dN[q][j] * J - N[q][i] * gv * N[q][j]);
+    }
+  });
+  return { Ke, Fe };
+}
+
+/* Her yöntem aynı sözleşmeye uyar: solve(problem, mesh) → { c, K, F, quadratureError }  (c: düğüm değerleri a).
+   Yeni yöntem eklemek = bu nesneye bir giriş eklemek. */
+const METHODS = {
+  galerkin: {
+    label: 'Galerkin (Bubnov–Galerkin)',
+    /* Zayıf form (v test fonksiyonu, α u'' terimi kısmi integre edilmiş):
+         ∫ (v' α u' − v β u' − v γ u) dx = [v α u'] − ∫ v f dx     →     K a = F,   F = F_b + F_l
+       Ağırlık fonksiyonu olarak şekil fonksiyonlarının kendisi alınır (v = N_i). */
+    solve(problem, mesh) {
+      const { n, p, dofs } = mesh;
+      const K = Array.from({ length: dofs }, () => new Array(dofs).fill(0)), F = new Array(dofs).fill(0);
+      let difference = 0, scale = 0;                                 // kuadratür hata tahmini için
+      for (let e = 0; e < n; e++) {
+        const fine = elementSystem(problem, mesh, e, 'fine'), coarse = elementSystem(problem, mesh, e, 'coarse');
+        for (let i = 0; i <= p; i++) {                               // montaj: yerel düğüm k → global e·p + k
+          difference = Math.max(difference, Math.abs(fine.Fe[i] - coarse.Fe[i]));
+          scale = Math.max(scale, Math.abs(fine.Fe[i]));
+          F[e * p + i] += fine.Fe[i];
+          for (let j = 0; j <= p; j++) {
+            difference = Math.max(difference, Math.abs(fine.Ke[i][j] - coarse.Ke[i][j]));
+            scale = Math.max(scale, Math.abs(fine.Ke[i][j]));
+            K[e * p + i][e * p + j] += fine.Ke[i][j];
+          }
+        }
+      }
+      /* Birinci mertebede (α = 0) kısmi integrasyon yoktur: K_ij = ∫ N_i (β N_j' + γ N_j) dx, F_i = ∫ N_i f dx.
+         Bu, yukarıdaki genel formülün (−1) katıdır; çözüm değişmez, ama K ve F ders kitabı ve kâğıtla aynı işarette olur. */
+      if (problem.order === 1) for (let i = 0; i < dofs; i++) { F[i] = -F[i]; for (let j = 0; j < dofs; j++) K[i][j] = -K[i][j]; }
+      /* Doğal koşul: sınır terimi F_b = [N_i α u'] yalnızca uç düğümlere katkı verir. Koşul verilmemişse akı sıfırdır.
+         'both' ucunda akı α·u' bilinir. Başlangıç değer probleminde koşulsuz uçtaki akı bilinmez; o uçtaki denklem
+         aşağıda zaten kullanılmadığı için oraya yazılan 0 sonucu etkilemez. */
+      if (problem.order === 2) {
+        const flux = (side, x) => {
+          const { type, value, slope } = problem.bc[side], alpha = problem.coef.alpha.f(x);
+          return type === 'neumann' ? alpha * value : type === 'both' ? alpha * slope : 0;
+        };
+        F[0] -= flux('left', mesh.a);
+        F[dofs - 1] += flux('right', mesh.b);
+      }
+      /* Temel koşul (u = değer): o düğümün değeri bilinir, sağ tarafa taşınır. */
+      const fixed = new Map();
+      if (['dirichlet', 'both'].includes(problem.bc.left.type)) fixed.set(0, problem.bc.left.value);
+      if (['dirichlet', 'both'].includes(problem.bc.right.type)) fixed.set(dofs - 1, problem.bc.right.value);
+      const free = [];
+      for (let i = 0; i < dofs; i++) if (!fixed.has(i)) free.push(i);
+      /* Kullanılan denklemler (test fonksiyonları v = N_i). Sınır değer probleminde serbest düğümlerinkiler.
+         Başlangıç değer probleminde akısı bilinmeyen uçtaki N_i çıkarılır (bilinmeyen sınır terimi düşer), akısı bilinen
+         uçtaki tutulur: n·p denklem, n·p bilinmeyen. */
+      const rows = problem.bc.left.type === 'both' ? Array.from({ length: dofs - 1 }, (_, i) => i)
+                 : problem.bc.right.type === 'both' ? Array.from({ length: dofs - 1 }, (_, i) => i + 1) : free;
+      const reducedK = rows.map((i) => free.map((j) => K[i][j]));
+      const reducedF = rows.map((i) => { let v = F[i]; for (const [j, value] of fixed) v -= K[i][j] * value; return v; });
+      let solved;
+      const lu = {};
+      const ivpUnique = problem.ivp && problem.degeneracy.kind === 'uniform';     // varlık-teklik teoremi α ≠ 0 iken geçerli
+      try { solved = solveLinear(reducedK, reducedF, lu); }
+      catch (err) { throw err instanceof PivotBreakdown ? classifyDiscrete(reducedK, reducedF, ivpUnique, fixed.size > 0) : err; }
+      /* Ayrık güvenilirlik: κ₁ tahmini; sayısal tekil eşiğini aşarsa SVD ile sınıflandırılır (çözüm sunulmaz). */
+      const condition = conditionEstimate(reducedK, lu);
+      if (!(condition <= COND_SINGULAR)) throw classifyDiscrete(reducedK, reducedF, ivpUnique, fixed.size > 0);
+      if (!solved.every(isFinite)) throw new Diagnosis('K5', 'ayrık sistem', 'çözümde sonlu olmayan değer (NaN/∞).');
+      const c = new Array(dofs);
+      fixed.forEach((value, i) => { c[i] = value; });
+      free.forEach((i, k) => { c[i] = solved[k]; });
+      /* Birinci mertebe uyumluluk (madde 3): atılan satır d'nin kalıntısı r_d ve sol sıfır uzayı vektörü y = (1, −A₂⁻ᵀa_d)
+         ile yᵀb. Kuram: A₂ tekil değilse yᵀb = −r_d; iki AYRI hesabın tutması kendi başına bir kontroldür. */
+      let firstOrder = null;
+      if (problem.order === 1) {
+        const [[d, u0]] = [...fixed];
+        const residual = K[d].reduce((s, v, j) => s + v * c[j], 0) - F[d];
+        const b = F.map((v, i) => v - K[i][d] * u0), z = luSolveTransposed(lu, free.map((j) => K[d][j]));
+        const yb = b[d] - free.reduce((s, i, k) => s + z[k] * b[i], 0);
+        const ynorm = Math.sqrt(1 + z.reduce((s, v) => s + v * v, 0)), bnorm = Math.sqrt(b.reduce((s, v) => s + v * v, 0)) || 1;
+        const scaled = Math.abs(yb) / (ynorm * bnorm);
+        firstOrder = { row: d + 1, residual, yb, scaled, compatible: scaled <= COMPAT_TOL };
+      }
+      return { c, K, F, quadratureError: scale > 0 ? difference / scale : 0, diagnostics: { condition, firstOrder } };
+    }
+  }
+};
+
+/* ---------- 5. ANALİZ ---------- */
+
+/* u_h(x): x'in düştüğü elemanı bul, referans koordinata geç, şekil fonksiyonlarıyla topla. */
+function evaluate(mesh, c, x) {
+  const { a, h, n, p } = mesh;
+  const e = Math.min(n - 1, Math.max(0, Math.floor((x - a) / h)));
+  const xi = 2 * (x - (a + e * h)) / h - 1;
+  return shapeFunctions(p, xi).reduce((s, Nk, k) => s + c[e * p + k] * Nk, 0);
+}
+
+/* u_h'(x): aynı elemandaki şekil fonksiyonu türevleri, dN/dx = (dN/dξ)·(2/h). Eleman sınırında u_h' süreksizdir; sağdaki eleman alınır. */
+function evaluateDerivative(mesh, c, x) {
+  const { a, h, n, p } = mesh;
+  const e = Math.min(n - 1, Math.max(0, Math.floor((x - a) / h)));
+  const xi = 2 * (x - (a + e * h)) / h - 1;
+  return shapeDerivatives(p, xi).reduce((s, dNk, k) => s + c[e * p + k] * dNk, 0) * 2 / h;
+}
+
+/* Çizim noktaları: eleman sınırları mutlaka dahil edilir ki lineer çözümdeki köşeler kaybolmasın. */
+function sampleXs(mesh) {
+  const perElement = Math.max(8, Math.ceil(480 / mesh.n)), xs = [mesh.a];
+  for (let e = 0; e < mesh.n; e++)
+    for (let j = 1; j <= perElement; j++) xs.push(mesh.a + e * mesh.h + mesh.h * j / perElement);
+  return xs;
+}
+
+/* Referans çözüm: tam çözüm genel olarak bilinmediği için hata, çok ince bir ağın çözümüne göre ölçülür.
+   Sınır: referansın kendi hatası sıfır değildir; n = 64, p = 4 gibi çok ince çözümlerde ölçülen hata bu yüzden hafif sapar. */
+function referenceSolution(problem, methodKey) {
+  const mesh = makeMesh(problem.x0, problem.x1, REFERENCE_MESH.n, REFERENCE_MESH.p);
+  const c = METHODS[methodKey].solve(problem, mesh).c;
+  const u = (x) => evaluate(mesh, c, x);
+  u.derivative = (x) => evaluateDerivative(mesh, c, x);
+  return u;
+}
+
+/* Hata ölçüleri, GERÇEK FEM yeniden kurulumuyla (her elemanda kendi şekil fonksiyonları), eleman eleman bileşik kuadratürle:
+     l2    = ‖u − u_h‖_L²  = (∫ (u − u_h)² dx)^½
+     h1    = |u − u_h|_H¹  = (∫ (u' − u_h')² dx)^½      (yalnızca du verilirse)
+     max   = max |u − u_h|  — eleman başına 96 kuadratür noktası + düğümler üzerinden (sürekli maksimumun alt tahmini)
+     nodal = max_i |u(x_i) − a_i|  — düğüm hatası (1D'de süperyakınsama gösterebilir; L² ile karıştırılmamalı) */
+function errorNorms(u, mesh, c, du) {
+  const { a, h, n, p } = mesh, rule = RULES.fine, N = REFERENCE[p].N.fine, dN = REFERENCE[p].dN.fine;
+  let squared = 0, squaredH1 = 0, max = 0, nodal = 0;
+  for (let e = 0; e < n; e++) {
+    rule.points.forEach((xi, q) => {
+      const x = a + e * h + h * (1 + xi) / 2;
+      const uh = N[q].reduce((s, Nk, k) => s + c[e * p + k] * Nk, 0);
+      const diff = u(x) - uh;
+      squared += rule.weights[q] * diff * diff * h / 2;
+      max = Math.max(max, Math.abs(diff));
+      if (du) {
+        const duh = dN[q].reduce((s, dNk, k) => s + c[e * p + k] * dNk, 0) * 2 / h;
+        squaredH1 += rule.weights[q] * (du(x) - duh) ** 2 * h / 2;
+      }
+    });
+  }
+  for (let i = 0; i < mesh.dofs; i++) nodal = Math.max(nodal, Math.abs(u(mesh.nodeX(i)) - c[i]));
+  return { l2: Math.sqrt(squared), h1: du ? Math.sqrt(squaredH1) : null, max: Math.max(max, nodal), nodal };
+}
+
+/* E_max = max_x |u − u_h|: sürekli maksimum. Örnekleme yalnız alt tahmin verir; bu yüzden her elemanda 32 eşit noktada
+   en büyük |e| bulunur, sonra komşu örnekler arasında altın oran aramasıyla yerel maksimuma yaklaşılır (40 adım).
+   Sonuç hâlâ bir sayısal tahmindir (aranan aralık dışındaki dar bir tepe kaçabilir) ve öyle etiketlenir; ama örnek
+   noktaları arasındaki tepeyi kaçırma hatası ~1e-12 göreliye iner. */
+function maxErrorRefined(u, mesh, c) {
+  const { a, h, n } = mesh, samples = 32, golden = (Math.sqrt(5) - 1) / 2;
+  /* 1) Her elemanda 33 eşit nokta. 2) Altın oran araması yalnız örneklenmiş değeri, örneklenmiş en büyüğün yarısını aşan
+        elemanlarda. Varsayım: e bir elemanda en çok birkaç kez salınır (p ≤ 4, çözümü çözen ağ); o zaman örnekler arası
+        tepe örneklenmiş değerin ~1.15 katını aşmaz ve diğer elemanlar global maksimumu taşıyamaz. Varsayım bozulursa
+        (kaba ağda çok hızlı salınan çözüm) sonuç yine bir alt tahmindir; etiket bunu söyler. */
+  const sampled = [];
+  let top = 0;
+  for (let e = 0; e < n; e++) {
+    const x0 = a + e * h, f = (x) => Math.abs(u(x) - evaluateOn(mesh, c, e, x));
+    const xs = Array.from({ length: samples + 1 }, (_, k) => x0 + h * k / samples), values = xs.map(f);
+    const k = values.indexOf(Math.max(...values));
+    sampled.push({ f, xs, k, v: values[k] });
+    top = Math.max(top, values[k]);
+  }
+  let best = 0, bestX = a;
+  for (const { f, xs, k, v } of sampled) {
+    if (v > best) { best = v; bestX = xs[k]; }
+    if (v < 0.5 * top) continue;
+    let lo = xs[Math.max(0, k - 1)], hi = xs[Math.min(samples, k + 1)];
+    let m1 = hi - golden * (hi - lo), m2 = lo + golden * (hi - lo), f1 = f(m1), f2 = f(m2);
+    for (let it = 0; it < 40; it++) {
+      if (f1 > f2) { hi = m2; m2 = m1; f2 = f1; m1 = hi - golden * (hi - lo); f1 = f(m1); }
+      else { lo = m1; m1 = m2; f1 = f2; m2 = lo + golden * (hi - lo); f2 = f(m2); }
+    }
+    for (const [value, x] of [[f1, m1], [f2, m2]]) if (value > best) { best = value; bestX = x; }
+  }
+  return { value: best, x: bestX };
+}
+/* u_h'yi belirli bir elemanın polinomuyla değerlendirir (eleman sınırında komşu elemana kaymasın). */
+function evaluateOn(mesh, c, e, x) {
+  const xi = 2 * (x - (mesh.a + e * mesh.h)) / mesh.h - 1;
+  return shapeFunctions(mesh.p, xi).reduce((s, Nk, k) => s + c[e * mesh.p + k] * Nk, 0);
+}
+
+/* Yakınsama çalışması (h-inceltme): her derece için n = 1, 2, 4, …; gerçek eleman boyu h = (x₁ − x₀)/n ile birlikte saklanır. */
+function convergenceStudy(problem, u, methodKey, du) {
+  const study = {};
+  for (const p of [1, 2, 3, 4]) {
+    study[p] = CONVERGENCE_NS.map((n) => {
+      const mesh = makeMesh(problem.x0, problem.x1, n, p);
+      const norms = errorNorms(u, mesh, METHODS[methodKey].solve(problem, mesh).c, du);
+      return { n, h: mesh.h, l2: norms.l2, h1: norms.h1 };
+    });
+  }
+  return study;
+}
+
+/* Sunucudan gelen analitik çözüm metnini okur ve İKİ kontrol yapar: (1) sunucunun örnek değerleriyle tutarlılık,
+   (2) problem koşullarına karşı bağımsız kontrol (exactConditionFailure). DOM'a dokunmaz; bu yüzden CORE'dadır. */
+const fmtNum = (v) => String(Number(v.toPrecision(6)));
+function parseExact(data, problem) {
+  try {
+    const u = parseExpression(data.u).f, du = parseExpression(data.du).f;
+    const scale = Math.max(1e-300, ...data.samples.map((pt) => Math.abs(pt[1])));
+    const dscale = Math.max(1e-300, ...data.samples.map((pt) => Math.abs(pt[2])));
+    for (const [x, ux, dux] of data.samples)
+      if (!(Math.abs(u(x) - ux) <= 1e-9 * scale) || !(Math.abs(du(x) - dux) <= 1e-9 * dscale)) return null;
+    const failure = problem ? exactConditionFailure(u, du, problem, scale, dscale) : '';
+    return failure ? { rejected: failure } : { u, du, tex: data.tex };
+  } catch { return null; }
+}
+/* İkinci, BAĞIMSIZ koşul kontrolü (sunucunun sembolik doğrulamasına ek): okunan analitik çözüm problem tanımının
+   koşullarını sağlıyor mu? Akı koşulu yalnız formülasyonun gerektirdiği yerde (2. mertebe BVP, "verilmedi", α(x_b) ≠ 0)
+   sınanır. Tolerans 1e-9 × ölçek (64-bit değerlendirme; sezgisel). */
+function exactConditionFailure(u, du, problem, scale, dscale) {
+  const tol = (v, s) => Math.abs(v) <= 1e-9 * Math.max(1, s);
+  for (const [side, xb] of [['left', problem.x0], ['right', problem.x1]]) {
+    const { type, value, slope } = problem.bc[side];
+    if ((type === 'dirichlet' || type === 'both') && !tol(u(xb) - value, scale)) return `u(${fmtNum(xb)}) = ${fmtNum(u(xb))} ≠ ${fmtNum(value)}`;
+    const target = type === 'neumann' ? value : type === 'both' ? slope : null;
+    if (target !== null && !tol(du(xb) - target, dscale)) return `u′(${fmtNum(xb)}) = ${fmtNum(du(xb))} ≠ ${fmtNum(target)}`;
+    const a = problem.coef.alpha.f(xb);
+    if (type === 'none' && problem.order === 2 && !problem.ivp && a !== 0 && !tol(a * du(xb), Math.abs(a) * dscale))
+      return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ 0 (doğal koşul)`;
+  }
+  return '';
+}
+/* Gözlenen hız: r = log(E_kaba/E_ince) / log(h_kaba/h_ince), GERÇEK h değerleriyle.
+   points: [{h, E}] (h azalan sırada). floor(h): bu değerin altındaki hata ölçüm tabanındadır (yuvarlama ya da referansın
+   kendi hatası) ve hıza katılmaz. İki ucu da tabanın üstünde olan EN İNCE ardışık çift kullanılır; yoksa null
+   (hız tanımsızdır — asla 0 gösterilmez). */
+function observedRate(points, floor = () => 0) {
+  for (let k = points.length - 1; k >= 1; k--) {
+    const coarse = points[k - 1], fine = points[k];
+    if (coarse.E > floor(coarse.h) && fine.E > floor(fine.h) && fine.E > 0)
+      return { rate: Math.log(coarse.E / fine.E) / Math.log(coarse.h / fine.h), from: coarse, to: fine };
+  }
+  return null;
+}
+
+/* ---------- 6. LATEX ---------- */
+
+function texNum(v) {
+  if (!isFinite(v)) return '\\text{tanımsız}';
+  if (Math.abs(v) < 1e-14) return '0';
+  const [mantissa, exponent] = v.toExponential(4).split('e');
+  const exp = Number(exponent);
+  if (exp >= -3 && exp <= 4) return String(parseFloat(v.toPrecision(5)));
+  return `${parseFloat(mantissa)}\\times 10^{${exp}}`;
+}
+
+/* Denklemin önizlemesi. α sabitse α u'' yazılır; değişkense (α u')' biçimi korunur. Sıfır katsayılı terim yazılmaz. */
+function equationTex(problem) {
+  const term = (key, symbol) => {
+    const value = problem.constant[key];
+    if (value === 0) return null;
+    if (value !== null) return { sign: value < 0 ? '-' : '+', body: (Math.abs(value) === 1 ? '' : `${texNum(Math.abs(value))}\\,`) + symbol };
+    const tex = problem.coef[key].tex;
+    return { sign: '+', body: key === 'alpha' ? `\\left(\\left(${tex}\\right)u'\\right)'` : `\\left(${tex}\\right)${symbol}` };
+  };
+  const terms = [term('alpha', "u''"), term('beta', "u'"), term('gamma', 'u')].filter(Boolean);
+  const left = terms.map((t, i) => (i === 0 ? (t.sign === '-' ? '-' : '') : ` ${t.sign} `) + t.body).join('');
+  return `${left} = ${problem.coef.f.tex}`;
+}
+function conditionsTex(problem) {
+  const one = (side, point) => {
+    const { type, value, slope } = problem.bc[side];
+    if (type === 'dirichlet') return `u(${texNum(point)}) = ${texNum(value)}`;
+    if (type === 'neumann') return `u'(${texNum(point)}) = ${texNum(value)}`;
+    if (type === 'both') return `u(${texNum(point)}) = ${texNum(value)},\\quad u'(${texNum(point)}) = ${texNum(slope)}`;
+    return problem.order === 2 && !problem.ivp ? `\\alpha u'\\big|_{${texNum(point)}} = 0` : null;   // başlangıç değer probleminde öbür uç serbest
+  };
+  return [one('left', problem.x0), one('right', problem.x1)].filter(Boolean).join(',\\quad ');
+}
+/*CORE-END*/
+
+/* ---------- 7. GRAFİK ----------
+   Tek genel çizici. cfg = { height, series:[{name,color,points:[[x,y]],width,dash,markers,highlight,endLabel,onTop}], xLog, yLog, xTicks, vlines, zeroLine, band, xTitle, yTitle }
+   Her çağrıda SVG baştan kurulur: veri küçük olduğu için bu, artımlı güncellemeden hem basit hem yeterince hızlı. */
+function niceTicks(lo, hi, target = 6) {
+  const raw = (hi - lo) / target, base = Math.pow(10, Math.floor(Math.log10(raw))), ratio = raw / base;
+  const step = base * (ratio >= 7.5 ? 10 : ratio >= 3.5 ? 5 : ratio >= 1.5 ? 2 : 1);
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step)
+    ticks.push(Math.abs(v) < step * 1e-9 ? 0 : parseFloat(v.toPrecision(10)));   // sıfıra denk gelen çizgi yuvarlama gürültüsüyle 3e-18 yazmasın
+  return ticks;
+}
+const formatValue = (v) => (v !== 0 && (Math.abs(v) < 1e-3 || Math.abs(v) >= 1e5) ? v.toExponential(3) : String(parseFloat(v.toPrecision(5))));
+/* Eksen etiketi kısa olmalı: "-2.000e-4" yerine "-2e-4"; tick değerleri zaten yuvarlak sayılardır. */
+const tickLabel = (v) => {
+  if (v === 0 || (Math.abs(v) >= 1e-3 && Math.abs(v) < 1e5)) return String(v);
+  const [m, e] = v.toExponential(3).split('e');
+  return `${parseFloat(m)}e${Number(e)}`;
+};
+/* Log eksende 10^k biçimi "1e-6"dan daha okunur; SVG metninde üst simge tspan ile yazılır. */
+const powerLabel = (k) => `10<tspan dy="-5" font-size="8.5">${k < 0 ? '−' + -k : k}</tspan>`;
+
+function drawChart(host, cfg) {
+  const labelled = cfg.series.some((s) => s.endLabel);
+  const W = Math.max(host.clientWidth, 260), H = cfg.height;
+  const pad = { l: 58, r: labelled ? 62 : 14, t: cfg.yTitle ? 22 : 10, b: 28 };
+  const fx = cfg.xLog ? Math.log2 : (v) => v;
+  const fy = cfg.yLog ? (v) => Math.log10(Math.max(v, LOG_FLOOR)) : (v) => v;
+  const finite = cfg.series.flatMap((s) => s.points).filter((pt) => isFinite(pt[1]));
+  if (!finite.length) { host.replaceChildren(); return; }
+
+  let x0 = Math.min(...finite.map((pt) => fx(pt[0]))), x1 = Math.max(...finite.map((pt) => fx(pt[0])));
+  let y0 = Math.min(...finite.map((pt) => fy(pt[1]))), y1 = Math.max(...finite.map((pt) => fy(pt[1])));
+  if (cfg.zeroLine) { y0 = Math.min(y0, 0); y1 = Math.max(y1, 0); }
+  if (cfg.yLog) { y0 = Math.floor(y0); y1 = Math.max(Math.ceil(y1), y0 + 1); }
+  else { const margin = (y1 - y0 || 1) * 0.06; y0 -= margin; y1 += margin; }
+
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  const sx = (v) => pad.l + (fx(v) - x0) / (x1 - x0) * plotW;
+  const sy = (v) => pad.t + plotH - (fy(v) - y0) / (y1 - y0) * plotH;
+
+  const xTicks = cfg.xTicks || niceTicks(x0, x1, Math.max(3, Math.floor(plotW / 90)));
+  const logStep = Math.max(1, Math.ceil((y1 - y0) / 6));
+  const yTicks = cfg.yLog
+    ? Array.from({ length: Math.floor((y1 - y0) / logStep) + 1 }, (_, i) => Math.pow(10, y0 + i * logStep))
+    : niceTicks(y0, y1, 5);
+  const yLabel = (v) => (cfg.yLog ? powerLabel(Math.round(Math.log10(v))) : tickLabel(v));
+
+  let svg = '';
+  /* Güvenilmez ölçüm bölgesi (ör. 1e-12 altı yuvarlama gürültüsü): bu bölgedeki noktalar gerçek hata sanılmasın diye taranır. */
+  if (cfg.band !== undefined && fy(cfg.band) > y0) {
+    const top = Math.max(pad.t, sy(cfg.band));
+    svg += `<rect class="band" x="${pad.l}" y="${top}" width="${plotW}" height="${pad.t + plotH - top}"/>`;
+  }
+  for (const v of yTicks) svg += `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(v)}" y2="${sy(v)}"/><text x="${pad.l - 8}" y="${sy(v) + 4}" text-anchor="end">${yLabel(v)}</text>`;
+  for (const v of xTicks) svg += `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${tickLabel(v)}</text>`;
+  if (cfg.xTitle) svg += `<text class="axis-title" x="${pad.l - 20}" y="${H - 8}" text-anchor="end">${cfg.xTitle} →</text>`;
+  if (cfg.yTitle) svg += `<text class="axis-title" x="${pad.l}" y="12" text-anchor="start">↑ ${cfg.yTitle}</text>`;
+  for (const v of cfg.vlines || []) svg += `<line class="vline" x1="${sx(v)}" x2="${sx(v)}" y1="${pad.t}" y2="${pad.t + plotH}"/>`;
+  const baseY = cfg.zeroLine ? sy(0) : pad.t + plotH;
+  svg += `<line class="axis" x1="${pad.l}" x2="${W - pad.r}" y1="${baseY}" y2="${baseY}"/>`;
+
+  /* onTop serileri (ör. kesikli referans) en son çizilir: renkli eğrinin altında kaybolmasın. */
+  const drawOrder = [...cfg.series].sort((a, b) => (a.onTop ? 1 : 0) - (b.onTop ? 1 : 0));
+  for (const s of drawOrder) {
+    let d = '', pen = 'M';
+    for (const [x, y] of s.points) {
+      if (!isFinite(y)) { pen = 'M'; continue; }            // tanımsız noktada çizgiyi kır
+      d += `${pen}${sx(x).toFixed(1)},${sy(y).toFixed(1)}`; pen = 'L';
+    }
+    svg += `<path d="${d}" fill="none" style="stroke:${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
+    /* İşaret: [x, y, {r, hollow}]. Boş halka = farklı anlam (eleman içi düğüm ya da ölçüm tabanındaki nokta). */
+    for (const [x, y, style = {}] of s.markers || []) {
+      if (!isFinite(y)) continue;
+      svg += style.hollow
+        ? `<circle cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:var(--surface);stroke:${s.color}" stroke-width="1.6"/>`
+        : `<circle class="ring" cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:${s.color}"/>`;
+    }
+    if (s.highlight && isFinite(s.highlight[1])) svg += `<circle class="ring" cx="${sx(s.highlight[0])}" cy="${sy(s.highlight[1])}" r="6" style="fill:${s.color}"/>`;
+  }
+  /* Doğrudan etiket: serinin son noktasının sağına yazılır; üst üste binmesinler diye en az 13 px aralıkla dizilir. */
+  const labels = cfg.series.filter((s) => s.endLabel && s.points.length)
+    .map((s) => ({ s, y: sy(s.points[s.points.length - 1][1]) })).sort((a, b) => a.y - b.y);
+  labels.forEach((item, i) => { if (i > 0) item.y = Math.max(item.y, labels[i - 1].y + 13); });
+  const overflow = labels.length ? labels[labels.length - 1].y - (pad.t + plotH + 4) : 0;
+  for (const item of labels) svg += `<text class="end-label" x="${W - pad.r + 8}" y="${item.y - Math.max(0, overflow) + 4}" style="fill:${item.s.color}">${item.s.endLabel}</text>`;
+  svg += `<line class="cross" y1="${pad.t}" y2="${pad.t + plotH}" visibility="hidden"/>`;
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${cfg.label}">${svg}</svg><div class="tip" hidden></div>`;
+
+  /* Üzerine gelince: en yakın örnek noktasına kilitlenen dikey çizgi + tüm serilerin o noktadaki değeri. */
+  const svgEl = host.querySelector('svg'), cross = host.querySelector('.cross'), tip = host.querySelector('.tip');
+  const nearest = (s, target) => s.points.reduce((best, pt) => (Math.abs(fx(pt[0]) - target) < Math.abs(fx(best[0]) - target) ? pt : best));
+  svgEl.onpointermove = (event) => {
+    const px = (event.clientX - svgEl.getBoundingClientRect().left) * (W / svgEl.getBoundingClientRect().width);
+    if (px < pad.l || px > W - pad.r) return svgEl.onpointerleave();
+    const target = x0 + (px - pad.l) / plotW * (x1 - x0);
+    const anchor = nearest(cfg.series[0], target);
+    cross.setAttribute('x1', sx(anchor[0])); cross.setAttribute('x2', sx(anchor[0])); cross.setAttribute('visibility', 'visible');
+    tip.innerHTML = `${cfg.xName} = ${formatValue(anchor[0])}` + cfg.series.map((s) =>
+      `<br><i style="background:${s.color}"></i>${s.name}: ${formatValue(nearest(s, fx(anchor[0]))[1])}`).join('');
+    tip.hidden = false;
+    const left = sx(anchor[0]) / W * host.clientWidth;
+    tip.style.left = left > host.clientWidth / 2 ? '' : `${left + 12}px`;
+    tip.style.right = left > host.clientWidth / 2 ? `${host.clientWidth - left + 12}px` : '';
+  };
+  svgEl.onpointerleave = () => { cross.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+}
+
+/* ---------- 8. SUNUCU ----------
+   Çözüm kâğıdı ve PDF, server.py üzerinden fem_sheet.py (SymPy) ile üretilir. Sayfa dosyadan açıldıysa
+   ya da sunucu çalışmıyorsa grafikler çalışmaya devam eder; yalnızca kâğıt üretilemez ve bunu söyleriz. */
+const SERVER_HINT = 'Çözüm kâğıdı için sunucu gerekli: proje klasöründe "python3 server.py" çalıştır ve http://localhost:8000 adresini aç.';
+async function postJSON(path, payload) {
+  let response;
+  try { response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); }
+  catch { throw new Error(SERVER_HINT); }
+  return response;
+}
+async function requestSheet(payload) {
+  const response = await postJSON('api/sheet', payload);
+  const data = await response.json().catch(() => ({ error: SERVER_HINT }));
+  if (!response.ok) throw new Error(data.error || 'Çözüm kâğıdı üretilemedi.');
+  return data;                                               // { text, tex, nodal, exact }
+}
+async function requestPdf(payload) {
+  const response = await postJSON('api/pdf', payload);
+  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'PDF üretilemedi.');
+  return response.blob();
+}
+
+/* ---------- 9. ARAYÜZ ---------- */
+const $ = (id) => document.getElementById(id);
+const seriesColor = (p) => `var(--series-${p})`;
+const CONDITION_TYPES = { none: 'verilmedi', dirichlet: 'u =', neumann: 'u′ =', both: 'u ve u′' };   // both: başlangıç değer problemi
+const N_TICKS = [1, 2, 4, 8, 16, 32, 64];      // yakınsama grafiğindeki n değerleriyle aynı: sürgüde bu noktalara kolay gelinsin
+const N_TICK_LABELS = new Set([1, 8, 16, 32, 64]);
+
+/* Tek doğruluk kaynağı: arayüzdeki her kontrol bu nesneyi değiştirir, render() her şeyi bundan çizer.
+   Denklem, aralık ve koşullar bilinçli olarak BOŞ başlar: hazır örnek yok, problemi kullanıcı kendisi yazar.
+   Yalnız ağ parametreleri (n, p) bir başlangıç değeri taşır; sürgünün bir konumu olmak zorunda. */
+const state = {
+  alpha: '', beta: '', gamma: '', f: '', x0: NaN, x1: NaN,
+  left: { type: 'none', value: '', slope: '' }, right: { type: 'none', value: '', slope: '' },
+  n: 4, degree: 2, method: 'galerkin',
+  compare: new Set([1]),      // aktif dereceye EK olarak gösterilen dereceler
+  showReference: true,
+  errorView: 'signed',        // noktasal hata: 'signed' (u − u_h) ya da 'abs' (|u − u_h|, log)
+  convNorm: 'l2',             // yakınsama grafiğinin normu: 'l2' ya da 'h1'
+  convMode: 'h',              // 'h': n değişir (h-inceltme) · 'p': n sabit, derece 1→4 (p-inceltme)
+  sheet: null, sheetKey: ''   // sunucudan gelen son kâğıt ve hangi girdilere ait olduğu
+};
+let view = null;              // son başarılı hesabın sonucu
+let cache = { key: '', reference: null, study: null };      // n ve p'ye bağlı olmayan pahalı hesaplar
+
+/* Kâğıdı (ve referans çözümü) belirleyen girdiler; anahtar değişmediyse yeniden hesap gerekmez. */
+const problemInputs = () => ({ alpha: state.alpha, beta: state.beta, gamma: state.gamma, f: state.f, x0: state.x0, x1: state.x1, left: state.left, right: state.right });
+const sheetPayload = () => ({ ...problemInputs(), n: state.n, degree: state.degree, method: state.method });
+
+function typeset(element) {
+  const ready = window.MathJax?.startup?.promise;          // MathJax yüklenemediyse ham LaTeX görünür kalır
+  if (!ready) return Promise.resolve();
+  return ready.then(() => { MathJax.typesetClear([element]); return MathJax.typesetPromise([element]); }).catch(() => {});
+}
+/* "## başlık / $$formül$$" bloklarını DOM'a döker (kâğıdın sunucudan gelen biçimi). */
+function renderMathText(container, text) {
+  container.replaceChildren();
+  for (const block of text.trim().split(/\n\s*\n/)) {
+    const heading = block.match(/^#+\s+(.*)/);
+    const element = document.createElement(heading ? 'h4' : 'p');
+    element.textContent = heading ? heading[1] : block;
+    container.append(element);
+  }
+  return typeset(container);
+}
+
+function showError(message) {
+  $('fn-error').textContent = message;
+}
+
+/* Henüz yazılmamış girdi bir "hata" değildir: kırmızı mesaj yerine boş durum gösterilir.
+   Çekirdek boş kutuyu 0 sayar; α ve β ikisi de boşsa ya da aralık girilmemişse problem henüz tanımlanmamıştır. */
+function missingInput() {
+  if (!state.alpha.trim() && !state.beta.trim()) return 'Eksik: α ya da β kutularından en az biri dolu olmalı.';
+  if (!isFinite(state.x0) || !isFinite(state.x1)) return 'Eksik: aralığın uçları x₀ ve x₁.';
+  return '';
+}
+
+/* ---------- Analitik referans ----------
+   Neden: ince ağ referansı AYNI yöntemle hesaplanır; yöntemdeki sistematik bir hata ona karşı ölçülen hatada görünmez.
+   Analitik çözüm bulunabiliyorsa (SymPy dsolve, sunucuda) hata ona karşı ölçülür. Gelen metin tarayıcı ayrıştırıcısıyla
+   okunur ve sunucunun verdiği örnek değerlerle (bağıl 1e-9) karşılaştırılır; tutmazsa kullanılmaz. */
+let exact = { key: '', status: 'idle' };       // status: pending · ok · none (bulunamadı) · offline (sunucu yok)
+let exactTimer = null;
+function requestExact(key, inputs) {
+  if (exact.key === key) return;
+  exact = { key, status: 'pending' };
+  clearTimeout(exactTimer);
+  exactTimer = setTimeout(async () => {          // yazarken her tuşta sunucuya gitmesin
+    let status = 'none', parsed = null, data = {};
+    try {
+      const response = await postJSON('api/exact', inputs);
+      data = response.ok ? await response.json() : {};
+      parsed = data.exact_js ? parseExact(data.exact_js, buildProblem(inputs)) : null;
+      status = parsed?.rejected ? 'rejected' : parsed ? 'ok' : data.exact_status === 'rejected' ? 'rejected' : 'none';
+      if (status === 'rejected') parsed = { rejectReason: parsed?.rejected ? `tarayıcı kontrolü: ${parsed.rejected}` : `sunucu kontrolü: ${data.exact_reason}`, candidate: data.exact_candidate };
+      else if (parsed) parsed.level = data.exact_status === 'verified_symbolic' ? 'sembolik doğrulandı' : 'sayısal doğrulandı (kanıt değil)';
+    } catch { status = 'offline'; }
+    if (exact.key !== key) return;
+    /* Sunucunun SÜREKLİ problem sınıflandırması (SymPy): kanıtlanmış ret (continuous_error) ve sınıf bilgisi. */
+    exact = { key, status, ...(parsed || {}), classification: data.classification || null, continuousError: data.continuous_error || null };
+    render();
+  }, 350);
+}
+
+/* Ölçüm tabanı. 64-bit hesapta göreli yuvarlama ε ≈ 2.2e-16, montajlı sistemin koşul sayısıyla (n = 64, p = 4'te ~1e5)
+   büyür; testlerde gözlenen taban 1e-12…1e-11 (göreli) olduğu için ROUNDOFF_REL = 1e-11 alınır. H¹ hatasında türev
+   yuvarlamayı 1/h kadar büyütür. İnce ağ referansı kullanılıyorsa referansın kendi hatası da tabana eklenir:
+   ‖u_ref − u‖ ≈ E(n = 64, p = 4) / (2^{p+1} − 1) (asimptotik varsayım), 3 kat güvenlik payıyla. */
+const ROUNDOFF_REL = 1e-11;
+function measurementFloors(problem, u, du, study, analytic) {
+  const L = problem.x1 - problem.x0, probe = Array.from({ length: 201 }, (_, i) => problem.x0 + L * i / 200);
+  const scale = Math.max(...probe.map((x) => Math.abs(u(x)))), dscale = Math.max(...probe.map((x) => Math.abs(du(x))));
+  const last = study[4][study[4].length - 1];
+  const ref = analytic ? { l2: 0, h1: 0 } : { l2: 3 * last.l2 / 31, h1: 3 * last.h1 / 15 };
+  return {
+    point: ROUNDOFF_REL * Math.max(scale, 1e-300),
+    l2: () => Math.max(ROUNDOFF_REL * scale * Math.sqrt(L), ref.l2),
+    h1: (h) => Math.max(ROUNDOFF_REL * Math.sqrt(L) * Math.max(dscale, scale / h), ref.h1)
+  };
+}
+
+/* Girdiyi doğrula ve hesapla. Hata varsa mesajı gösterir, null döner. */
+function compute() {
+  const missing = missingInput();
+  $('empty-reason').textContent = missing;
+  if (missing) { showError(''); view = null; return null; }
+  try {
+    const problem = buildProblem(problemInputs());
+    const problemKey = JSON.stringify(problemInputs());
+    requestExact(problemKey, problemInputs());
+    if (exact.key === problemKey && exact.continuousError)       // sunucu sembolik olarak kanıtladı: K1/K2, sürekli problem
+      throw Object.assign(new Error(exact.continuousError.message), { category: exact.continuousError.category });
+    const analytic = exact.key === problemKey && exact.status === 'ok';
+    const key = JSON.stringify([problemKey, state.method, analytic]);
+    if (cache.key !== key) {
+      let u, du;
+      if (analytic) ({ u, du } = exact);
+      else {
+        /* Referans ince ağın (n = 128, p = 4) kendi ayrık sistemi tekilse bu, kullanıcının ağıyla ilgili değildir
+           (ör. işaret değiştiren α'nın sıfırı referans ağda düğüme denk gelir): mesaj hangi sistem olduğunu söyler. */
+        try { u = referenceSolution(problem, state.method); }
+        catch (err) { throw Object.assign(new Error(`İnce ağ referansı (n = ${REFERENCE_MESH.n}, p = ${REFERENCE_MESH.p}) çözülemedi — ${err.message} Analitik çözüm olmadan hata ölçülemiyor.`), { category: err.category }); }
+        du = u.derivative;
+      }
+      const study = convergenceStudy(problem, u, state.method, du);
+      cache = { key, u, du, study, analytic, floors: measurementFloors(problem, u, du, study, analytic) };
+    }
+    const degrees = [...new Set([...state.compare, state.degree])].sort();
+    const results = {};
+    for (const p of degrees) {
+      const mesh = makeMesh(state.x0, state.x1, state.n, p);
+      const result = METHODS[state.method].solve(problem, mesh);
+      results[p] = { mesh, result, norms: errorNorms(cache.u, mesh, result.c, cache.du) };
+    }
+    results[state.degree].maxError = maxErrorRefined(cache.u, results[state.degree].mesh, results[state.degree].result.c);
+    /* p-inceltme: ağ (n) sabit, derece 1 → 4. Yalnız o görünüm açıkken hesaplanır (gösterilmeyen dereceler için ek çözüm). */
+    cache.pStudies ??= new Map();                       // n → p-inceltme verisi (problem değişince cache ile birlikte sıfırlanır)
+    const pStudy = state.convMode !== 'p' ? null : cache.pStudies.get(state.n) ?? [1, 2, 3, 4].map((p) => {
+      if (results[p]) return { p, dofs: results[p].mesh.dofs, ...results[p].norms };
+      const mesh = makeMesh(state.x0, state.x1, state.n, p);
+      return { p, dofs: mesh.dofs, ...errorNorms(cache.u, mesh, METHODS[state.method].solve(problem, mesh).c, cache.du) };
+    });
+    if (pStudy) cache.pStudies.set(state.n, pStudy);
+    showError('');
+    return { problem, degrees, results, pStudy, ...cache };
+  } catch (err) {
+    showError(err.message);
+    return null;
+  }
+}
+
+/* Her hata ölçüsü kendi adı ve tanımıyla: "hata" tek başına hiçbir yerde kullanılmaz.
+   Analitik referansta u − u_h gerçek HATAdır (E); ince ağ referansında u_ref − u_h yalnızca bir FARKtır (D) — gerçek hata
+   değildir ve referansın kendi hatası kadar belirsizdir. Etiketler bu ayrımı her yerde taşır. */
+const refName = () => (view.analytic ? 'u' : 'u_ref');
+const errWord = () => (view.analytic ? 'hata' : 'fark');
+const errSym = () => (view.analytic ? 'E' : 'D');
+/* İnce ağ referansının kendi L² hatası için asimptotik tahmin: E(n = 64, p = 4) / (2⁵ − 1). Kanıt değil, tahmin. */
+const referenceErrorEstimate = () => { const last = view.study[4][view.study[4].length - 1]; return last.l2 / 31; };
+const rateOf = (p, norm) => observedRate(view.study[p].map((o) => ({ h: o.h, E: o[norm] })), view.floors[norm]);
+function theoryText(problem, p) {
+  if (problem.order === 1) return 'kuramsal: 1. mertebe Galerkin için optimal hız garantisi yok';
+  if (problem.ivp) return `beklenen: p + 1 = ${p + 1} · p = ${p} (Petrov–Galerkin; kanıt değil, testlerde gözlendi)`;
+  return `kuramsal (düzgün çözüm): L² p + 1 = ${p + 1} · H¹ p = ${p}`;
+}
+function renderTiles() {
+  const { mesh, norms, result } = view.results[state.degree];
+  const U = refName(), risky = result.quadratureError > QUADRATURE_WARNING;
+  const l2 = rateOf(state.degree, 'l2'), h1 = rateOf(state.degree, 'h1');
+  const rateText = (r) => (r === null ? '—' : r.rate.toFixed(2));
+  const S = errSym(), W = errWord(), refErr = view.analytic ? 0 : referenceErrorEstimate();
+  const tooClose = !view.analytic && norms.l2 < 10 * refErr;   // fark, referansın kendi hatasından ayırt edilemez
+  const status = exact.status === 'pending' ? 'analitik çözüm aranıyor…' : exact.status === 'offline' ? 'analitik için sunucu gerekli'
+    : exact.status === 'rejected' ? `analitik aday (${exact.candidate}) REDDEDİLDİ — ${exact.rejectReason}` : 'analitik bulunamadı';
+  const referenceTile = view.analytic ? ['Referans u', 'analitik', `${exact.level}: denklem ve koşullar sınandı; tarayıcıda koşullar yeniden sınandı → gösterilen değerler gerçek hata`]
+    : ['Referans u_ref', 'ince ağ', `n = 128, p = 4, aynı yöntem · ${status} · gösterilenler gerçek hata DEĞİL, ince ağa göre fark; `
+       + `referansın tahmini kendi L² hatası ≈ ${refErr.toExponential(1)} (sıfır değil)`];
+  const maxError = view.results[state.degree].maxError;
+  const tiles = [
+    ['Ağ', `N = ${mesh.dofs}`, `n = ${state.n}, p = ${state.degree}, h = ${formatValue(mesh.h)}; N = np + 1 düğüm; κ₁(K) ≈ ${result.diagnostics.condition.toExponential(1)} (tahmin)`],
+    referenceTile,
+    [`${S}_L² (${W})`, norms.l2.toExponential(2), `(∫ (${U} − u_h)² dx)^½` + (tooClose ? ' · ⚠ referansın kendi hatası düzeyinde: güvenilmez' : ''), tooClose],
+    [`${S}_H¹ (${W}, yarı-norm)`, norms.h1.toExponential(2), `(∫ (${U}′ − u_h′)² dx)^½`],
+    [`${S}_max (${W}, sayısal arama)`, maxError.value.toExponential(2), `max |${U} − u_h| ≈ x = ${formatValue(maxError.x)}; 32 nokta/eleman + yerel altın oran araması (alt tahmin, kesin maksimum değil)`],
+    [`${S}_düğüm (${W})`, norms.nodal.toExponential(2), `max_i |${U}(x_i) − a_i|`],
+    ['Ölçülen hız L² · H¹ (h-inceltme)', `${rateText(l2)} · ${rateText(h1)}`,
+      (l2 === null || h1 === null ? `${W} ölçüm tabanında: hız tanımsız · ` : '') + theoryText(view.problem, state.degree)],
+    ['Kuadratür hatası', result.quadratureError.toExponential(1), risky ? '⚠ katsayılar düzgün değil; integraller yaklaşık' : '✓ integraller güvenilir', risky]
+  ];
+  $('tiles').innerHTML = tiles.map(([label, value, sub, warn]) =>
+    `<div class="tile${warn ? ' warn' : ''}"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`).join('');
+}
+
+/* Teşhis kutusu: sürekli problem (sunucu, SymPy; kanıt düzeyiyle) ve ayrık sistem (tarayıcı) bilgisi ayrı satırlarda.
+   Ret gerektirmeyen durumlar burada uyarı olarak görünür; kanıtlanmış K1/K2 ise kırmızı hata yolundan gelir. */
+function renderDiagnostics() {
+  const lines = [], c = exact.key === JSON.stringify(problemInputs()) ? exact.classification : null;
+  const lead = view.problem.order === 2 ? 'α' : 'β';
+  if (exact.status === 'pending') lines.push('Sürekli problem: sınıflandırılıyor…');
+  else if (exact.status === 'offline') lines.push('Sürekli problem sınıflandırılamadı: sunucu yok (yalnız ayrık sistem teşhisi yapılıyor).');
+  else if (c) {
+    const extra = c.assumptions?.length ? ` · varsayım: ${c.assumptions.join('; ')}` : '';
+    if (c.kind === 'unique') lines.push(`Sürekli problem: tek çözüm (${c.method}; ${c.evidence})${extra}.`);
+    else if (c.kind === 'no_solution' || c.kind === 'non_unique')
+      lines.push(`Sürekli problem: ${c.kind === 'no_solution' ? 'çözüm yok' : 'tek değil'} — yalnız ${c.method} kanıt (matematiksel kanıt değil; ${c.evidence}).`);
+    else lines.push(`Sürekli problem sınıflandırılamadı: ${c.reason}.`);
+  }
+  const g = view.problem.degeneracy;
+  if (g.kind !== 'uniform')
+    lines.push(`${CATEGORY.K4} (uyarı): ${lead}(x*) = 0, x* ≈ ${g.points.map((q) => formatValue(q.x)).join(', ')}`
+      + ` (${g.kind === 'sign_changing' ? 'işaret değiştiriyor' : 'işaret değiştirmiyor'}; tarayıcıda sayısal tespit). Düzgün eliptiklik yok: standart yakınsama kuramı garanti değil; bu tek başına çözümsüzlük anlamına gelmez.`);
+  const fo = view.results[state.degree].result.diagnostics.firstOrder;
+  if (fo) lines.push(`1. mertebe: test uzayı v = 0 u verilen düğümde (ders kitabı); atılan denklem i = ${fo.row}, kalıntı r = ${fo.residual.toExponential(2)}; `
+    + `sol sıfır uzayı |yᵀb|/(‖y‖‖b‖) = ${fo.scaled.toExponential(1)} → tam sistem ${fo.compatible ? 'uyumlu (satır seçimi sonucu değiştirmez)' : 'uyumsuz: başka bir satırın atılması (başka test uzayı) başka bir çözüm verir'}.`);
+  const condition = view.results[state.degree].result.diagnostics.condition;
+  if (condition > COND_WARN)
+    lines.push(`${CATEGORY.K3} (uyarı, ayrık sistem): κ₁ ≈ ${condition.toExponential(1)} — sonuçta yaklaşık κ·ε ≈ ${(condition * 2.2e-16).toExponential(0)} göreli hata olabilir.`);
+  $('diagnostics').hidden = !lines.length;
+  $('diagnostics').innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
+}
+
+function renderChips() {
+  const chip = (id, text, color, pressed, active) =>
+    `<button type="button" class="chip${active ? ' active' : ''}" id="chip-${id}" data-chip="${id}" aria-pressed="${pressed}" style="--chip-color:${color}">${text}</button>`;
+  const referenceText = view?.analytic ? 'analitik u(x)' : 'referans u_ref (ince ağ)';
+  $('chips').innerHTML = chip('reference', referenceText, 'var(--ink)', state.showReference, false) +
+    [1, 2, 3, 4].map((p) => chip(p, `${DEGREE_NAMES[p]} (p=${p})${p === state.degree ? ' · aktif' : ''}`, seriesColor(p), p === state.degree || state.compare.has(p), p === state.degree)).join('');
+}
+
+/* Düğüm işaretleri: her derece kendi düğümlerini taşır (P2/P3'ün iç düğümleri farklı x'tedir).
+   Dolu = eleman uç düğümü (komşu elemanla paylaşılır), boş = eleman içi düğüm. Aktif derece büyük, diğerleri küçük. */
+const MARKER_LIMIT = { active: 129, other: 65 };
+function nodeMarkers(entry, active) {
+  const { mesh, result } = entry;
+  if (mesh.dofs > (active ? MARKER_LIMIT.active : MARKER_LIMIT.other)) return [];
+  return result.c.map((value, i) => [mesh.nodeX(i), value, { hollow: i % mesh.p !== 0, r: active ? 4 : 2.6 }]);
+}
+
+function renderCharts() {
+  const { degrees, results, u, study, floors, problem } = view;
+  const U = refName(), active = results[state.degree];
+  const xs = sampleXs(active.mesh);                          // çizim örnekleri: ağdan bağımsız, eleman sınırları dahil
+  const curve = (p) => xs.map((x) => [x, evaluate(results[p].mesh, results[p].result.c, x)]);
+  const boundaries = state.n <= 32 ? Array.from({ length: state.n + 1 }, (_, e) => state.x0 + e * active.mesh.h) : [];
+
+  const series = degrees.map((p) => ({
+    name: `${DEGREE_NAMES[p]} u_h`, color: seriesColor(p), points: curve(p), width: p === state.degree ? 2.5 : 1.75,
+    markers: nodeMarkers(results[p], p === state.degree)
+  }));
+  if (state.showReference) series.unshift({ name: view.analytic ? 'analitik u' : 'u_ref', color: 'var(--ink)', points: xs.map((x) => [x, u(x)]), width: 1.25, dash: '5 4', onTop: true });
+  drawChart($('chart-approx'), { height: 340, series, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: 'u', label: 'Referans çözüm ve seçili sonlu eleman çözümleri' });
+  const hidden = degrees.filter((p) => results[p].mesh.dofs > MARKER_LIMIT[p === state.degree ? 'active' : 'other']);
+  $('node-legend').textContent = '● eleman uç düğümü · ○ eleman içi düğüm (p ≥ 2) · kesikli dikey çizgi: eleman sınırı'
+    + (hidden.length ? ` · ${hidden.map((p) => `p=${p}`).join(', ')}: düğüm çok sık, işaret gösterilmiyor` : '')
+    + (boundaries.length ? '' : ' (n > 32: sınır çizgileri gizli)');
+
+  /* Noktasal hata: işaretli (u − u_h) doğrusal eksende ya da mutlak |u − u_h| log eksende. Mutlak görünümde düğüm
+     hataları ayrıca işaretlenir; ölçüm tabanının altındaki değerler taban çizgisine oturtulur ve bölge taranır. */
+  const absolute = state.errorView === 'abs';
+  const W = errWord();
+  $('error-title').textContent = absolute ? `Mutlak noktasal ${W}` : `İşaretli noktasal ${W}`;
+  $('error-hint').innerHTML = (absolute
+    ? `|${U}(x) − u<sub>h</sub>(x)|, log eksen; noktalar: düğümde |${U}(x<sub>i</sub>) − a<sub>i</sub>|; taralı: ölçüm tabanı`
+    : `${U}(x) − u<sub>h</sub>(x), seçili n için (pozitif: u<sub>h</sub> altta)`)
+    + (view.analytic ? '' : ' · ince ağa göre fark, gerçek hata değil');
+  const floorPoint = floors.point;
+  drawChart($('chart-error'), absolute ? {
+    height: 240, yLog: true, band: floorPoint, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `|${U} − u_h|`, label: 'Mutlak noktasal hata',
+    series: degrees.map((p) => ({
+      name: DEGREE_NAMES[p], color: seriesColor(p), width: p === state.degree ? 2 : 1.5,
+      points: curve(p).map(([x, v]) => [x, Math.max(Math.abs(u(x) - v), floorPoint / 10)]),
+      markers: p === state.degree && results[p].mesh.dofs <= MARKER_LIMIT.active
+        ? results[p].result.c.map((a, i) => { const x = results[p].mesh.nodeX(i); return [x, Math.max(Math.abs(u(x) - a), floorPoint / 10), { r: 3 }]; }) : []
+    }))
+  } : {
+    height: 240, zeroLine: true, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `${U} − u_h`, label: 'İşaretli noktasal hata',
+    series: degrees.map((p) => ({ name: DEGREE_NAMES[p], color: seriesColor(p), points: curve(p).map(([x, v]) => [x, u(x) - v]), width: p === state.degree ? 2 : 1.5 }))
+  });
+
+  /* Yakınsama: seçili norm (L² ya da H¹ yarı-normu). Dolu nokta hıza katılır; boş nokta ölçüm tabanındadır, katılmaz.
+     Satır sonu: gözlenen hız (gerçek h ile) ya da tanımsızsa "—". Kesikli gri: kuramsal eğim (yalnız kuramın geçerli
+     olduğu 2. mertebe sınır değer probleminde), son geçerli ölçüme sabitlenir. */
+  const norm = state.convNorm, k = (p) => (norm === 'l2' ? p + 1 : p);
+  const of = W === 'hata' ? 'hatası' : 'farkı';                     // Türkçe iyelik: "L² hatası" / "L² farkı"
+  const normName = norm === 'l2' ? `L² ${of}` : `H¹ yarı-norm ${of}`;
+  const yTitle = norm === 'l2' ? `‖${U} − u_h‖_L²` : `|${U} − u_h|_H¹`;
+  if (state.convMode === 'p') {
+    /* p-inceltme: ağ sabit (n, h değişmez), yalnız derece artar. h-hızı HESAPLANMAZ (h değişmiyor); yalnız ölçülen değerler.
+       Noktalar derecenin rengiyle; ○ ölçüm tabanında. N = np + 1 her noktada farklıdır (ipucunda yazılı). */
+    $('conv-title').textContent = `p-inceltme: ${normName}`;
+    $('conv-hint').innerHTML = `Ağ sabit: n = ${state.n}, h = ${formatValue(active.mesh.h)}; derece p = 1 → 4 (bilinmeyen sayısı N = `
+      + view.pStudy.map((o) => o.dofs).join(' → ') + `). Yalnız ölçülen ${W}lar; p-inceltmede h-hızı tanımsızdır. `
+      + 'h-inceltme n\'yi (h\'yi), p-inceltme dereceyi, hp-inceltme ikisini birden değiştirir (burada gösterilmez). ○ ölçüm tabanında; taralı bölge bu taban.';
+    const floor = floors[norm], h = active.mesh.h;
+    drawChart($('chart-conv'), {
+      height: 240, yLog: true, xTicks: [1, 2, 3, 4], xName: 'p', xTitle: 'p', yTitle, band: floor(h), label: 'Sabit ağda derece artışıyla hata',
+      series: [{ name: `n = ${state.n}`, color: 'var(--ink-2)', width: 1.25, points: view.pStudy.map((o) => [o.p, o[norm]]) },
+        ...view.pStudy.map((o) => ({ name: `p=${o.p}`, color: seriesColor(o.p), width: 0, points: [[o.p, o[norm]]],
+          markers: [[o.p, o[norm], { hollow: !(o[norm] > floor(h)), r: o.p === state.degree ? 6 : 4.5 }]] }))]
+    });
+    return;
+  }
+  $('conv-title').textContent = `h-inceltme: ${normName}`;
+  $('conv-hint').textContent = 'Derece sabit, n (h = (x₁ − x₀)/n) değişir; iki eksen log. Satır sonu: gerçek h ile ölçülen hız '
+    + 'r = log(E_kaba/E_ince)/log(h_kaba/h_ince). ● hıza katılan ölçüm · ○ ölçüm tabanında (yuvarlama ya da referansın kendi hatası), '
+    + 'katılmaz; taralı bölge bu taban. Kesikli gri: kuramsal eğim.';
+  const hMin = (problem.x1 - problem.x0) / CONVERGENCE_NS[CONVERGENCE_NS.length - 1];
+  const convSeries = degrees.map((p) => {
+    const floor = floors[norm], rate = rateOf(p, norm);
+    return {
+      name: DEGREE_NAMES[p], color: seriesColor(p), width: p === state.degree ? 2 : 1.5,
+      points: study[p].map((o) => [o.n, o[norm]]),
+      markers: study[p].map((o) => [o.n, o[norm], { hollow: !(o[norm] > floor(o.h)) }]),
+      highlight: [state.n, results[p].norms[norm]],
+      endLabel: rate === null ? 'hız —' : `hız ${rate.rate.toFixed(2)}`
+    };
+  });
+  const activeRate = rateOf(state.degree, norm);
+  if (problem.order === 2 && !problem.ivp && activeRate) {
+    const anchor = activeRate.to, slope = k(state.degree);
+    const ns = CONVERGENCE_NS.filter((n) => n <= anchor.h ** -1 * (problem.x1 - problem.x0) * 1.0001);
+    convSeries.push({ name: `kuramsal h^${slope}`, color: 'var(--ink-2)', width: 1, dash: '2 4',
+      points: ns.map((n) => [n, anchor.E * ((problem.x1 - problem.x0) / n / anchor.h) ** slope]), endLabel: `kuramsal h^${slope}` });
+  }
+  drawChart($('chart-conv'), {
+    height: 240, xLog: true, yLog: true, xTicks: CONVERGENCE_NS, xName: 'n', xTitle: 'n', yTitle,
+    band: floors[norm](hMin), label: 'Hatanın eleman sayısıyla değişimi', series: convSeries
+  });
+}
+
+function renderPreview() {
+  try {
+    const problem = buildProblem(problemInputs());
+    $('eq-preview').textContent = `$${equationTex(problem)}$`;
+    $('bc-preview').textContent = `$${conditionsTex(problem)}$`;
+    typeset($('eq-preview')); typeset($('bc-preview'));
+  } catch { $('eq-preview').textContent = ''; $('bc-preview').textContent = ''; }
+}
+
+function renderTicks() {
+  for (const el of $('n-tick-labels').children) el.classList.toggle('on', Number(el.dataset.n) === state.n);
+}
+
+function render() {
+  $('n-value').textContent = state.n;
+  $('p-value').textContent = `${state.degree} · ${DEGREE_NAMES[state.degree]}`;
+  document.documentElement.style.setProperty('--active-color', seriesColor(state.degree));
+  for (const side of ['left', 'right']) {
+    $(`bc-${side}-value`).disabled = state[side].type === 'none';
+    $(`bc-${side}-value`).placeholder = state[side].type === 'both' ? 'u değeri' : 'değer';
+    $(`bc-${side}-slope-row`).hidden = state[side].type !== 'both';
+  }
+  renderTicks();
+  for (const b of document.querySelectorAll('[data-error-view]')) b.setAttribute('aria-pressed', String(b.dataset.errorView === state.errorView));
+  for (const b of document.querySelectorAll('[data-conv-norm]')) b.setAttribute('aria-pressed', String(b.dataset.convNorm === state.convNorm));
+  for (const b of document.querySelectorAll('[data-conv-mode]')) b.setAttribute('aria-pressed', String(b.dataset.convMode === state.convMode));
+  const computed = compute();
+  if (computed) view = computed;
+  renderChips();                                 // hesaptan sonra: referans çipi analitik/ince ağ durumunu doğru göstersin
+  /* Hiç geçerli problem yoksa boş durum; geçersiz girdide son geçerli grafikler soluk kalır (yazarken titremesin). */
+  $('empty-state').hidden = !!view;
+  if (!computed) $('diagnostics').hidden = true;
+  for (const id of ['tiles', 'main-chart', 'chart-grid']) {
+    $(id).hidden = !view;
+    $(id).classList.toggle('outdated', !!view && !computed);
+  }
+  $('solve-btn').disabled = sheetBusy || !computed;
+  if (!computed) return;
+  renderTiles();
+  renderDiagnostics();
+  renderCharts();
+  $('stale').hidden = !state.sheet || state.sheetKey === JSON.stringify(sheetPayload());
+}
+
+/* Kâğıt sunucuda üretilir. Gelen düğüm değerleri tarayıcıdaki çözümle karşılaştırılır: iki bağımsız
+   uygulama (sayısal JavaScript, sembolik SymPy) aynı sonucu veriyorsa ikisi de doğrulanmış olur.
+   sheetBusy: istek sürerken düğme kilitlenir; çift tıklama aynı (pahalı) sembolik hesabı iki kez başlatmasın. */
+let sheetBusy = false;
+async function writeSolution() {
+  if (sheetBusy) return;
+  render();
+  if (!compute()) return;                                    // geçersiz girdi: eski grafiğin problemini sunucuya yollama
+  const payload = sheetPayload(), hint = $('sheet-hint'), button = $('solve-btn');
+  sheetBusy = true;
+  button.disabled = true; button.textContent = 'Hesaplanıyor…'; button.setAttribute('aria-busy', 'true');
+  hint.hidden = false;
+  hint.textContent = 'Çözüm kâğıdı hesaplanıyor… (sembolik integraller; büyük n ve p birkaç saniye sürebilir)';
+  $('sheet-check').textContent = '';
+  try {
+    state.sheet = { payload, ...(await requestSheet(payload)) };
+    state.sheetKey = JSON.stringify(payload);
+    hint.hidden = true; $('stale').hidden = true;
+    $('sheet').hidden = false; $('sheet-actions').hidden = false;
+    $('sheet-check').innerHTML = crossCheck(payload, state.sheet);
+    await renderMathText($('derivation'), state.sheet.text);
+  } catch (err) {
+    hint.hidden = false;
+    hint.textContent = err.message;
+  } finally {
+    sheetBusy = false;
+    button.textContent = 'Çözüm kâğıdını yaz'; button.removeAttribute('aria-busy');
+    render();
+  }
+}
+
+/* Çapraz kontrol: iki bağımsız uygulamanın (tarayıcı: kuadratürlü sayısal; kâğıt: SymPy tam/sembolik) anlamlı büyüklüklerini
+   karşılaştırır. Tolerans belgeli: TOL = 1e-9 · ölçek (12 noktalı Gauss düzgün katsayıda ~1e-15 verir; 1e-9 yuvarlamayı
+   tolere eder ama gerçek bir formülasyon farkını — tipik ≥ 1e-3 — gizlemez). Kuadratür uyarısı varsa (köşeli/tekil
+   katsayı) tarayıcı integralleri yaklaşıktır; o zaman 1e-5 kullanılır ve bu açıkça yazılır. */
+function crossCheck(payload, sheet) {
+  const problem = buildProblem(payload), mesh = makeMesh(payload.x0, payload.x1, payload.n, payload.degree);
+  const mine = METHODS[payload.method].solve(problem, mesh);
+  const rough = mine.quadratureError > QUADRATURE_WARNING, rel = rough ? 1e-5 : 1e-9;
+  const maxAbs = (values) => Math.max(1, ...values.map(Math.abs));
+  const lines = [];
+  const line = (ok, text) => lines.push(`<li class="${ok ? '' : 'bad'}">${ok ? '✓' : '✗'} ${text}</li>`);
+  const nodalGap = Math.max(...mine.c.map((v, i) => Math.abs(v - sheet.nodal[i])));
+  const nodalTol = rel * maxAbs(sheet.nodal);
+  line(nodalGap <= nodalTol, `düğüm katsayıları a: en büyük fark ${nodalGap.toExponential(1)} (tolerans ${nodalTol.toExponential(0)})`);
+  if (sheet.K) {
+    let gap = 0, scale = 1;
+    sheet.K.forEach((row, i) => row.forEach((v, j) => { gap = Math.max(gap, Math.abs(v - mine.K[i][j])); scale = Math.max(scale, Math.abs(v)); }));
+    /* K yükten (f) bağımsızdır; köşeli yük K toleransını gevşetmemeli. Yalnız katsayılar (α, β, γ) köşeliyse gevşer. */
+    // constant[key] === null: değişken katsayı (0 da bir sabittir; !0 ile karıştırılmamalı)
+    const roughK = ['alpha', 'beta', 'gamma'].some((key) => problem.constant[key] === null) && rough, relK = roughK ? 1e-5 : 1e-9;
+    line(gap <= relK * scale, `montajlı K matrisi: en büyük girdi farkı ${gap.toExponential(1)} (tolerans ${(relK * scale).toExponential(0)})`);
+  } else lines.push('<li>· K matrisi karşılaştırılmadı (65’ten çok bilinmeyen)</li>');
+  const bcGap = Math.max(0, ...Object.entries(sheet.fixed || {}).map(([i, v]) => Math.max(Math.abs(sheet.nodal[i] - v), Math.abs(mine.c[i] - v))));
+  if (Object.keys(sheet.fixed || {}).length) line(bcGap <= 1e-12 * maxAbs(Object.values(sheet.fixed)), `u = değer koşulu iki çözümde de sağlanıyor (fark ${bcGap.toExponential(1)})`);
+  const analytic = sheet.exact_js && parseExact(sheet.exact_js);
+  if (analytic) {
+    const nodalErr = Math.max(...sheet.nodal.map((v, i) => Math.abs(analytic.u(mesh.nodeX(i)) - v)));
+    lines.push(`<li>· analitik çözüme göre düğüm hatası max|u(x<sub>i</sub>) − a<sub>i</sub>| = ${nodalErr.toExponential(2)} (bu bir uyuşmazlık değil, yöntemin hatasıdır)</li>`);
+  }
+  if (mine.diagnostics.firstOrder && sheet.first_order_residual !== null && sheet.first_order_residual !== undefined) {
+    const gap = Math.abs(mine.diagnostics.firstOrder.residual - sheet.first_order_residual);
+    line(gap <= rel * Math.max(1, Math.abs(sheet.first_order_residual), ...sheet.nodal.map(Math.abs)), `1. mertebe atılan denklem kalıntısı r: fark ${gap.toExponential(1)}`);
+  }
+  if (rough) lines.push('<li>· kuadratür uyarısı: tarayıcı integralleri yaklaşık, tolerans 1e-5’e gevşetildi</li>');
+  return `Çapraz kontrol (tarayıcı ↔ SymPy):<ul class="check-list">${lines.join('')}</ul>`;
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'), { href: url, download: filename }).click();
+  URL.revokeObjectURL(url);
+}
+
+/* Olaylar: her biri yalnızca state'i günceller ve render() çağırır. */
+function fillInputs() {
+  for (const key of ['alpha', 'beta', 'gamma', 'f']) $(`in-${key}`).value = state[key];
+  $('range-a').value = isFinite(state.x0) ? state.x0 : ''; $('range-b').value = isFinite(state.x1) ? state.x1 : '';
+  for (const side of ['left', 'right']) { $(`bc-${side}-type`).value = state[side].type; $(`bc-${side}-value`).value = state[side].value; $(`bc-${side}-slope`).value = state[side].slope; }
+}
+/* İşaret konumu, tarayıcının sürgü topuzunun yarı genişliği kadar içeriden başlar; .ticks kenar boşluğu bunu karşılar. */
+function buildTicks() {
+  $('n-ticks').innerHTML = N_TICKS.map((v) => `<option value="${v}"></option>`).join('');
+  $('n-tick-labels').innerHTML = N_TICKS.map((v) =>
+    `<span data-n="${v}" style="left:${((v - 1) / (MAX_ELEMENTS - 1) * 100).toFixed(3)}%">${N_TICK_LABELS.has(v) ? `<button type="button" tabindex="-1" data-n="${v}">${v}</button>` : ''}</span>`).join('');
+}
+function init() {
+  $('method').innerHTML = Object.entries(METHODS).map(([key, m]) => `<option value="${key}">${m.label}</option>`).join('');
+  const typeOptions = Object.entries(CONDITION_TYPES).map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
+  $('bc-left-type').innerHTML = typeOptions; $('bc-right-type').innerHTML = typeOptions;
+  $('n-slider').max = MAX_ELEMENTS; $('n-slider').value = state.n; $('p-slider').value = state.degree;
+  buildTicks();
+  fillInputs();
+
+  const changed = () => { renderPreview(); render(); };
+  for (const key of ['alpha', 'beta', 'gamma', 'f']) $(`in-${key}`).addEventListener('input', (e) => { state[key] = e.target.value; changed(); });
+  $('range-a').addEventListener('input', (e) => { state.x0 = parseFloat(e.target.value); changed(); });
+  $('range-b').addEventListener('input', (e) => { state.x1 = parseFloat(e.target.value); changed(); });
+  for (const side of ['left', 'right']) {
+    $(`bc-${side}-type`).addEventListener('change', (e) => { state[side].type = e.target.value; changed(); });
+    $(`bc-${side}-value`).addEventListener('input', (e) => { state[side].value = e.target.value; changed(); });
+    $(`bc-${side}-slope`).addEventListener('input', (e) => { state[side].slope = e.target.value; changed(); });
+  }
+  $('method').addEventListener('change', (e) => { state.method = e.target.value; render(); });
+  $('n-slider').addEventListener('input', (e) => { state.n = Number(e.target.value); render(); });
+  $('n-tick-labels').addEventListener('click', (e) => {
+    const value = e.target.closest('button[data-n]')?.dataset.n;
+    if (!value) return;
+    state.n = Number(value); $('n-slider').value = state.n; render();
+  });
+  $('p-slider').addEventListener('input', (e) => { state.degree = Number(e.target.value); render(); });
+  $('chips').addEventListener('click', (e) => {
+    const id = e.target.closest('[data-chip]')?.dataset.chip;
+    if (!id) return;
+    if (id === 'reference') state.showReference = !state.showReference;
+    else if (Number(id) !== state.degree) state.compare.has(Number(id)) ? state.compare.delete(Number(id)) : state.compare.add(Number(id));
+    render();
+  });
+  for (const b of document.querySelectorAll('[data-error-view]')) b.addEventListener('click', () => { state.errorView = b.dataset.errorView; render(); });
+  for (const b of document.querySelectorAll('[data-conv-norm]')) b.addEventListener('click', () => { state.convNorm = b.dataset.convNorm; render(); });
+  for (const b of document.querySelectorAll('[data-conv-mode]')) b.addEventListener('click', () => { state.convMode = b.dataset.convMode; render(); });
+  $('solve-btn').addEventListener('click', writeSolution);
+  /* PDF: sunucuda pdflatex varsa gerçek LaTeX çıktısı indirilir; yoksa tarayıcının yazdır → "PDF olarak kaydet" yolu kullanılır. */
+  $('pdf-btn').addEventListener('click', async () => {
+    try { download(await requestPdf(state.sheet.payload), 'fem-cozum-kagidi.pdf'); } catch { window.print(); }
+  });
+  $('tex-btn').addEventListener('click', () => download(new Blob([state.sheet.tex], { type: 'application/x-tex' }), 'fem-cozum-kagidi.tex'));
+  $('copy-btn').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(state.sheet.text); $('copy-btn').textContent = 'Kopyalandı'; }
+    catch { $('copy-btn').textContent = 'Kopyalanamadı'; }
+    setTimeout(() => { $('copy-btn').textContent = 'LaTeX kaynağını kopyala'; }, 1600);
+  });
+  window.addEventListener('resize', render);
+
+  renderPreview();
+  render();
+}
+init();
+</script>
+</body>
+</html>

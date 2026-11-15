@@ -1,0 +1,153 @@
+OK   parse 2x^2 - 3x + 1 
+OK   parse -x^2 
+OK   parse sin(pi*x)^2 
+OK   parse 1/(1+25*x^2) 
+OK   parse e^-x 
+OK   parse (x+1)(x-1) 
+OK   parse 1/2x 
+OK   rejects sin( 
+OK   rejects 2+*3 
+OK   rejects foo(x) 
+OK   rejects x) 
+OK   gauss x^22 exact 
+OK   shape p=1: ΣN=1, ΣN'=0, N' doğru 
+OK   shape p=2: ΣN=1, ΣN'=0, N' doğru 
+OK   shape p=3: ΣN=1, ΣN'=0, N' doğru 
+OK   shape p=4: ΣN=1, ΣN'=0, N' doğru 
+OK   hand case a2 = -3/44 
+OK   u''+u=x, D/D p=1 hız 2.00, hata 2.4e-4
+OK   u''+u=x, D/D p=2 hız 3.00, hata 1.4e-6
+OK   u''+u=x, D/D p=3 hız 4.00, hata 3.1e-9
+OK   u''+u=x, D/D p=4 hız 5.00, hata 1.5e-11
+OK   u''+u=x, D/D: referans çözüm tam çözüme yakın 1.0e-12
+OK   -u''=sin(pi x), D/D p=1 hız 2.00, hata 2.5e-4
+OK   -u''=sin(pi x), D/D p=2 hız 3.00, hata 3.1e-6
+OK   -u''=sin(pi x), D/D p=3 hız 4.00, hata 3.5e-8
+OK   -u''=sin(pi x), D/D p=4 hız 5.00, hata 3.3e-10
+OK   -u''=sin(pi x), D/D: referans çözüm tam çözüme yakın 1.4e-13
+OK   u''-4u=0, D/N p=1 hız 2.00, hata 1.8e-4
+OK   u''-4u=0, D/N p=2 hız 2.99, hata 2.9e-6
+OK   u''-4u=0, D/N p=3 hız 3.99, hata 1.8e-8
+OK   u''-4u=0, D/N p=4 hız 5.00, hata 1.3e-10
+OK   u''-4u=0, D/N: referans çözüm tam çözüme yakın 2.5e-11
+OK   ((1+x)u')'=x, D/N p=1 hız 2.00, hata 2.4e-4
+OK   ((1+x)u')'=x, D/N p=2 tam
+OK   ((1+x)u')'=x, D/N p=3 tam
+OK   ((1+x)u')'=x, D/N p=4 tam
+OK   ((1+x)u')'=x, D/N: referans çözüm tam çözüme yakın 5.9e-13
+OK   -0.05u''+u'=1, D/D p=1 hız 1.83, hata 1.6e-2
+OK   -0.05u''+u'=1, D/D p=2 hız 2.66, hata 1.6e-3
+OK   -0.05u''+u'=1, D/D p=3 hız 3.64, hata 1.2e-4
+OK   -0.05u''+u'=1, D/D p=4 hız 4.62, hata 6.9e-6
+OK   -0.05u''+u'=1, D/D: referans çözüm tam çözüme yakın 1.6e-9
+OK   u''=2, N/D (u=x^2-2x) p=1 hız 2.00, hata 7.1e-4
+OK   u''=2, N/D (u=x^2-2x) p=2 tam
+OK   u''=2, N/D (u=x^2-2x) p=3 tam
+OK   u''=2, N/D (u=x^2-2x) p=4 tam
+OK   u''=2, N/D (u=x^2-2x): referans çözüm tam çözüme yakın 6.2e-12
+OK   polinom çözüm tam bulunur 
+OK   1. mertebe p=1: hata küçülüyor 2.7e-3 → 6.7e-4
+OK   1. mertebe p=2: hata küçülüyor 4.2e-4 → 1.1e-4
+OK   1. mertebe p=3: hata küçülüyor 1.1e-6 → 6.9e-8
+OK   IVP u''+u=0, u(0)=0, u'(0)=1 p=1 hız 2.00, hata 1.7e-4
+OK   IVP u''+u=0, u(0)=0, u'(0)=1 p=2 hız 3.00, hata 1.2e-6
+OK   IVP u''+u=0, u(0)=0, u'(0)=1 p=3 hız 4.00, hata 2.6e-9
+OK   IVP u''+u=0, u(0)=0, u'(0)=1 p=4 hız 5.00, hata 1.3e-11
+OK   IVP u''+u=0 uzun aralık [0,10] p=1 hız 1.76, hata 2.2e-1
+OK   IVP u''+u=0 uzun aralık [0,10] p=2 hız 3.29, hata 3.6e-3
+OK   IVP u''+u=0 uzun aralık [0,10] p=3 hız 4.00, hata 1.1e-4
+OK   IVP u''+u=0 uzun aralık [0,10] p=4 hız 5.00, hata 3.5e-6
+OK   IVP sönümlü u''+0.4u'+4u=0 p=1 hız 1.86, hata 7.4e-2
+OK   IVP sönümlü u''+0.4u'+4u=0 p=2 hız 3.14, hata 1.5e-3
+OK   IVP sönümlü u''+0.4u'+4u=0 p=3 hız 3.99, hata 5.2e-5
+OK   IVP sönümlü u''+0.4u'+4u=0 p=4 hız 5.00, hata 1.6e-6
+OK   IVP ((1+x)u')'=0 p=1 hız 2.00, hata 2.6e-4
+OK   IVP ((1+x)u')'=0 p=2 hız 2.99, hata 1.2e-6
+OK   IVP ((1+x)u')'=0 p=3 hız 3.98, hata 1.1e-8
+OK   IVP ((1+x)u')'=0 p=4 hız 4.97, hata 1.2e-10
+OK   son değer u''-u=0, u(1)=1, u'(1)=0 p=1 hız 2.00, hata 4.9e-4
+OK   son değer u''-u=0, u(1)=1, u'(1)=0 p=2 hız 3.00, hata 8.9e-7
+OK   son değer u''-u=0, u(1)=1, u'(1)=0 p=3 hız 4.00, hata 6.0e-9
+OK   son değer u''-u=0, u(1)=1, u'(1)=0 p=4 yuvarlama tabanı, hata 9.7e-12
+OK   IVP atış problemi tam 
+OK   IVP: öbür uca koşul reddedilir 
+OK   IVP: iki uçta u ve u' reddedilir 
+OK   IVP: 1. mertebede reddedilir 
+OK   IVP: α(x₀)=0 reddedilir 
+OK   kıyas P1: a = [0, 1/6, 1] 0, 0.16666666666666732, 1.0000000000000002
+OK   kıyas P1: K^(1) ders kitabı işaretiyle [[-1/2, 1/2], [-1/2, 1/2]] (1. mertebe, kısmi integrasyon yok) 
+OK   kıyas P1: düğüm hatası 1/12, L² = 0.0304290, H¹ = 1/3 nodal 0.08333333333333268, l2 0.03042903097250904, h1 0.3333333333333322
+OK   kıyas P1: u_h = x/3 ve 5x/3 − 2/3 
+OK   kıyas P2: N = 5, x² makine hassasiyetinde L² 1.8e-16, H¹ 5.7e-16
+OK   kıyas P3: N = 7, x² makine hassasiyetinde L² 4.8e-16, H¹ 1.7e-15
+OK   shape p=1: N_i(x_j) = δ_ij 
+OK   shape p=2: N_i(x_j) = δ_ij 
+OK   shape p=3: N_i(x_j) = δ_ij 
+OK   shape p=4: N_i(x_j) = δ_ij 
+OK   H¹ hızı p=1 ≈ 1 hız 1.00
+OK   H¹ hızı p=2 ≈ 2 hız 2.00
+OK   H¹ hızı p=3 ≈ 3 hız 3.00
+OK   observedRate: gerçek h ile (h oranı 3) 
+OK   observedRate: tabandaki noktalar kullanılmaz, hız tanımsız (0 değil) 
+OK   observedRate: taban üstündeki son çift seçilir 
+OK   α(x₀)=0 ucunda u' koşulu reddedilir 
+OK   E_max yerel arama: kesin tepe 1e-12 içinde 0.1226264803904808 @ 0.33333333395736087
+OK   IVP p=1: ωh = 3 (< 2√3) genlik sınırlı 2.00
+OK   IVP p=1: ωh = 3.6 (> 2√3) üstel büyüme 1.1e+9
+OK   IVP kaba ağ: doğru mesaj (tekil değil, ağ kaba) Neredeyse tekil / kötü koşullu — ayrık sistem: sürekli probl
+OK   IVP: |u_h'(x₀) − u'(x₀)| ağla küçülür (zayıf koşul) 1.3e-3 → 8.1e-5
+OK   analyzeSystem ölçek 1e-8: rank 1 uyumlu / rank 1 uyumsuz / rank 2 η 8.3e-17 / 1.6e-1
+OK   analyzeSystem ölçek 1: rank 1 uyumlu / rank 1 uyumsuz / rank 2 η 0.0e+0 / 1.6e-1
+OK   analyzeSystem ölçek 100000000: rank 1 uyumlu / rank 1 uyumsuz / rank 2 η 0.0e+0 / 1.6e-1
+OK   analyzeSystem N=3: rank N−1, uyumlu ↔ uyumsuz ayrımı η 1.3e-16 / 3.9e-1
+OK   analyzeSystem N=17: rank N−1, uyumlu ↔ uyumsuz ayrımı η 3.3e-16 / 3.1e-3
+OK   analyzeSystem N=65: rank N−1, uyumlu ↔ uyumsuz ayrımı η 9.7e-16 / 1.5e-3
+OK   analyzeSystem N=257: rank N−1, uyumlu ↔ uyumsuz ayrımı η 2.2e-15 / 1.6e-6
+OK   analyzeSystem: NaN → sonlu değil 
+OK   conditionEstimate Hilbert(6) 3 kat içinde 2.907e+7
+OK   conditionEstimate köşegen = 1e6 
+OK   K1: u''=1, iki uç doğal (∫f ≠ 0, uyumsuz) 
+OK   K2: u''=1, u'(0)=0, u'(1)=1 (uyumlu, sabit boş uzay) 
+OK   K2: u''=2x−1, N/N (uyumlu) 
+OK   K3: IVP kaba ağ (ωh > 2√3) 
+OK   K1/K2: işaret değiştiren α, n çift (eski genel mesaj yok) 
+OK   kaynakta genel 'Sistem tekil: çözüm tek değil' mesajı kalmadı 
+OK   koşul sayısı her çözümde raporlanır 
+OK   α=1: düzgün 
+OK   α=x: dejenere, x*=0 uçta 
+OK   α=x−0.5: işaret değiştiren, x*=0.5 
+OK   α=(x−0.3)²: değme sıfırı (işaret değiştirmez) bulunur 0.3
+OK   α=sin x [0,4]: 0 ve π 
+OK   1. mertebe β=x−0.5: işaret değiştiren 
+OK   dejenerelik ret değil: α=x−0.5, n tek çözülür 
+OK   parseExact: u(0)=−1 ≠ 0 adayı reddedilir (KR-1) u(0) = -1 ≠ 0
+OK   parseExact: dejenere serbest uçta akı sınanmaz, aday kabul 
+OK   parseExact: doğal koşul α u′(0) = 1 ≠ 0 reddedilir 
+OK   parseExact: IVP eğimi u′(0) = 2 ≠ 1 reddedilir 
+OK   u'=2x [0,2] n=2 P1 (ödev): r = 0, uyumlu r 1.3322676295501878e-15
+OK   u'=3x² [0,2] n=2 P1: r = −1, uyumsuz r -0.9999999999999963
+OK   yᵀb = −r (iki ayrı hesap) f=2x γ=0 n=2 p=1 -1.3877787807814457e-15 / 1.3322676295501878e-15
+OK   yᵀb = −r (iki ayrı hesap) f=3x^2 γ=0 n=8 p=1 0.062499999999999764 / -0.06249999999999987
+OK   yᵀb = −r (iki ayrı hesap) f=0 γ=2 n=8 p=1 -0.02031368937098721 / 0.020313689370987154
+OK   yᵀb = −r (iki ayrı hesap) f=3x^2 γ=0 n=4 p=3 2.499736528882579e-15 / -1.6982942829812941e-15
+OK   2. mertebede firstOrder yok 
+OK   işaret değiştiren α, kullanıcı ağı n=5 (x=0.5 düğüm değil): çözülür 
+OK   aynı problemde referans ağ n=128 (x=0.5 düğüm): kategorili teşhis, sayı üretilmez Tek olmayan çözüm (boş uzay ≠ {0}) — ayrık sistem: rank 510 
+OK   kullanıcı ağı n=4 (x=0.5 düğüm): kategorili teşhis K2
+OK   ölçek 10^-8: uyumlu K2, uyumsuz K1 
+OK   ölçek 10^0: uyumlu K2, uyumsuz K1 
+OK   ölçek 10^8: uyumlu K2, uyumsuz K1 
+OK   bilimsel gösterim 1e-8 reddedilir (sessizce 1·e − 8 okunmaz) 
+OK   boyut N=3…257: uyumlu saf Neumann her boyutta K2 K2,K2,K2,K2
+OK   κ̂ ölçekten bağımsız (α, γ, f × 1e8) 2.603e+3 / 2.603e+3
+OK   tekil: u''=1, koşul yok 
+OK   tekil: u''=1, iki uç da u' 
+OK   koşulsuz ama γ≠0 çözülür 
+OK   1. mertebe koşulsuz reddedilir 
+OK   1. mertebe u' koşulu reddedilir 
+OK   α=β=0 reddedilir 
+OK   aralıkta tanımsız katsayı reddedilir 
+OK   x₀ ≥ x₁ reddedilir 
+OK   kuadratür: düzgün ≈ 0 
+OK   kuadratür: abs(x-0.3) işaretlenir 
+OK   equationTex \left(\left(1 + x\right)u'\right)' = x
