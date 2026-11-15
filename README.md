@@ -1,6 +1,6 @@
 # FEM Lab
 
-**A browser-based Galerkin finite element laboratory for one-dimensional linear differential equations — solve,
+**A browser-based Galerkin finite element laboratory for one-dimensional  differential equations — solve,
 understand and verify.**
 
 [![CI](https://github.com/yzd-info/fem-lab/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yzd-info/fem-lab/actions/workflows/ci.yml)
