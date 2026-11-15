@@ -14,7 +14,8 @@ Desteklenen problem sınıfı (tek boyut, lineer, 1. ve 2. mertebe):
     (α(x) u')' + β(x) u' + γ(x) u = f(x),    x ∈ (x₀, x₁)
 
 - α, β, γ, f serbest ifadelerdir (polinom, trigonometrik, üstel …). α = 0 ise denklem birinci mertebedir.
-- Uç koşulu her uç için: `u = değer`, `u' = değer`, `u ve u'` (tür `both`, u' değeri `slope` alanında) ya da "verilmedi"
+- Uç koşulu her uç için: `u = değer`, `u' = değer` (türev; Q = α(x_b)·değer), `α u' = değer` (tür `flux`, akı; Q = değer;
+  türev koşuluna ÇEVRİLMEZ), `u ve u'` (tür `both`, u' değeri `slope` alanında) ya da "verilmedi"
   (sınır değer probleminde o uçta doğal koşul α u' = 0; başlangıç değer probleminde o uç serbest).
   İkinci mertebe: iki koşul farklı uçlarda ya da bir uçta `both` + öbür uç "verilmedi".
   Birinci mertebe denklem tam olarak bir `u = değer` koşulu alır.
@@ -24,17 +25,18 @@ Kullanıcı akışı:
 1. Denklemi (α, β, γ, f), aralığı ve uç koşullarını kendisi yazar (hazır örnek yok; sayfa boş başlar).
 2. n ve p sürgülerini sürükler; çözüm eğrisi, noktasal hata ve yakınsama grafiği canlı güncellenir.
 3. Çiplerle hangi derecelerin aynı grafikte üst üste görüneceğini seçer.
-4. "Çözüm kâğıdını yaz"a basar; kâğıdı PDF ya da `.tex` olarak indirir.
+4. "Çözüm kâğıdını aç"a (ya da kâğıt başlığına) basar; açık kâğıt problem değişince kendiliğinden yenilenir; kâğıdı PDF ya da `.tex` olarak indirir.
 
 ## 2. Dosyalar
 
 | Dosya | Görev |
 |---|---|
 | `index.html` | Arayüz + canlı grafikler için **sayısal** FEM çekirdeği (JavaScript, bağımlılıksız; MathJax CDN'den) |
-| `fem_sheet.py` | Çözüm kâğıdı: **sembolik/tam** FEM (SymPy). Kâğıttaki her sayı ve integral buradan gelir |
+| `fem_sheet.py` | Katman 1 (define_problem), 2 (validate_problem), 3 (fem_engine: **sembolik/tam** FEM, SymPy), 5 (build_sheet: yalnız biçimleme) ve hat (run_pipeline) |
+| `fem_verify.py` | Katman 4: bağımsız doğrulama; motorun fonksiyonlarını ÇAĞIRMAZ (tests.py kaynakta denetler) |
 | `server.py` | Yerel sunucu (yalnızca standart kütüphane): sayfayı sunar, kâğıdı hesaplatır, PDF'e derler |
-| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 153 kontrol) |
-| `tests.py` | Kâğıt testleri (`python3 tests.py`, 145 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
+| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 163 kontrol) |
+| `tests.py` | Kâğıt testleri (`python3 tests.py`, 186 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
 | `requirements.txt` | `sympy` |
 
 Çalıştırma: `pip install -r requirements.txt` → `python3 server.py` → http://localhost:8000
@@ -69,12 +71,13 @@ Ayrıklaştırma u_h = N a, v = N_i (Bubnov–Galerkin):
   kullanılmaz. 1. mertebede atılan satır kalıntısı ve sol sıfır uzayı uyumluluğu gösterilir; satır seçimi değişmez.
   Ayrıntı README "İyi tanımlılık ve teşhis"; toleranslar sezgiseldir ve orada belgelidir.
 
-Kâğıdın sabit bölüm sırası: Verilenler · 1 Ağ · 2 Şekil fonksiyonları (polinomdan türetme, δ_ij, yerel→global) ·
-3 Yaklaşık çözüm, kalıntı ve Galerkin ifadesi (u_h^(e), R^(e), test uzayı, 1. mertebede ∫N_i R = 0 denklemleri) ·
-4 Zayıf form ve ayrıklaştırma (kısmi integrasyon yalnız 2. mertebede) ·
-5 Eleman matrisleri ve yük vektörleri (her integral tek tek: yerine konmuş çarpım → açılmış integrand →
-ilkel fonksiyon → değer) · 6 Montaj · 7 Sınır koşulları (indirgenmiş sistem) · 8 Çözüm (a, uç akıları) ·
-9 Yaklaşık çözüm (eleman eleman polinom) · 10 Tam çözümle karşılaştırma (analitik çözüm bulunabilirse).
+Kâğıdın sabit bölüm sırası (numara dinamik; zayıf form bölümü yalnız 2. mertebede): Verilenler (girdi → iç gösterim iz
+tablosu, güçlü form, 𝓛 ve mertebesi, koşullar, analitik çözümün durumu) · Gösterim · Ağ · Şekil fonksiyonları (polinomdan
+türetme, V, δ_ij, birim bölüşüm, tamlık, süreklilik, yerel→global) · Yaklaşık çözüm · Galerkin Weighted-Residual Formulation
+(2. mertebede eleman içi klasik kalıntı + dağılımsal kalıntı ayrı) · [2. mertebe] Weak Formulation (Integration by Parts) ·
+Eleman matrisleri ve yük vektörleri (integral kuralı yazılır) · Montaj · Sınır koşulları ve indirgenmiş sistem · Çözüm ·
+Yaklaşık çözümün yeniden kurulması · Hata ölçüleri (yoksa "hesaplanmadı"; yakınsama tablosu) · Doğrulama ve sayısal tanılar ·
+Uyarılar ve sınırlar.
 Anlatım cümlesi yoktur; yalnızca başlıklar ve matematik.
 
 Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
@@ -85,6 +88,9 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 
 ## 4. Mimari kurallar (pazarlıksız)
 
+- **Beş katman (pazarlıksız).** Problem tanımı → problem doğrulaması → FEM motoru → bağımsız doğrulama → kâğıt; veri yalnız
+  aşağı akar, katmanlar yapılandırılmış veri alışverişi yapar. Doğrulama katmanı motoru çağırmaz; kâğıt hiçbir sayı
+  hesaplamaz; doğrulama katmanı girdiyi sessizce düzeltmez. Bir katman başarısızsa sonrakiler çalışmaz. Ayrıntı README "Mimari".
 - **İki bağımsız çekirdek bilinçlidir.** JavaScript sayısal çözer (anlık grafik), SymPy sembolik çözer (kâğıt).
   Her kâğıtta ikisinin düğüm değerleri karşılaştırılır ve fark ekranda gösterilir. Birini diğerine bağlama.
 - **Tek yönlü bağımlılık.** Her dosyanın başında bölüm haritası var; bir bölüm yalnızca üstündekileri kullanır.
@@ -99,11 +105,11 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 
 ## 5. Yapılacaklar
 
-1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (153 OK); `python3 tests.py` (145 OK,
+1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (163 OK); `python3 tests.py` (186 OK,
    pdflatex yoksa derleme kontrolleri atlanır). Bir test başarısızsa nedeni ortam mı kod mu ayır; kodu "düzeltmeden"
    önce raporla.
 2. **Gerçek tarayıcıda uçtan uca kontrol.** `python3 server.py`, http://localhost:8000. Altı örneğin her biri için:
-   grafikler çiziliyor, "Çözüm kâğıdını yaz" kâğıdı getiriyor, ham `$…$` kalmıyor, çapraz kontrol farkı < 1e-8,
+   grafikler çiziliyor, "Çözüm kâğıdını aç" kâğıdı getiriyor, ham `$…$` kalmıyor, çapraz kontrol farkı < 1e-8,
    "PDF indir" ve ".tex indir" çalışıyor. Konsol temiz olmalı.
 3. **Windows uyumu.** Kullanıcının işletim sisteminde `python` / `python3` ve `node` adlarını kontrol et; gerekiyorsa
    yalnızca README'deki komutları ona göre yaz (koda işletim sistemi dalı ekleme).
