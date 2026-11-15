@@ -431,7 +431,7 @@ def lagrange_basis(degree, h):
 
 
 def hat(k):
-    return sp.Symbol(f'\\hat{{a}}^{{(e)}}_{{{k}}}')      # e elemanının yerel katsayısı (global a_j ile karıştırılmasın)
+    return sp.Symbol(f'a^{{(e)}}_{{{k}}}')      # e elemanının yerel katsayısı a_k^{(e)} (global a_j ile karıştırılmasın)
 
 
 def node_value(j):
@@ -481,7 +481,15 @@ def integral(label, terms, h, symbolic):
                 return {**record, 'method': 'polinom', 'integrand': integrand, 'primitive': primitive, 'value': value}
             value = sp.simplify(sp.integrate(integrand, (s, 0, h)))
             if not value.has(sp.Integral) and value.is_finite and value.is_real:
-                return {**record, 'method': 'sembolik', 'value': value}
+                # İlkel fonksiyon yalnız gösterim içindir: F(h) − F(0) değere sembolik olarak eşit değilse kâğıda yazılmaz.
+                expanded = sp.expand(integrand)
+                try:
+                    primitive = sp.integrate(expanded, s)
+                    ok = not primitive.has(sp.Integral) and sp.simplify(primitive.subs(s, h) - primitive.subs(s, 0) - value) == 0
+                except Exception:
+                    ok = False
+                return {**record, 'method': 'sembolik', 'value': value,
+                        'integrand': expanded if ok else None, 'primitive': primitive if ok else None}
         except Exception:
             pass
     value = sp.Float(mpmath.quad(sp.lambdify(s, integrand, 'mpmath'), [0, float(h)]), 15)
@@ -791,6 +799,67 @@ def formulation_data(r):
 STATUS_MARK = {'geçti': '\\checkmark', 'başarısız': '\\times', 'uyarı': '!', 'yapılmadı': '-'}
 
 
+# Uzun bir toplamı okunur tut: kısa ise tek satır, değilse her terim ayrı satırda (aligned). Yalnız biçimdir; terimler aynıdır.
+LINE_LIMIT = 110      # yaklaşık görünür karakter (LaTeX komutları sayılmaz); bunu aşan satır PDF'te okunmaz kadar küçülürdü
+
+
+def visible_len(text):
+    """LaTeX kaynağının yaklaşık görünür genişliği: komutlar, süslü parantezler ve boşluk komutları sayılmaz;
+    \\frac{a}{b} iki katlı yazıldığı için payın ve paydanın uzun olanı kadar sayılır (kaba ama tutarlı ölçü)."""
+    text = re.sub(r'\\frac\{([^{}]*)\}\{([^{}]*)\}', lambda m: max(m.group(1), m.group(2), key=len), text)
+    text = re.sub(r'\\text\{([^{}]*)\}', r'\1', text)
+    return len(re.sub(r'\\[a-zA-Z]+|[{}]|\\[,;!]|\s{2,}', '', text))
+
+
+def stack(lhs, terms, tail=''):
+    one = ' + '.join(terms).replace('+ -', '- ')
+    if visible_len(lhs + one + tail) <= LINE_LIMIT:
+        return f'{lhs} = {one}{tail}'
+    rows = [f'{lhs} &= {terms[0]}'] + [('&\\quad ' + (t if t.startswith('-') else '+ ' + t)) for t in terms[1:]]
+    tail = tail.lstrip(',').lstrip()                  # ayrı satıra inen ek (ör. x aralığı) virgülle başlamasın
+    return '\\begin{aligned} ' + ' \\\\ '.join(rows) + (f' \\\\ &{tail}' if tail else '') + ' \\end{aligned}'
+
+
+def chunk_rows(terms, width=110):
+    """İşaretli terim listesini (ör. ['a', '- b', '+ c']) en fazla width karakterlik satırlara toplar."""
+    rows, current = [], ''
+    for t in terms:
+        if current and len(current) + len(t) + 1 > width:
+            rows.append(current)
+            current = t
+        else:
+            current = f'{current} {t}' if current else t
+    return rows + ([current] if current else [])
+
+
+def signed_terms(expr):
+    out = []
+    args = sp.Add.make_args(sp.sympify(expr))
+    try:                                              # azalan kuvvet sırası (tek satırlık LaTeX ile aynı düzen)
+        args = sorted(args, key=lambda t: -sp.Poly(t, s).total_degree() if t.free_symbols <= {s} else 0)
+    except Exception:
+        pass
+    for k, t in enumerate(args):
+        body = sp.latex(t)
+        out.append(body if k == 0 else (body if body.startswith('-') else '+ ' + body))
+    return out
+
+
+def sum_terms(expr):
+    return [sp.latex(t) for t in sp.Add.make_args(expr)]
+
+
+def product_parts(terms):
+    """product_tex ile aynı çarpımlar, işaretleriyle ayrı ayrı (satıra bölmek için)."""
+    out = []
+    for sign, factors in terms:
+        if any(g == 0 for g in factors):
+            continue
+        body = ''.join(f'\\left({sp.latex(g)}\\right)' for g in factors if g != 1) or '1'
+        out.append(('- ' if sign < 0 else '+ ' if out else '') + body)
+    return out or ['0']
+
+
 def product_tex(terms):
     """[(işaret, [çarpanlar])] → '(N_i')(α)(N_j') - (N_i)(γ)(N_j)': integrandın açılmamış, yerine konmuş hali.
     Katsayısı sıfır olan terim ve 1'e eşit çarpan yazılmaz."""
@@ -811,10 +880,30 @@ def format_integral(step):
     if step['method'] == 'sıfır':
         return wrap('= 0')
     if step['method'] == 'polinom':
-        return wrap(f"= \\int_{{0}}^{{{upper}}}\\left({sp.latex(step['integrand'])}\\right)ds = "
-                    f"\\left[{sp.latex(step['primitive'])}\\right]_{{0}}^{{{upper}}} = {tex_value(step['value'])}")
+        expanded = f"= \\int_{{0}}^{{{upper}}}\\left({sp.latex(step['integrand'])}\\right)ds"
+        primitive = f"\\left[{sp.latex(step['primitive'])}\\right]_{{0}}^{{{upper}}} = {tex_value(step['value'])}"
+        if visible_len(raw) <= LINE_LIMIT and visible_len(expanded + primitive) <= LINE_LIMIT:
+            return wrap(f'{expanded} = {primitive}')
+        # Uzun (yüksek dereceli) integral: her adım kendi satır(lar)ında; terimler aynen korunur, yalnız satıra bölünür.
+        product = chunk_rows(product_parts(step['terms']))
+        rows = [f"{step['label']} &= \\int_{{0}}^{{{upper}}}\\Big[ {product[0]}"] + [f'&\\qquad {r_}' for r_ in product[1:]]
+        rows[-1] += ' \\Big]\\,ds'
+        integrand = chunk_rows(signed_terms(step['integrand']))
+        rows += [f'&= \\int_{{0}}^{{{upper}}}\\Big( {integrand[0]}'] + [f'&\\qquad {r_}' for r_ in integrand[1:]]
+        rows[-1] += ' \\Big)\\,ds'
+        prim = chunk_rows(signed_terms(step['primitive']))
+        rows += [f'&= \\Big[ {prim[0]}'] + [f'&\\qquad {r_}' for r_ in prim[1:]]
+        rows[-1] += f' \\Big]_{{0}}^{{{upper}}}'
+        rows.append(f"&= {tex_value(step['value'])}")
+        return '\\begin{aligned} ' + ' \\\\ '.join(rows) + ' \\end{aligned}'
     if step['method'] == 'sembolik':
-        return wrap(f"= {tex_value(step['value'])}")
+        if step.get('primitive') is None:
+            return wrap(f"= {tex_value(step['value'])}")
+        expanded = f"= \\int_{{0}}^{{{upper}}}\\left({sp.latex(step['integrand'])}\\right)ds"
+        primitive = f"\\left[{sp.latex(step['primitive'])}\\right]_{{0}}^{{{upper}}}"
+        rows = chunk_rows(signed_terms(step['primitive']), 80)   # polinom olmayan ilkel: her adım ayrı satırda
+        prim = '&= \\Big[ ' + ' \\\\ &\\qquad '.join(rows) + f' \\Big]_{{0}}^{{{upper}}}'
+        return wrap(f"{expanded} \\\\ {prim} \\\\ &= {tex_value(step['value'])}")
     return wrap(f"\\approx {dec(step['value'])}")
 
 
@@ -827,14 +916,14 @@ def format_shape(c):
     B.append('s_k = (k - 1)\\,\\frac{h}{p}:\\qquad ' + ',\\ '.join(f's_{{{k + 1}}} = {sp.latex(v)}' for k, v in enumerate(c['nodes'])))
     B.append('\\begin{aligned} ' + ' \\\\ '.join(f'u^{{e}}(s_{{{k + 1}}}) &= {sp.latex(cond)} = {sp.latex(hats[k])}'
                                                for k, cond in enumerate(c['conds'])) + ' \\end{aligned}\\qquad \\text{(interpolasyon koşulları)}')
-    B.append(f'{tex_matrix(c["V"].tolist())}\\,{tex_column(cs)} = {tex_column(hats)}\\qquad \\mathbf{{V}}\\mathbf{{c}} = \\hat{{\\mathbf{{a}}}}^{{(e)}}'
+    B.append(f'{tex_matrix(c["V"].tolist())}\\,{tex_column(cs)} = {tex_column(hats)}\\qquad \\mathbf{{V}}\\mathbf{{c}} = \\mathbf{{a}}^{{(e)}}'
              f'\\quad \\text{{(interpolasyon matrisi }} \\mathbf{{V}}\\text{{, }} V_{{km}} = s_k^{{\\,m}}\\text{{)}}')
     B.append(f's_1 = 0 \\;\\Rightarrow\\; c_0 = {sp.latex(c["sol"][cs[0]])}')
     B.append(f'{tex_matrix(c["W"].tolist())}\\,{tex_column(cs[1:])} = {tex_column(c["rhs"])}\\qquad \\text{{(kalan {degree} denklem, }} c_0 \\text{{ yerine konmuş)}}')
     B.append('\\begin{aligned} ' + ' \\\\ '.join(f'{sp.latex(cm)} &= {sp.latex(sp.collect(sp.expand(c["sol"][cm]), hats))}' for cm in cs)
              + ' \\end{aligned}\\qquad \\text{(çözüm)}')
-    B.append('u^{e}(s) = ' + ' + '.join(f'{sp.latex(hv)}\\left({sp.latex(Nk)}\\right)' for hv, Nk in zip(hats, c['shapes']))
-             + f' = \\sum_{{k=1}}^{{{degree + 1}}} \\hat{{a}}^{{(e)}}_k\\,N_k(s)\\qquad \\text{{(}}\\hat{{a}}^{{(e)}}_k\\text{{ katsayılarına göre gruplandı)}}')
+    B.append(stack('u^{e}(s)', [f'{sp.latex(hv)}\\left({sp.latex(Nk)}\\right)' for hv, Nk in zip(hats, c['shapes'])],
+                   f' = \\sum_{{k=1}}^{{{degree + 1}}} a^{{(e)}}_k\\,N_k(s)\\qquad \\text{{(}}a^{{(e)}}_k\\text{{ katsayılarına göre gruplandı)}}'))
     B.append('\\begin{aligned} ' + ' \\\\ '.join(f"N_{{{k + 1}}}(s) &= {sp.latex(Nk)}, &\\qquad N_{{{k + 1}}}'(s) &= {sp.latex(dNk)}"
                                                for k, (Nk, dNk) in enumerate(zip(c['shapes'], c['derivatives']))) + ' \\end{aligned}')
     B.append(f'\\big[N_i(s_j)\\big] = {tex_matrix(c["delta"].tolist())} = \\mathbf{{I}}\\quad (N_i(s_j) = \\delta_{{ij}}),\\qquad '
@@ -866,6 +955,25 @@ def classification_lines(r, c):
         else:
             lines.append(f'\\text{{Sürekli problem sınıflandırılamadı: {c["reason"]}}}')
     return lines
+
+
+def wrap_text(text, width):
+    """Uzun düz metni ', ' ve '; ' sınırlarından width karakteri aşmayan satırlara böler (kâğıtta okunur kalsın)."""
+    lines, current = [], ''
+    for piece in re.split(r'(?<=[,;])\s+', text):
+        if current and len(current) + 1 + len(piece) > width:
+            lines.append(current)
+            current = piece
+        else:
+            current = f'{current} {piece}' if current else piece
+    return lines + [current] if current else lines
+
+
+def text_block(text, width=95):
+    chunks = wrap_text(text, width)
+    if len(chunks) == 1:
+        return f'\\text{{{chunks[0]}}}'
+    return '\\begin{aligned} ' + ' \\\\ '.join(f'&\\text{{{c}}}' for c in chunks) + ' \\end{aligned}'
 
 
 def raw_tex(text):
@@ -924,8 +1032,8 @@ def build_sheet(valid, r, V):
     D(tex_equation(alpha, beta, gamma, f) + f', \\qquad x \\in \\Omega = ({X0},\\, {X1})')
     D(f'\\mathcal{{L}}(u) = {lhs_tex}\\qquad \\text{{({order}. mertebe diferansiyel operatör; güçlü form: }} \\mathcal{{L}}(u) = f\\text{{)}}')
     D(',\\qquad '.join(c for c in (condition_tex('left', x0), condition_tex('right', x1)) if c))
-    D(f'n = {n},\\qquad h = \\frac{{x_1 - x_0}}{{n}} = {sp.latex(h)},\\qquad p = {degree}\\ \\text{{({DEGREE_NAMES[degree]} eleman: eleman başına {degree + 1} düğüm)}},'
-      f'\\qquad N = np + 1 = {dofs}\\ \\text{{(toplam düğüm = bilinmeyen sayısı)}}')
+    D(f'n = {n},\\qquad h = \\frac{{x_1 - x_0}}{{n}} = {sp.latex(h)},\\qquad p = {degree}\\ \\text{{({DEGREE_NAMES[degree]} eleman: eleman başına {degree + 1} düğüm)}}')
+    D(f'N = np + 1 = {dofs}\\ \\text{{düğüm (düğüm katsayısı }} a_j\\text{{); temel koşuldan sonra bilinmeyen: }} {len(r["free"])}')
     method_text = ('Bubnov–Galerkin' if not r['ivp'] else 'Petrov–Galerkin (test fonksiyonları akısı bilinmeyen uçta sıfır)')
     D(f'\\text{{Yöntem: {method_text}}}')
     for line in classification_lines(r, V['classification']):
@@ -939,13 +1047,15 @@ def build_sheet(valid, r, V):
         D(f'\\text{{analitik çözüm yok: {exact["reason"]}}}')
 
     section('Gösterim')
-    D('\\begin{aligned} u(x)&:\\ \\text{tam çözüm (biliniyorsa)} & u_h(x)&:\\ \\text{sonlu eleman yaklaşımı} \\\\ '
-      '\\phi_j(x)&:\\ \\text{global yaklaşım (şekil) fonksiyonu} & N_k(s),\\ N_k^{(e)}(x)&:\\ \\text{yerel şekil fonksiyonu, } e \\text{ elemanında} \\\\ '
-      'a_j&:\\ \\text{bilinmeyen global düğüm katsayısı} & \\hat{a}^{(e)}_k&:\\ e \\text{ elemanının yerel katsayısı} \\\\ '
+    D('\\begin{aligned} u(x)&:\\ \\text{tam çözüm (biliniyorsa)} & u_h(x)&:\\ \\text{sonlu eleman yaklaşımı (global)} \\\\ '
+      'N_j(x)&:\\ \\text{global şekil fonksiyonu (düğüm } j\\text{)} & u_h^{(e)}(x)&:\\ e \\text{ elemanındaki yerel yaklaşım} \\\\ '
+      'N_k(s),\\ N_k^{(e)}(x)&:\\ \\text{yerel şekil (interpolasyon) fonksiyonu} & \\phi_i(x)&:\\ \\text{Galerkin ağırlık fonksiyonu} \\\\ '
+      'a_j&:\\ \\text{bilinmeyen global düğüm katsayısı} & a^{(e)}_k&:\\ e \\text{ elemanının yerel katsayısı} \\\\ '
       'c_m&:\\ \\text{eleman polinomunun katsayısı} & R(u_h, x)&:\\ \\text{kalıntı} \\\\ '
-      'w_i(x)&:\\ \\text{ağırlık (test) fonksiyonu} & K_{ij},\\ F_i&:\\ \\text{sistem matrisi ve yük vektörü girdileri} \\end{aligned}')
-    D('\\phi_j(x) = \\begin{cases} N_k^{(e)}(x), & x \\in \\Omega_e,\\ j = (e-1)p + k \\\\ 0, & \\text{diğer elemanlarda} \\end{cases}'
-      '\\qquad \\text{(genel Galerkin tabanı } \\phi_j \\text{, sonlu eleman interpolasyonunda parça parça } N_k^{(e)} \\text{ olur)}')
+      'K_{ij},\\ F_i&:\\ \\text{sistem matrisi ve yük vektörü girdileri} & Q&:\\ \\text{uçtaki akı } \\alpha u\' \\end{aligned}'
+      '\\qquad \\text{(Heinrich \\& Pepper gösterimi)}')
+    D('N_j(x) = \\begin{cases} N_k^{(e)}(x), & x \\in \\Omega_e,\\ j = (e-1)p + k \\\\ 0, & \\text{diğer elemanlarda} \\end{cases},\\qquad '
+      'a^{(e)}_k = a_{(e-1)p+k},\\qquad \\phi_i = N_i\\ \\text{(Bubnov–Galerkin)}')
 
     section('Ağ')
     nodes = form['nodes']
@@ -957,26 +1067,30 @@ def build_sheet(valid, r, V):
     D(f'\\begin{{array}}{{c|c|c}} e & \\Omega_e & \\text{{yerel }} k = 1, \\dots, {degree + 1} \\;\\mapsto\\; \\text{{global }} j = (e-1)p + k \\\\ \\hline {table} \\end{{array}}')
 
     section('Şekil fonksiyonları (polinom interpolasyonundan)')
-    D('s = x - x_e \\in [0, h]\\qquad \\text{(yerel koordinat: her elemanda aynı türetme)}')
+    D('\\text{Referans eleman: } s \\in [0, h],\\quad s = x - x_e\\qquad \\text{(her } \\Omega_e \\text{ bunun } x = x_e + s \\text{ ile ötelenmiş halidir; Jacobian } dx/ds = 1\\text{; türetme her elemanda aynı)}')
     for block in format_shape(r['shape']):
         D(block)
     D('x = x_e + s,\\quad dx = ds,\\quad \\frac{dN_k^{(e)}}{dx} = \\frac{dN_k}{ds}\\ (\\text{Jacobian } 1),\\qquad N_k^{(e)}(x) = N_k(x - x_e),'
-      '\\qquad \\hat{a}^{(e)}_k = a_{(e-1)p+k}\\qquad \\text{(yerel → global)}')
+      '\\qquad a^{(e)}_k = a_{(e-1)p+k}\\qquad \\text{(yerel → global)}')
     D('\\text{süreklilik: komşu elemanlar ortak düğümde aynı } a_j \\text{ katsayısını kullanır} \\Rightarrow u_h \\in C^0;\\ '
       'u_h\' \\text{ düğümlerde genel olarak süreksiz}')
     for e in form['shown']:
         E = form['elements'][e]
-        D(f'e = {e + 1}:\\qquad ' + ',\\quad '.join(f'N_{{{k + 1}}}^{{({e + 1})}}(x) = {sp.latex(Nk)}' for k, Nk in enumerate(E['N']))
-          + ',\\qquad ' + ',\\ '.join(f'\\hat{{a}}^{{({e + 1})}}_{{{k + 1}}} = {sp.latex(a)}' for k, a in enumerate(E['coefficients'])))
+        shapes = [f'N_{{{k + 1}}}^{{({e + 1})}}(x) = {sp.latex(Nk)}' for k, Nk in enumerate(E['N'])]
+        mapping = ',\\ '.join(f'a^{{({e + 1})}}_{{{k + 1}}} = {sp.latex(a)}' for k, a in enumerate(E['coefficients']))
+        if visible_len(''.join(shapes) + mapping) <= LINE_LIMIT:
+            D(f'e = {e + 1}:\\qquad ' + ',\\quad '.join(shapes) + ',\\qquad ' + mapping)
+        else:
+            D(f'e = {e + 1}:\\qquad \\begin{{aligned}} ' + ' \\\\ '.join(t.replace(' = ', ' &= ', 1) for t in shapes) + ' \\end{aligned}\\qquad ' + mapping)
 
     section('Yaklaşık çözüm')
-    D(f'u_h(x) = \\sum_{{j=1}}^{{{dofs}}} a_j\\,\\phi_j(x)\\qquad \\text{{(}} a_j \\text{{: belirlenecek bilinmeyenler)}}')
-    D('\\phi_j(x_i) = \\delta_{ij} \\;\\Rightarrow\\; u_h(x_i) = a_i\\qquad \\text{(katsayılar düğüm değerleridir)}')
-    D('x \\in \\Omega_e:\\quad u_h(x) = u_h^{(e)}(x) = \\sum_{k=1}^{p+1} \\hat{a}^{(e)}_k\\,N_k^{(e)}(x)')
+    D(f'u_h(x) = \\sum_{{j=1}}^{{{dofs}}} a_j\\,N_j(x)\\qquad \\text{{(}} a_j \\text{{: belirlenecek düğüm katsayıları)}}')
+    D('N_j(x_i) = \\delta_{ij} \\;\\Rightarrow\\; u_h(x_i) = a_i\\qquad \\text{(katsayılar düğüm değerleridir)}')
+    D('x \\in \\Omega_e:\\quad u_h(x) = u_h^{(e)}(x) = \\sum_{k=1}^{p+1} a^{(e)}_k\\,N_k^{(e)}(x)')
     for e in form['shown']:
         E = form['elements'][e]
-        D(f'u_h^{{({e + 1})}}(x) = ' + ' + '.join(f'{sp.latex(a)}\\left({sp.latex(Nk)}\\right)' for a, Nk in zip(E['coefficients'], E['N']))
-          + f',\\qquad x \\in [{sp.latex(E["xe"])}, {sp.latex(E["xe"] + h)}]')
+        D(stack(f'u_h^{{({e + 1})}}(x)', [f'{sp.latex(a)}\\left({sp.latex(Nk)}\\right)' for a, Nk in zip(E['coefficients'], E['N'])],
+                f',\\qquad x \\in [{sp.latex(E["xe"])}, {sp.latex(E["xe"] + h)}]'))
     if n > len(form['shown']):
         D('\\text{diğer elemanlar aynı yapıda}')
 
@@ -986,29 +1100,30 @@ def build_sheet(valid, r, V):
     interior_name = 'R_e(x)' if order == 2 else 'R(u_h, x)\\big|_{\\Omega_{e}}'
     for e in form['shown']:
         label = f'R_{{{e + 1}}}(x)' if order == 2 else f'R(u_h, x)\\big|_{{\\Omega_{{{e + 1}}}}}'
-        D(f'{label} = {sp.latex(form["elements"][e]["residual"])}' + ('\\qquad \\text{(eleman içi klasik kalıntı)}' if order == 2 else ''))
+        res, note = form['elements'][e]['residual'], ('\\qquad \\text{(eleman içi klasik kalıntı)}' if order == 2 else '')
+        D(f'{label} = {sp.latex(res)}{note}' if visible_len(sp.latex(res)) <= LINE_LIMIT else stack(label, sum_terms(res), note))
     if order == 2:
         D("\\mathcal{L}(u_h) - f = \\sum_e R_e\\,\\chi_{\\Omega_e} + \\sum_{k} J_k\\,\\delta(x - x_k),\\qquad "
           "J_k = \\alpha(x_k)\\big[u_h'(x_k^+) - u_h'(x_k^-)\\big]\\qquad \\text{(dağılımsal kalıntı; iç düğümlerde türev sıçraması)}")
         D('\\text{eleman içi } R_e \\text{ tek başına global kalıntı değildir; } C^0 \\text{ elemanda düğüm terimleri } J_k \\text{ de vardır}')
-    D(f'\\int_{{{X0}}}^{{{X1}}} w_i(x)\\,R(u_h, x)\\,dx = 0\\qquad \\text{{(kalıntı, ağırlık fonksiyonlarına göre ortalamada sıfır)}}')
-    D('w_i(x) = \\phi_i(x)\\qquad \\text{(' + ('Bubnov–Galerkin: ağırlık fonksiyonları yaklaşım fonksiyonlarıyla aynı' if not r['ivp']
-      else 'Petrov–Galerkin: ağırlıklar yaklaşım fonksiyonlarından seçilir, test uzayı farklı') + ')}')
+    D(f'\\int_{{{X0}}}^{{{X1}}} \\phi_i(x)\\,R(u_h, x)\\,dx = 0\\qquad \\text{{(kalıntı, ağırlık fonksiyonlarına göre ortalamada sıfır)}}')
+    D('\\phi_i(x) = N_i(x)\\qquad \\text{(' + ('Bubnov–Galerkin: ağırlık fonksiyonları şekil fonksiyonlarıyla aynı' if not r['ivp']
+      else 'Petrov–Galerkin: ağırlıklar şekil fonksiyonlarından seçilir ama test uzayı deneme uzayından farklı') + ')}')
     tests_used = list(r['rows'])
-    D(f'w_i \\in \\{{\\phi_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
+    D(f'\\phi_i \\in \\{{N_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
     for i in range(dofs):
         if i in tests_used:
             continue
         P = 'x_0' if i == 0 else 'x_1'
         if r['ivp']:
-            D(f'w_{{{i + 1}}} = \\phi_{{{i + 1}}}\\ \\text{{çıkarıldı: }} {P}\\text{{ ucunda akı bilinmiyor, test fonksiyonu orada sıfır seçilir}}')
+            D(f'\\phi_{{{i + 1}}} = N_{{{i + 1}}}\\ \\text{{çıkarıldı: }} {P}\\text{{ ucunda akı bilinmiyor, ağırlık fonksiyonu orada sıfır seçilir}}')
         else:
-            D(f'w_{{{i + 1}}} = \\phi_{{{i + 1}}}\\ \\text{{çıkarıldı: }} u({P})\\ \\text{{verildi (temel koşul) }}\\Rightarrow a_{{{i + 1}}}\\ \\text{{bilinen; test uzayı: }} w({P}) = 0')
+            D(f'\\phi_{{{i + 1}}} = N_{{{i + 1}}}\\ \\text{{çıkarıldı: }} u({P})\\ \\text{{verildi (temel koşul) }}\\Rightarrow a_{{{i + 1}}}\\ \\text{{bilinen; ağırlık uzayı: }} \\phi({P}) = 0')
 
     def matrix_definitions():
         D(f'\\mathbf{{a}} = \\begin{{bmatrix}} a_1 & \\cdots & a_{{{dofs}}} \\end{{bmatrix}}^{{\\mathsf{{T}}}} \\in \\mathbb{{R}}^{{{dofs}}},\\quad '
           f'\\mathbf{{K}} \\in \\mathbb{{R}}^{{{dofs}\\times{dofs}}},\\quad \\mathbf{{F}} \\in \\mathbb{{R}}^{{{dofs}}}\\qquad '
-          '\\text{(satır } i \\leftrightarrow w_i = \\phi_i\\text{, sütun } j \\leftrightarrow a_j\\text{; } K_{ij}\\text{: } a_j\\text{\'nin katsayısı)}')
+          '\\text{(satır } i \\leftrightarrow \\phi_i\\text{, sütun } j \\leftrightarrow a_j\\text{; } K_{ij}\\text{: } a_j\\text{\'nin katsayısı)}')
         D('\\sum_{j} K_{ij}\\,a_j = F_i \\;\\Longleftrightarrow\\; \\mathbf{K}\\,\\mathbf{a} = \\mathbf{F}')
 
     if order == 1:
@@ -1016,56 +1131,71 @@ def build_sheet(valid, r, V):
         for row in form['galerkin_rows']:
             parts = ' + '.join(f'\\int_{{{sp.latex(p_["xe"])}}}^{{{sp.latex(p_["xe"] + h)}}}\\left({sp.latex(p_["weight"])}\\right)\\left[{sp.latex(p_["residual"])}\\right]dx'
                                for p_ in row['parts'])
-            D(f'w_{{{row["i"] + 1}}}:\\quad {parts} = {sp.latex(row["total"])} = 0')
-        k_int = tex_terms([(beta, "\\phi_i\\,\\phi_j'"), (gamma, '\\phi_i\\,\\phi_j')])
+            if visible_len(parts + sp.latex(row['total'])) <= LINE_LIMIT:
+                D(f'\\phi_{{{row["i"] + 1}}}:\\quad {parts} = {sp.latex(row["total"])} = 0')
+            else:                                         # uzun: ağırlık ve kalıntı yukarıda yazıldı, adlarıyla anılır
+                k_of = lambda p_: row['i'] - p_['e'] * degree + 1
+                named = ' + '.join(f'\\int_{{{sp.latex(p_["xe"])}}}^{{{sp.latex(p_["xe"] + h)}}} N_{{{k_of(p_)}}}^{{({p_["e"] + 1})}}(x)\\,'
+                                   f'R(u_h, x)\\big|_{{\\Omega_{{{p_["e"] + 1}}}}}\\,dx' for p_ in row['parts'])
+                total = chunk_rows(signed_terms(row['total']))
+                D(f'\\phi_{{{row["i"] + 1}}}:\\quad \\begin{{aligned}} &{named} \\\\ &= ' + ' \\\\ &\\quad '.join(total) + ' = 0 \\end{aligned}')
+        k_int = tex_terms([(beta, "\\phi_i\\,N_j'"), (gamma, '\\phi_i\\,N_j')])
         f_int = '0' if f == 0 else f'\\int_{{{X0}}}^{{{X1}}} \\phi_i\\left({sp.latex(f)}\\right)dx'
-        D(f'u_h = \\sum_j a_j\\phi_j:\\quad \\int_{{{X0}}}^{{{X1}}} \\phi_i\\,R\\,dx = \\sum_j a_j \\underbrace{{\\int_{{{X0}}}^{{{X1}}} \\left({k_int}\\right)dx}}_{{K_{{ij}}}}'
-          f' - \\underbrace{{{f_int}}}_{{F_i}} = 0')
+        D(f'u_h = \\sum_j a_j N_j:\\quad \\int_{{{X0}}}^{{{X1}}} \\phi_i\\,R\\,dx = \\sum_j a_j \\underbrace{{\\int_{{{X0}}}^{{{X1}}} \\left({k_int}\\right)dx}}_{{K_{{ij}}}}'
+          f' - \\underbrace{{{f_int}}}_{{F_i}} = 0,\\qquad \\phi_i = N_i')
         matrix_definitions()
     else:
-        D("\\text{İkinci mertebe: } R \\ni (\\alpha u_h')' \\text{; } C^0 \\text{ yaklaşımda } u_h' \\text{ düğümlerde süreksiz, } (\\alpha u_h')' \\text{ orada klasik anlamda tanımsız}"
-          "\\Rightarrow \\text{türev ağırlık fonksiyonuna aktarılır (bir sonraki bölüm)}")
-        D(f"\\int_{{{X0}}}^{{{X1}}} w_i\\left[{lhs_tex.replace('u', 'u_h')}" + ('' if f == 0 else f' - \\left({sp.latex(f)}\\right)') + '\\right]dx = 0')
+        D("\\text{İkinci mertebe: } R \\ni (\\alpha u_h')' \\text{; } C^0 \\text{ yaklaşımda } u_h' \\text{ düğümlerde süreksiz, } (\\alpha u_h')' \\text{ orada klasik anlamda tanımsız}")
+        D("\\Rightarrow \\text{türevlerden biri ağırlık fonksiyonuna aktarılır (bir sonraki bölüm)}")
+        D(f"\\int_{{{X0}}}^{{{X1}}} \\phi_i\\left[{lhs_tex.replace('u', 'u_h')}" + ('' if f == 0 else f' - \\left({sp.latex(f)}\\right)') + '\\right]dx = 0')
 
         section('Weak Formulation (Integration by Parts)')
-        D(f"\\int_{{{X0}}}^{{{X1}}} w_i\\,(\\alpha u_h')'\\,dx = \\Big[w_i\\,\\alpha u_h'\\Big]_{{{X0}}}^{{{X1}}} - \\int_{{{X0}}}^{{{X1}}} w_i'\\,\\alpha u_h'\\,dx"
+        D(f"\\int_{{{X0}}}^{{{X1}}} \\phi_i\\,(\\alpha u_h')'\\,dx = \\Big[\\phi_i\\,\\alpha u_h'\\Big]_{{{X0}}}^{{{X1}}} - \\int_{{{X0}}}^{{{X1}}} \\phi_i'\\,\\alpha u_h'\\,dx"
           "\\qquad \\text{(kısmi integrasyon)}")
         D("\\text{Sonuç: } u_h\\text{'den yalnız birinci türev istenir (türev mertebesi 2 → 1); } C^0 \\text{ yaklaşım yeterli; uçlarda akı } Q = \\alpha u' \\text{ ortaya çıkar}")
-        weak_left = tex_terms([(alpha, "w_i'u_h'"), (-beta, "w_i\\,u_h'"), (-gamma, 'w_i\\,u_h')])
-        load = '' if f == 0 else f" - \\int_{{{X0}}}^{{{X1}}} w_i\\left({sp.latex(f)}\\right)dx"
-        D(f"\\int_{{{X0}}}^{{{X1}}}\\left({weak_left}\\right)dx = w_i({X1})\\,Q_1 - w_i({X0})\\,Q_0{load},\\qquad Q = \\alpha u'")
+        weak_left = tex_terms([(alpha, "\\phi_i'u_h'"), (-beta, "\\phi_i\\,u_h'"), (-gamma, '\\phi_i\\,u_h')])
+        load = '' if f == 0 else f" - \\int_{{{X0}}}^{{{X1}}} \\phi_i\\left({sp.latex(f)}\\right)dx"
+        D(f"\\int_{{{X0}}}^{{{X1}}}\\left({weak_left}\\right)dx = \\phi_i({X1})\\,Q_1 - \\phi_i({X0})\\,Q_0{load},\\qquad Q = \\alpha u'")
         for side, point, name in (('left', x0, 'Q_0'), ('right', x1, 'Q_1')):
             kind, value = r['conditions'][side]
             P = sp.latex(point)
             if kind == 'dirichlet':
-                why = f'u({P})\\ \\text{{verildi: test uzayında }} w_i({P}) = 0 \\Rightarrow \\text{{terim kullanılan denklemlerde yok; }} {name} \\text{{ bilinmeyen, çözümden sonra hesaplanır}}'
+                why = f'u({P})\\ \\text{{verildi (temel koşul): ağırlık uzayında }} \\phi_i({P}) = 0 \\Rightarrow \\text{{terim kullanılan denklemlerde yok; }} {name} \\text{{ bilinmeyen, çözümden sonra hesaplanır}}'
             elif kind == 'neumann':
-                why = f"{name} = \\alpha({P})\\,u'({P}) = {tex_value(r['Q'][side])}\\ \\text{{(türev koşulu akıya çevrildi: α ile çarpıldı; yük vektörüne girer)}}"
+                why = f"{name} = \\alpha({P})\\,u'({P}) = {tex_value(r['Q'][side])}\\ \\text{{(türev koşulu, doğal: akıya α ile çarpılarak girer; yük vektörüne)}}"
             elif kind == 'flux':
-                why = f"{name} = \\alpha({P})\\,u'({P}) = {tex_value(r['Q'][side])}\\ \\text{{(akı koşulu doğrudan; yük vektörüne girer)}}"
+                why = f"{name} = \\alpha({P})\\,u'({P}) = {tex_value(r['Q'][side])}\\ \\text{{(akı koşulu, doğal: doğrudan yük vektörüne girer)}}"
             elif kind == 'both':
                 why = f"{name} = \\alpha({P})\\,u'({P}) = {tex_value(r['Q'][side])}\\ \\text{{(başlangıç koşulu: akı bilinir)}}"
             elif r['ivp']:
-                why = f'{name}\\ \\text{{bilinmiyor: test uzayında }} w_i({P}) = 0 \\text{{ seçilir (Petrov–Galerkin), terim düşer}}'
+                why = f'{name}\\ \\text{{bilinmiyor: ağırlık uzayında }} \\phi_i({P}) = 0 \\text{{ seçilir (Petrov–Galerkin), terim düşer}}'
             elif alpha.subs(x, point) == 0:
                 why = f'\\alpha({P}) = 0 \\Rightarrow {name} = 0\\ \\text{{(dejenere uç)}}'
             else:
                 why = f'{name} = 0\\ \\text{{(koşul verilmedi: doğal koşul }} \\alpha u\' = 0\\text{{)}}'
             D(f'x = {P}:\\quad ' + why)
-        k_int = tex_terms([(alpha, "\\phi_i'\\phi_j'"), (-beta, "\\phi_i\\,\\phi_j'"), (-gamma, '\\phi_i\\,\\phi_j')])
+        k_int = tex_terms([(alpha, "\\phi_i'N_j'"), (-beta, "\\phi_i\\,N_j'"), (-gamma, '\\phi_i\\,N_j')])
         f_int = '' if f == 0 else f' - \\int_{{{X0}}}^{{{X1}}} \\phi_i\\left({sp.latex(f)}\\right)dx'
-        D(f'u_h = \\sum_j a_j\\phi_j,\\ w_i = \\phi_i:\\quad \\sum_j a_j \\underbrace{{\\int_{{{X0}}}^{{{X1}}} \\left({k_int}\\right)dx}}_{{K_{{ij}}}}'
+        D(f'u_h = \\sum_j a_j N_j,\\ \\phi_i = N_i:\\quad \\sum_j a_j \\underbrace{{\\int_{{{X0}}}^{{{X1}}} \\left({k_int}\\right)dx}}_{{K_{{ij}}}}'
           f' = \\underbrace{{\\phi_i({X1})\\,Q_1 - \\phi_i({X0})\\,Q_0{f_int}}}_{{F_i = F_{{b,i}} + F_{{l,i}}}}')
         matrix_definitions()
 
     # --- eleman integralleri
     section('Eleman matrisleri ve yük vektörleri')
-    D(f'K_{{ij}} = \\sum_e K^{{(e)}}_{{ij}},\\qquad K^{{(e)}}_{{ij}} = \\int_{{\\Omega_e}} (\\cdots)\\,dx \\text{{ (yukarıdaki integrand, }} \\phi \\to N^{{(e)}}\\text{{)}},\\qquad '
-      f'i, j = 1, \\dots, {degree + 1}\\ \\text{{(yerel)}},\\qquad \\mathbf{{K}}^{{(e)}} \\in \\mathbb{{R}}^{{{degree + 1}\\times{degree + 1}}},\\ \\mathbf{{F}}^{{(e)}} \\in \\mathbb{{R}}^{{{degree + 1}}}')
-    integrand_K = (tex_terms([(alpha, "N_i'N_j'"), (-beta, "N_i\\,N_j'"), (-gamma, 'N_i\\,N_j')]) if order == 2
-                   else tex_terms([(beta, "N_i\\,N_j'"), (gamma, 'N_i\\,N_j')]))
-    D(f'K^{{(e)}}_{{ij}} = \\int_0^h\\left({integrand_K}\\right)ds,\\qquad F^{{(e)}}_{{l,i}} = {"-" if order == 2 else ""}\\int_0^h N_i\\,f(x_e + s)\\,ds,\\qquad x = x_e + s'
+    D(f'K_{{ij}} = \\sum_e K^{{(e)}}_{{ij}},\\qquad F_{{l,i}} = \\sum_e F^{{(e)}}_{{l,i}}\\qquad \\text{{(}}\\phi_i, N_j \\text{{ yalnız kendi düğümlerini içeren elemanlarda sıfırdan farklı)}}')
+    D(f'i, j = 1, \\dots, {degree + 1}\\ \\text{{(yerel)}},\\qquad \\mathbf{{K}}^{{(e)}} \\in \\mathbb{{R}}^{{{degree + 1}\\times{degree + 1}}},\\ \\mathbf{{F}}^{{(e)}} \\in \\mathbb{{R}}^{{{degree + 1}}}')
+    integrand_x = (tex_terms([(alpha, "N_i^{(e)\\prime}N_j^{(e)\\prime}"), (-beta, "N_i^{(e)}N_j^{(e)\\prime}"), (-gamma, 'N_i^{(e)}N_j^{(e)}')]) if order == 2
+                   else tex_terms([(beta, "N_i^{(e)}N_j^{(e)\\prime}"), (gamma, 'N_i^{(e)}N_j^{(e)}')]))
+    at_s = lambda g: g.subs(x, sp.Symbol('x_e') + s)          # katsayı yerel koordinatta: x = x_e + s
+    integrand_K = (tex_terms([(at_s(alpha), "N_i'N_j'"), (-at_s(beta), "N_i\\,N_j'"), (-at_s(gamma), 'N_i\\,N_j')]) if order == 2
+                   else tex_terms([(at_s(beta), "N_i\\,N_j'"), (at_s(gamma), 'N_i\\,N_j')]))
+    D(f'K^{{(e)}}_{{ij}} = \\int_{{x_e}}^{{x_e + h}}\\left({integrand_x}\\right)dx,\\qquad '
+      f'F^{{(e)}}_{{l,i}} = {"-" if order == 2 else ""}\\int_{{x_e}}^{{x_e + h}} N_i^{{(e)}}(x)\\,f(x)\\,dx'
       + ('' if order == 2 else '\\qquad (\\mathbf{F} = \\mathbf{F}_l\\text{; sınır terimi yok})'))
+    D('x = x_e + s,\\quad J = \\frac{dx}{ds} = 1,\\quad dx = J\\,ds = ds,\\quad \\frac{dN_i^{(e)}}{dx} = \\frac{1}{J}\\frac{dN_i}{ds} = N_i\'(s),'
+      '\\quad x \\in [x_e, x_e + h] \\mapsto s \\in [0, h]\\qquad \\text{(koordinat dönüşümü)}')
+    D(f'K^{{(e)}}_{{ij}} = \\int_0^h\\left({integrand_K}\\right)ds,\\qquad F^{{(e)}}_{{l,i}} = {"-" if order == 2 else ""}\\int_0^h N_i(s)\\,f(x_e + s)\\,ds'
+      + "\\qquad (N_i' = dN_i/ds)")
     methods = {step['method'] for record in r['elements'] for step in record['K_steps'] + record['F_steps']}
     if not r['symbolic']:
         D('\\text{Sembolik süre sınırı aşıldı: tüm integraller sayısal (mpmath.quad, uyarlamalı tanh–sinh kuralı, 15 basamak); adımlar yazılmadı}')
@@ -1076,9 +1206,9 @@ def build_sheet(valid, r, V):
     if n > DETAIL_LIMIT and r['symbolic']:
         D(f'\\text{{gösterilmeyen elemanlar (e = 3, …, {n - 1}): sayısal integral (mpmath.quad, tanh–sinh); değerleri montajda}}')
     if r['uniform_K'] and n > 1:
-        D('\\alpha, \\beta, \\gamma \\text{ sabit ve } h \\text{ eşit} \\Rightarrow x = x_e + s \\text{ ile integrand } e\\text{\'den bağımsız} \\Rightarrow \\mathbf{K}^{(e)} = \\mathbf{K}^{(1)}')
+        D('\\alpha, \\beta, \\gamma \\text{ sabit},\\ h \\text{ her elemanda eşit},\\ J = 1 \\Rightarrow s \\text{ cinsinden integrand } e\\text{\'den bağımsız} \\Rightarrow \\mathbf{K}^{(e)} = \\mathbf{K}^{(1)}\\ \\text{(tüm } e\\text{)}')
     if r['uniform_F'] and n > 1:
-        D('f \\text{ sabit} \\Rightarrow \\mathbf{F}^{(e)}_l = \\mathbf{F}^{(1)}_l')
+        D('f \\text{ sabit},\\ h \\text{ eşit},\\ J = 1 \\Rightarrow \\mathbf{F}^{(e)}_l = \\mathbf{F}^{(1)}_l\\ \\text{(tüm } e\\text{)}')
     for record in r['elements']:
         e = record['e']
         if e not in r['detailed']:
@@ -1086,7 +1216,11 @@ def build_sheet(valid, r, V):
         has_K, has_F = not (r['uniform_K'] and e > 0), not (r['uniform_F'] and e > 0)
         if not (has_K or has_F):
             continue
-        D(f'e = {e + 1}:\\qquad x_e = {sp.latex(record["xe"])},\\qquad x = {sp.latex(record["xe"] + s)}')
+        xe = record['xe']
+        D(f'e = {e + 1}:\\qquad x_e = {sp.latex(xe)},\\qquad \\int_{{{sp.latex(xe)}}}^{{{sp.latex(xe + h)}}}(\\cdots)\\,dx = '
+          f'\\int_0^{{{sp.latex(h)}}}(\\cdots)\\big|_{{x = {sp.latex(xe + s)}}}\\,ds')
+        if not has_K:
+            D(f'\\mathbf{{K}}^{{({e + 1})}} = \\mathbf{{K}}^{{(1)}} = {tex_matrix(record["K"].tolist())}\\qquad \\text{{(yukarıdaki gerekçe)}}')
         if has_K:
             if r['symbolic']:
                 for step in record['K_steps']:
@@ -1097,6 +1231,9 @@ def build_sheet(valid, r, V):
                 for step in record['F_steps']:
                     D(format_integral(step))
             D(f'\\mathbf{{F}}_l^{{({e + 1})}} = {tex_column(list(record["F"]))}')
+    same = [record['e'] + 1 for record in r['elements'] if record['e'] in r['detailed'] and record['e'] > 0 and r['uniform_K'] and r['uniform_F']]
+    if same:
+        D(f'e = {index_range(same[0], same[-1])[4:]}:\\qquad \\mathbf{{K}}^{{(e)}} = \\mathbf{{K}}^{{(1)}},\\quad \\mathbf{{F}}_l^{{(e)}} = \\mathbf{{F}}_l^{{(1)}}\\qquad \\text{{(aynı integrand, aynı sınırlar; yukarıdaki gerekçe)}}')
     if order == 2 and not alpha.free_symbols and alpha < 0:
         first_K, first_F = r['elements'][0]['K'], r['elements'][0]['F']
         D(f'\\alpha = {sp.latex(alpha)} < 0:\\qquad \\tilde{{\\mathbf{{K}}}}^{{(1)}} = -\\mathbf{{K}}^{{(1)}} = {tex_matrix((-first_K).tolist())},'
@@ -1120,7 +1257,7 @@ def build_sheet(valid, r, V):
     if order == 2:
         D("\\mathbf{F}_b = \\begin{bmatrix} -Q_0 & 0 & \\cdots & 0 & Q_1 \\end{bmatrix}^{\\mathsf{T}}\\qquad \\text{(yalnız uç düğümler; iç düğümlerde } \\phi_i(x_0) = \\phi_i(x_1) = 0\\text{)}")
         for row in form['row_equations']:
-            D(f'w_{{{row["i"] + 1}}}:\\quad {sp.latex(row["lhs"])} = {sp.latex(row["rhs"])}')
+            D(f'\\phi_{{{row["i"] + 1}}}:\\quad {sp.latex(row["lhs"])} = {sp.latex(row["rhs"])}')
 
     # --- sınır koşulları
     section('Sınır koşulları ve indirgenmiş sistem')
@@ -1129,16 +1266,17 @@ def build_sheet(valid, r, V):
         if index in r['fixed']:
             known.append(f'a_{{{index + 1}}} = {sp.latex(r["fixed"][index])}\\ \\text{{(temel)}}')
         if order == 2 and r['Q'][side] is not None:
-            known.append(f'{name} = {tex_value(r["Q"][side])}\\ \\text{{(doğal)}}')
+            origin = 'başlangıç koşulundan' if r['conditions'][side][0] == 'both' else 'doğal'
+            known.append(f'{name} = {tex_value(r["Q"][side])}\\ \\text{{({origin})}}')
     if known:
         D(',\\qquad '.join(known))
     removed_rows = [i + 1 for i in range(dofs) if i not in r['rows']]
     removed_cols = [i + 1 for i in r['fixed']]
     if removed_rows:
-        D('\\text{çıkarılan satırlar: } ' + ', '.join(str(i) for i in removed_rows) + '\\ (w_i \\text{ test uzayında değil})')
+        D('\\text{çıkarılan satırlar: } ' + ', '.join(str(i) for i in removed_rows) + '\\ (\\phi_i \\text{ ağırlık uzayında değil})')
     if removed_cols:
-        D('\\text{çıkarılan sütunlar: } ' + ', '.join(str(j) for j in removed_cols)
-          + '\\ (a_j \\text{ bilinen} \\Rightarrow K_{ij}a_j \\text{ sağ tarafa: } F_{\\mathrm{red},i} = F_i - \\sum_{j\\ \\text{bilinen}} K_{ij}a_j)')
+        D('\\text{çıkarılan sütunlar: } ' + ', '.join(str(j) for j in removed_cols) + '\\ (a_j \\text{ bilinen} \\Rightarrow K_{ij}a_j \\text{ sağ tarafa)}')
+        D('F_{\\mathrm{red},i} = F_i - \\sum_{j\\ \\text{bilinen}} K_{ij}\\,a_j')
     if r['free']:
         unknowns = [sp.Symbol(f'a_{{{i + 1}}}') for i in r['free']]
         D(f'\\mathbf{{K}}_{{\\mathrm{{red}}}}\\,\\mathbf{{a}}_{{\\mathrm{{bilinmeyen}}}} = \\mathbf{{F}}_{{\\mathrm{{red}}}}:\\qquad {tex_matrix(r["K_ff"].tolist())}\\,{tex_column(unknowns)} = {tex_column(list(r["F_f"]))}')
@@ -1157,7 +1295,7 @@ def build_sheet(valid, r, V):
     if r['first_order']:
         fo = r['first_order']
         rd, d = fo['residual'], fo['row']
-        D(f"\\text{{çıkarılan denklem }} w_{{{d}}}\\text{{: kalıntısı }} r_{{{d}}} = \\sum_j K_{{{d}j}}\\,a_j - F_{{{d}}} = {tex(rd) if fo['exact'] else dec(rd)}\\qquad \\text{{(otomatik sağlanmaz)}}")
+        D(f"\\text{{çıkarılan denklem }} \\phi_{{{d}}}\\text{{: kalıntısı }} r_{{{d}}} = \\sum_j K_{{{d}j}}\\,a_j - F_{{{d}}} = {tex(rd) if fo['exact'] else dec(rd)}\\qquad \\text{{(otomatik sağlanmaz)}}")
         yb_tex = tex(fo['yb']) if fo['exact'] and fo['yb'] is not None else dec(fo['yb'])
         scaled = '' if fo['exact'] else f",\\quad \\frac{{|\\mathbf{{y}}^{{\\mathsf{{T}}}}\\mathbf{{b}}|}}{{\\|\\mathbf{{y}}\\|\\,\\|\\mathbf{{b}}\\|}} = {dec(fo['scaled'])}"
         D(f"\\mathbf{{y}}^{{\\mathsf{{T}}}}\\mathbf{{A}} = 0,\\ \\mathbf{{y}}^{{\\mathsf{{T}}}}\\mathbf{{b}} = {yb_tex}{scaled}"
@@ -1165,7 +1303,7 @@ def build_sheet(valid, r, V):
         if fo['compatible']:
             D('\\text{tam sistem uyumlu: çıkarılan denklem de sağlanıyor; satır seçimi sonucu değiştirmez}')
         elif fo['compatible'] is False:
-            D('\\text{tam sistem uyumsuz: başka bir satırın çıkarılması (başka test uzayı) başka } \\mathbf{a}\\text{ verir}')
+            D('\\text{tam sistem uyumsuz: başka bir satırın çıkarılması (başka ağırlık uzayı) başka } \\mathbf{a}\\text{ verir}')
     if form['ivp_slope']:
         sl = form['ivp_slope']
         D(f"u_h'({sp.latex(sl['point'])}) = {tex_value(sl['computed'])},\\qquad u'({sp.latex(sl['point'])}) = {sp.latex(sl['given'])}"
@@ -1173,12 +1311,17 @@ def build_sheet(valid, r, V):
 
     # --- yeniden kurulum
     section('Yaklaşık çözümün yeniden kurulması')
-    D('u_h^{(e)}(x) = \\sum_{k=1}^{p+1} \\hat{a}^{(e)}_k\\,N_k^{(e)}(x),\\qquad \\hat{a}^{(e)}_k = a_{(e-1)p+k}')
+    D('u_h^{(e)}(x) = \\sum_{k=1}^{p+1} a^{(e)}_k\\,N_k^{(e)}(x),\\qquad a^{(e)}_k = a_{(e-1)p+k},\\qquad u_h(x) = u_h^{(e)}(x)\\ (x \\in \\Omega_e)')
     for piece in form['reconstruction']:
         e, xe = piece['e'], piece['xe']
         if piece['N'] is not None:
             sub = ' + '.join(f'\\left({tex(sp.sympify(v))}\\right)\\left({sp.latex(Nk)}\\right)' for v, Nk in zip(piece['values'], piece['N']))
-            D(f'u_h^{{({e + 1})}}(x) = {sub} = {tex(piece["piece"])},\\qquad {sp.latex(xe)} \\le x \\le {sp.latex(xe + h)}')
+            if visible_len(sub + tex(piece['piece'])) <= LINE_LIMIT:
+                D(f'u_h^{{({e + 1})}}(x) = {sub} = {tex(piece["piece"])},\\qquad {sp.latex(xe)} \\le x \\le {sp.latex(xe + h)}')
+            else:                                         # uzun ifade tek satırda okunmaz kadar küçülmesin: iki satır
+                terms = [f'\\left({tex(sp.sympify(v))}\\right)\\left({sp.latex(Nk)}\\right)' for v, Nk in zip(piece['values'], piece['N'])]
+                D(f'\\begin{{aligned}} u_h^{{({e + 1})}}(x) &= ' + ' \\\\ &\\quad + '.join(terms)
+                  + f' \\\\ &= {tex(piece["piece"])},\\qquad {sp.latex(xe)} \\le x \\le {sp.latex(xe + h)} \\end{{aligned}}')
         else:
             D(f'u_h^{{({e + 1})}}(x) = {tex(piece["piece"])},\\qquad {sp.latex(xe)} \\le x \\le {sp.latex(xe + h)}')
     if n > DETAIL_LIMIT:
@@ -1191,6 +1334,10 @@ def build_sheet(valid, r, V):
         D('\\text{hesaplanmadı: doğrulanmış analitik çözüm yok (' + ('aday reddedildi' if exact['status'] == 'rejected' else exact['reason']) + ')}')
     else:
         D(f'u(x) = {sp.latex(solution)}\\qquad \\text{{({level[exact["status"]]})}}')
+        D('\\begin{aligned} &\\max_j |u(x_j) - a_j| &&\\text{düğüm hatası: yalnız düğümlerde (1B\'de süperyakınsama gösterebilir)} \\\\ '
+          '&\\max_x |u - u_h| &&\\text{noktasal en büyük hata: eleman içi dahil (örneklemeyle; alt tahmin)} \\\\ '
+          '&\\|u - u_h\\|_{L^2} &&\\text{ortalama (karesel) hata büyüklüğü} \\\\ '
+          '&|u - u_h|_{H^1} &&\\text{türevin hatası (enerji normuyla ilişkili yarı-norm)} \\end{aligned}')
         D(',\\quad '.join(f'{name[1]}\\ \\checkmark\\ \\text{{({how})}}' for name, ok, how in exact['checks']))
         exact_or_dec = lambda v: sp.latex(v) if sp.sympify(v).is_Rational else dec(sp.sympify(v).evalf())
         table = ' \\\\ '.join(f'{j + 1} & {tex(xj)} & {exact_or_dec(aj)} & {exact_or_dec(uj)} & {exact_or_dec(ej)}'
@@ -1199,10 +1346,10 @@ def build_sheet(valid, r, V):
         mids = ' \\\\ '.join(f'{tex(xm)} & {dec(um)} & {dec(uhm)} & {dec(um - uhm)}' for xm, um, uhm in em['midpoints'])
         D(f'\\begin{{array}}{{c|c|c|c}} x & u(x) & u_h(x) & u - u_h \\\\ \\hline {mids} \\end{{array}}\\qquad \\text{{(noktasal hata, her elemanda ilk iki düğümün ortası }} x_e + h/2p\\text{{)}}')
         rel = lambda v: dec(v) if v is not None else '\\text{tanımsız}'
-        D(f'\\max_j |u(x_j) - a_j| = {dec(em["nodal"])}\\ (\\text{{göreli }} {rel(em["rel_nodal"])}),\\qquad '
-          f'\\max_x |u - u_h| \\approx {dec(em["pointwise"])}\\ (\\text{{göreli }} {rel(em["rel_pointwise"])};\\ \\text{{eleman başına 200 örnek, alt tahmin}})')
-        D(f'\\|u - u_h\\|_{{L^2}} = \\left(\\int_{{{X0}}}^{{{X1}}}(u - u_h)^2\\,dx\\right)^{{1/2}} \\approx {dec(em["l2"])}\\ (\\text{{göreli }} {rel(em["rel_l2"])}),\\qquad '
-          f'|u - u_h|_{{H^1}} = \\left(\\int_{{{X0}}}^{{{X1}}}(u\' - u_h\')^2\\,dx\\right)^{{1/2}} \\approx {dec(em["h1"])}\\ (\\text{{göreli }} {rel(em["rel_h1"])})')
+        D(f'\\max_j |u(x_j) - a_j| = {dec(em["nodal"])}\\ (\\text{{göreli }} {rel(em["rel_nodal"])})')
+        D(f'\\max_x |u - u_h| \\approx {dec(em["pointwise"])}\\ (\\text{{göreli }} {rel(em["rel_pointwise"])};\\ \\text{{eleman başına 200 örnek, alt tahmin}})')
+        D(f'\\|u - u_h\\|_{{L^2}} = \\left(\\int_{{{X0}}}^{{{X1}}}(u - u_h)^2\\,dx\\right)^{{1/2}} \\approx {dec(em["l2"])}\\ (\\text{{göreli }} {rel(em["rel_l2"])})')
+        D(f'|u - u_h|_{{H^1}} = \\left(\\int_{{{X0}}}^{{{X1}}}(u\' - u_h\')^2\\,dx\\right)^{{1/2}} \\approx {dec(em["h1"])}\\ (\\text{{göreli }} {rel(em["rel_h1"])})')
         if em['nodal'] < 1e-12 * max(1.0, abs(float(max(em['l2'], em['pointwise'])))) and em['pointwise'] > 1e-12:
             D('\\text{düğümlerde hata yok ama eleman içinde var: düğüm değerlerinin doğruluğu fonksiyonun doğruluğu değildir}')
     conv = V['convergence']
@@ -1214,14 +1361,15 @@ def build_sheet(valid, r, V):
         expected = conv['expected']
         D('\\text{beklenen: }' + (f"L^2\\ {expected['l2']},\\ H^1\\ {expected['h1']}\\ \\text{{({expected['basis']})}}" if expected
                                  else '\\text{bu sınıf için kuramsal hız iddia edilmiyor}'))
-        D('\\text{' + conv['detail'] + '}')
+        D(text_block(conv['detail']))
     else:
-        D(f'\\text{{yakınsama: {conv["detail"]}}}')
+        D(text_block('yakınsama: ' + conv['detail']))
 
     # --- doğrulama ve tanılar
     section('Doğrulama ve sayısal tanılar')
     for it in V['items']:
-        D(f'{STATUS_MARK[it["status"]]}\\quad \\text{{{it["name"]} ({it["status"]}): {it["detail"]}}}')
+        D(f'{STATUS_MARK[it["status"]]}\\quad \\text{{{it["name"]} ({it["status"]})}}')
+        D(text_block(it['detail']))                       # uzun ayrıntı tek satırda küçülmesin: satırlara bölünür
     dist = V['distributional']
     if dist and dist.get('jumps') is not None and dist['jumps']:
         shown_j = dist['jumps'][:6]
@@ -1253,7 +1401,7 @@ def build_sheet(valid, r, V):
     if V['errors'] is not None:
         warnings.append('noktasal en büyük hata örneklemeye dayanır (alt tahmin)')
     for w in warnings or ['özel uyarı yok']:
-        D('\\text{' + w + '}')
+        D(text_block(w))
     return '\n\n'.join(blocks)
 
 

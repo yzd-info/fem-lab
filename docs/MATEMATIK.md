@@ -69,26 +69,27 @@ Admissible combinations:
 - Global numbering: local node $k$ of element $e$ (both 0-based) is global node $e\,p + k$.
 - Local coordinate $s = x - x_e \in [0, h]$, so $dx = ds$ (the Jacobian is 1).
 
-Notation used throughout:
+Notation used throughout (following Heinrich & Pepper, *The Finite Element Method*: $N$ for shape/interpolation
+functions, Ch. 3; $\phi$ for Galerkin weighting functions, Ch. 2):
 
 | Symbol | Meaning |
 |---|---|
 | $u$, $u_h$ | exact solution (when known), finite element approximation |
-| $\phi_j(x)$ | global basis function; on $\Omega_e$ it equals the local shape function $N_k^{(e)}(x)$ with $j = (e-1)p + k$ (1-based) |
+| $N_j(x)$ | global shape function of node $j$; on $\Omega_e$ it equals the local shape function $N_k^{(e)}(x)$ with $j = (e-1)p + k$ (1-based), elsewhere 0 |
 | $N_k(s)$, $N_k^{(e)}(x)$ | local shape function on the reference element, and on element $e$ |
 | $a_j$ | unknown global nodal coefficient; $u_h(x_j) = a_j$ |
-| $\hat a^{(e)}_k$ | local coefficient of element $e$; $\hat a^{(e)}_k = a_{(e-1)p+k}$ |
+| $a^{(e)}_k$ | local coefficient of element $e$; $a^{(e)}_k = a_{(e-1)p+k}$ |
 | $c_m$ | coefficient of the element polynomial $u^e(s) = \sum_m c_m s^m$ |
 | $R(u_h, x)$ | residual $\mathcal{L}(u_h) - f$ |
-| $w_i$ | weight (test) function |
+| $\phi_i$ | Galerkin weighting function; $\phi_i = N_i$ (Bubnov–Galerkin) |
 | $K_{ij}$, $F_i$ | system matrix and load vector entries |
 
 ### Shape functions
 
 The shape functions are derived by polynomial interpolation. With $u^e(s) = \sum_{m=0}^{p} c_m s^m$ and nodes
-$s_k = (k-1)\,h/p$, the interpolation conditions $u^e(s_k) = \hat a^{(e)}_k$ give the system
-$\mathbf{V}\mathbf{c} = \hat{\mathbf{a}}^{(e)}$ with $V_{km} = s_k^{\,m}$. Solving for $\mathbf{c}$ and regrouping by
-$\hat a^{(e)}_k$ gives $u^e(s) = \sum_k \hat a^{(e)}_k N_k(s)$. The construction is checked against an independent
+$s_k = (k-1)\,h/p$, the interpolation conditions $u^e(s_k) = a^{(e)}_k$ give the system
+$\mathbf{V}\mathbf{c} = \mathbf{a}^{(e)}$ with $V_{km} = s_k^{\,m}$. Solving for $\mathbf{c}$ and regrouping by
+$a^{(e)}_k$ gives $u^e(s) = \sum_k a^{(e)}_k N_k(s)$. The construction is checked against an independent
 product-formula construction, and the following properties are verified for every degree:
 
 ```math
@@ -100,15 +101,15 @@ discontinuous at the nodes.
 
 ## 4. Galerkin formulation
 
-With $u_h = \sum_j a_j \phi_j$ the residual $R(u_h, x) = \mathcal{L}(u_h) - f$ is required to vanish in the weighted
+With $u_h = \sum_j a_j N_j$ the residual $R(u_h, x) = \mathcal{L}(u_h) - f$ is required to vanish in the weighted
 mean
 
 ```math
-\int_{x_0}^{x_1} w_i(x)\, R(u_h, x)\, dx = 0,
+\int_{x_0}^{x_1} \phi_i(x)\, R(u_h, x)\, dx = 0,
 ```
 
-with $w_i = \phi_i$ (Bubnov–Galerkin). Test functions associated with a node whose value is prescribed are removed
-from the test space ($w(x_b) = 0$ there).
+with weighting functions $\phi_i = N_i$ (Bubnov–Galerkin). Weighting functions associated with a node whose value is
+prescribed are removed from the weighting space ($\phi(x_b) = 0$ there).
 
 ### 4.1 First order: direct weighted residual (no integration by parts)
 
@@ -118,7 +119,7 @@ integration by parts is performed and there is no boundary term:
 ```math
 \int_{x_0}^{x_1} \phi_i\,(\beta u_h' + \gamma u_h)\,dx = \int_{x_0}^{x_1} \phi_i f\,dx
 \quad\Longrightarrow\quad
-K_{ij} = \int \phi_i\,(\beta \phi_j' + \gamma \phi_j)\,dx, \qquad F_i = \int \phi_i f\,dx .
+K_{ij} = \int \phi_i\,(\beta N_j' + \gamma N_j)\,dx, \qquad F_i = \int \phi_i f\,dx .
 ```
 
 This is $(-1)$ times the general second-order formula below; the solution is identical, but the sheet uses the
@@ -127,24 +128,24 @@ textbook sign and never labels this formulation a "weak form".
 ### 4.2 Second order: weak formulation (integration by parts)
 
 For a $C^0$ approximation, $u_h'$ jumps at the nodes, so $(\alpha u_h')'$ is not defined there in the classical sense.
-Integration by parts moves one derivative onto the test function:
+Integration by parts moves one derivative onto the weighting function:
 
 ```math
-\int_{x_0}^{x_1} w\,(\alpha u_h')'\,dx = \big[\,w\,\alpha u_h'\,\big]_{x_0}^{x_1} - \int_{x_0}^{x_1} w'\,\alpha u_h'\,dx ,
+\int_{x_0}^{x_1} \phi_i\,(\alpha u_h')'\,dx = \big[\,\phi_i\,\alpha u_h'\,\big]_{x_0}^{x_1} - \int_{x_0}^{x_1} \phi_i'\,\alpha u_h'\,dx ,
 ```
 
 which gives the weak form
 
 ```math
-\int_{x_0}^{x_1} \big(w'\,\alpha u' - w\,\beta u' - w\,\gamma u\big)\,dx = w(x_1)\,Q_1 - w(x_0)\,Q_0 - \int_{x_0}^{x_1} w f\,dx ,
+\int_{x_0}^{x_1} \big(\phi_i'\,\alpha u' - \phi_i\,\beta u' - \phi_i\,\gamma u\big)\,dx = \phi_i(x_1)\,Q_1 - \phi_i(x_0)\,Q_0 - \int_{x_0}^{x_1} \phi_i f\,dx ,
 \qquad Q = \alpha u'.
 ```
 
-Substituting $u_h = \sum_j a_j \phi_j$ and $w = \phi_i$:
+Substituting $u_h = \sum_j a_j N_j$ and $\phi_i = N_i$:
 
 ```math
 \mathbf{K}\mathbf{a} = \mathbf{F}, \qquad
-K_{ij} = \int \big(\phi_i'\,\alpha\,\phi_j' - \phi_i\,\beta\,\phi_j' - \phi_i\,\gamma\,\phi_j\big)\,dx, \qquad
+K_{ij} = \int \big(\phi_i'\,\alpha\,N_j' - \phi_i\,\beta\,N_j' - \phi_i\,\gamma\,N_j\big)\,dx, \qquad
 \mathbf{F} = \mathbf{F}_b + \mathbf{F}_l ,
 ```
 
@@ -152,17 +153,17 @@ K_{ij} = \int \big(\phi_i'\,\alpha\,\phi_j' - \phi_i\,\beta\,\phi_j' - \phi_i\,\
 F_{l,i} = -\int \phi_i f\,dx, \qquad \mathbf{F}_b = [\,-Q_0,\ 0,\ \dots,\ 0,\ Q_1\,]^{\mathsf T}.
 ```
 
-Row $i$ of the system corresponds to the test function $w_i = \phi_i$; column $j$ multiplies the unknown $a_j$.
+Row $i$ of the system corresponds to the weighting function $\phi_i$; column $j$ multiplies the unknown $a_j$.
 The boundary term at each end is handled as follows:
 
 | Condition at $x_b$ | Boundary term |
 |---|---|
-| $u(x_b) = g$ | $w_i(x_b) = 0$ in the test space, so the term is absent from the equations used; $Q$ is computed after the solve from the removed row |
+| $u(x_b) = g$ | $\phi_i(x_b) = 0$ in the weighting space, so the term is absent from the equations used; $Q$ is computed after the solve from the removed row |
 | $u'(x_b) = g$ | $Q = \alpha(x_b)\,g$, known, enters $\mathbf{F}_b$ |
 | $\alpha u'(x_b) = q$ | $Q = q$, known, enters $\mathbf{F}_b$ |
 | not given (boundary value problem) | $Q = 0$ (natural condition) |
 | not given, $\alpha(x_b) = 0$ | $Q = 0$ (degenerate end) |
-| free end of an initial value problem | unknown; the test function vanishing there is removed (§5) |
+| free end of an initial value problem | unknown; the weighting function that does not vanish there is removed (§5) |
 
 If $\alpha$ is a negative constant, the element matrices are the negatives of the familiar positive-definite
 stiffness matrices; $(-\mathbf{K})\,\mathbf{a} = -\mathbf{F}$ has the same solution, and the sheet shows both forms.
@@ -174,20 +175,20 @@ stiffness matrices; $(-\mathbf{K})\,\mathbf{a} = -\mathbf{F}$ has the same solut
   (`mpmath.quad`, adaptive tanh–sinh) and marked with "≈". For constant coefficients and equal element sizes the
   element matrix is the same for every element.
 - Assembly: $K_{IJ} = \sum_e K^{(e)}_{ij}$ and $F_I = \sum_e F^{(e)}_i$ with $I = (e-1)p + i$, $J = (e-1)p + j$.
-- Essential conditions: the row of a prescribed node is removed (its test function is not in the test space) and its
+- Essential conditions: the row of a prescribed node is removed (its weighting function is not in the weighting space) and its
   column is moved to the right-hand side, $F_{\mathrm{red},i} = F_i - \sum_{j\ \text{known}} K_{ij} a_j$. The reduced
   system $\mathbf{K}_{\mathrm{red}}\,\mathbf{a}_{\text{unknown}} = \mathbf{F}_{\mathrm{red}}$ is solved.
 
 ## 5. Initial value problems — what is proven and what is not
 
 Weak form as in §4.2. If $u(x_0) = u_0$ and $u'(x_0) = s_0$ are given at the left end, then $Q_0 = \alpha(x_0)\,s_0$ is
-known and $Q_1$ is unknown. Trial space: $u_h(x_0) = u_0$. Test space: the $N_i$ with $v(x_1) = 0$ (the last test
-function is removed). This is a Petrov–Galerkin choice: the test space differs from the trial space.
+known and $Q_1$ is unknown. Trial space: $u_h(x_0) = u_0$. Weighting space: the $N_i$ with $\phi(x_1) = 0$ (the last
+weighting function is removed). This is a Petrov–Galerkin choice: the weighting space differs from the trial space.
 
 - **Proven:**
-  1. Because $v(x_1) = 0$, the unknown term $Q_1$ drops out.
-  2. Trial and test spaces have the same dimension $np$, so the system is square.
-  3. Consistency: the exact solution satisfies this weak form for every test function.
+  1. Because $\phi_i(x_1) = 0$, the unknown term $Q_1$ drops out.
+  2. Trial and weighting spaces have the same dimension $np$, so the system is square.
+  3. Consistency: the exact solution satisfies this weak form for every weighting function.
   4. At the continuous level, a solution of this weak form satisfies both the differential equation and
      $u'(x_0) = s_0$ (reverse the integration by parts).
 - **At the discrete level:** $u(x_0)$ is satisfied exactly (essential condition); **$u'(x_0)$ only weakly**:
@@ -204,7 +205,7 @@ function is removed). This is a Petrov–Galerkin choice: the test space differs
 
 ## 6. First-order compatibility (left null space)
 
-The first-order test space follows the textbook: the test function of the node with the prescribed value is removed
+The first-order weighting space follows the textbook: the weighting function of the node with the prescribed value is removed
 (its equation is dropped). The full system, however, $\mathbf{A}\mathbf{a} = \mathbf{b}$ with
 $\mathbf{A} \in \mathbb{R}^{N \times (N-1)}$ (all rows, columns of the unknowns), is in general over-determined.
 It is compatible exactly when $\mathbf{b}$ lies in the range of $\mathbf{A}$, i.e.
@@ -219,7 +220,7 @@ $\mathbf{y} = \big(1 \text{ at } d,\ -\mathbf{A}_2^{-\mathsf T}\mathbf{a}_d\big)
 
 - $r_d = 0$: the full system is compatible; the choice of dropped row does not change the result
   (example: $u' = 2x$).
-- $r_d \neq 0$: dropping a different row means a different test space and therefore a different solution
+- $r_d \neq 0$: dropping a different row means a different weighting space and therefore a different solution
   (example: $u' = 3x^2$ on $[0, 2]$, $n = 2$ gives $r = -1$). Which one is more accurate depends on the problem;
   this is not an accuracy proof.
 
@@ -240,7 +241,7 @@ For a $C^0$ approximation the residual has three different meanings, and the she
    J_k = \alpha(x_k)\big[u_h'(x_k^+) - u_h'(x_k^-)\big].
    ```
 
-3. **Weak residual.** The Galerkin equation of an interior test function is the identity
+3. **Weak residual.** The Galerkin equation of an interior weighting function is the identity
    $\int \phi_i R_e\,dx + \sum_k \phi_i(x_k)\,J_k = 0$ (element-wise integration by parts in reverse).
 
 Example: for $u'' = -2$, $u(0) = u(1) = 0$, P1, the classical residual is $R_e = 2$ in every element and the nodal
@@ -252,7 +253,7 @@ natural condition is satisfied only weakly.
 
 ## 8. Reconstruction
 
-The approximate solution is reconstructed element by element, $u_h^{(e)}(x) = \sum_k \hat a^{(e)}_k N_k^{(e)}(x)$,
+The approximate solution is reconstructed element by element, $u_h^{(e)}(x) = \sum_k a^{(e)}_k N_k^{(e)}(x)$,
 with the element's own shape functions (no smoothing). All error measures use this reconstruction.
 
 ## 9. Worked example (reference values)
@@ -278,7 +279,7 @@ exists only for second-order problems.
 3. Mesh (local-to-global table).
 4. Shape functions (derivation via $\mathbf{V}$, $\delta_{ij}$, partition of unity, completeness, continuity,
    local → global).
-5. Approximate solution $u_h = \sum_j a_j \phi_j$.
+5. Approximate solution $u_h = \sum_j a_j N_j$.
 6. Galerkin weighted-residual formulation (for first order also the evaluated $\int \phi_i R\,dx = 0$ equations, which
    are checked against the rows of $\mathbf{K}$; for second order the classical and distributional residual).
 7. *(second order only)* Weak formulation (integration by parts), with the justification of every boundary term.

@@ -165,10 +165,10 @@ for p_ in (1, 2, 3, 4):
             ok = False
         check(f'şekil türetmesi P{p_}, h={h_}: Vandermonde yolu hesaptaki N ile aynı', ok and any('\\mathbf{V}\\mathbf{c}' in b_ for b_ in blocks))
 hw = fem_sheet.make_sheet(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2))['text']
-for label, needle in [('polinom u^e(s) = c₀ + c₁s', 'u^{e}(s) = c_{0} + c_{1} s'), ('koşul c₀ = â₁⁽ᵉ⁾', 'u^{e}(s_{1}) &= c_{0} = \\hat{a}^{(e)}_{1}'),
-                      ('çözüm c₁ = â₂ − â₁', 'c_{1} &= - \\hat{a}^{(e)}_{1} + \\hat{a}^{(e)}_{2}'), ('gruplama â₁(1 − s) + â₂(s)', '\\hat{a}^{(e)}_{1}\\left(1 - s\\right) + \\hat{a}^{(e)}_{2}\\left(s\\right)'),
+for label, needle in [('polinom u^e(s) = c₀ + c₁s', 'u^{e}(s) = c_{0} + c_{1} s'), ('koşul c₀ = a₁⁽ᵉ⁾', 'u^{e}(s_{1}) &= c_{0} = a^{(e)}_{1}'),
+                      ('çözüm c₁ = â₂ − â₁', 'c_{1} &= - a^{(e)}_{1} + a^{(e)}_{2}'), ('gruplama â₁(1 − s) + â₂(s)', 'a^{(e)}_{1}\\left(1 - s\\right) + a^{(e)}_{2}\\left(s\\right)'),
                       ('global N⁽²⁾ = 2 − x, x − 1', 'N_{1}^{(2)}(x) = 2 - x,\\quad N_{2}^{(2)}(x) = x - 1'), ('u_h⁽¹⁾ = a₁(1 − x) + a₂x', 'u_h^{(1)}(x) = a_{1}\\left(1 - x\\right) + a_{2}\\left(x\\right)'),
-                      ('kalıntı R⁽¹⁾ = a₂ − a₁ − 2x', 'R(u_h, x)\\big|_{\\Omega_{1}} = - a_{1} + a_{2} - 2 x'), ('Dirichlet → w₁ test uzayında yok', 'w_{1} = \\phi_{1}\\ \\text{çıkarıldı: } u(x_0)\\ \\text{verildi (temel koşul)'),
+                      ('kalıntı R⁽¹⁾ = a₂ − a₁ − 2x', 'R(u_h, x)\\big|_{\\Omega_{1}} = - a_{1} + a_{2} - 2 x'), ('Dirichlet → φ₁ ağırlık uzayında yok', '\\phi_{1} = N_{1}\\ \\text{çıkarıldı: } u(x_0)\\ \\text{verildi (temel koşul)'),
                       ('i = 2 denklemi −a₁/2 + a₃/2 − 2 = 0 (ödev 2. satır)', '- \\frac{a_{1}}{2} + \\frac{a_{3}}{2} - 2 = 0'),
                       ('i = 3 denklemi −a₂/2 + a₃/2 − 5/3 = 0', '- \\frac{a_{2}}{2} + \\frac{a_{3}}{2} - \\frac{5}{3} = 0'),
                       ('yerine koyma (0)(1 − x) + (2/3)(x) = 2x/3', '\\left(0\\right)\\left(1 - x\\right) + \\left(\\frac{2}{3}\\right)\\left(x\\right) = \\frac{2 x}{3}'),
@@ -179,16 +179,17 @@ bvp = fem_sheet.make_sheet(problem('1', '', '1', 'x', D(0), D(0), 2, 1))['text']
 check('2. mertebe: C⁰ gerekçesi + kısmi integrasyon + satır denklemi', 'klasik anlamda tanımsız' in bvp and '(kısmi integrasyon)' in bvp
       and '\\frac{11 a_{2}}{3}' in bvp and 'R_{1}(x) = a_{1} \\left(1 - 2 x\\right) + 2 a_{2} x - x' in bvp and 'dağılımsal kalıntı' in bvp)
 ivp = fem_sheet.make_sheet(problem('1', '', '1', '0', B(0, 1), NONE, 2, 1))['text']
-check('IVP: akısı bilinmeyen uçtaki test fonksiyonu gerekçesiyle dışarıda', '\\text{bilinmiyor: test uzayında }' in ivp and 'Petrov–Galerkin' in ivp)
+check('IVP: akısı bilinmeyen uçtaki test fonksiyonu gerekçesiyle dışarıda', '\\text{bilinmiyor: ağırlık uzayında }' in ivp and 'Petrov–Galerkin' in ivp)
 
 # 1i. Matematiksel çözüm kâğıdı standardı: başlık mertebeye göre; boyutlar; montaj eşlemesi; sınır terimi gerekçesi; hata ölçüleri
 check('1. mertebe: "Weak Formulation" başlığı YOK, ağırlıklı kalıntı başlığı var', 'Weak Formulation' not in hw and 'Galerkin Weighted-Residual Formulation' in hw)
 check('2. mertebe: "Weak Formulation (Integration by Parts)" var ve ağırlıklı kalıntıdan sonra', 'Weak Formulation (Integration by Parts)' in bvp
       and bvp.index('Galerkin Weighted-Residual') < bvp.index('Weak Formulation (Integration by Parts)'))
-check('kâğıt: w_i = φ_i ve u_h = Σ a_j φ_j açık', 'w_i(x) = \\phi_i(x)' in hw and 'u_h(x) = \\sum_{j=1}^{3} a_j\\,\\phi_j(x)' in hw)
-check('kâğıt: a, K, F boyutları ve satır/sütun anlamı', '\\mathbf{K} \\in \\mathbb{R}^{3\\times3}' in hw and 'satır } i \\leftrightarrow w_i' in hw)
+check('kâğıt (Heinrich & Pepper): φ_i = N_i ağırlık, u_h = Σ a_j N_j, yerel a_k⁽ᵉ⁾', '\\phi_i(x) = N_i(x)' in hw and 'u_h(x) = \\sum_{j=1}^{3} a_j\\,N_j(x)' in hw
+      and 'a^{(e)}_k = a_{(e-1)p+k}' in hw and 'w_i' not in hw and '\\hat{a}' not in hw)
+check('kâğıt: a, K, F boyutları ve satır/sütun anlamı', '\\mathbf{K} \\in \\mathbb{R}^{3\\times3}' in hw and 'satır } i \\leftrightarrow \\phi_i' in hw)
 check('ödev: montajda K₂₂ = K⁽¹⁾₂₂ + K⁽²⁾₁₁ = 0 ve F₂ = 2/3 + 4/3', 'K_{22} = K^{(1)}_{22} + K^{(2)}_{11}' in hw and 'F_{l,2} = F^{(1)}_{l,2} + F^{(2)}_{l,1}' in hw)
-check('2. mertebe: her uçta sınır terimi gerekçesi', bvp.count('x = 0:\\quad') == 1 and bvp.count('x = 1:\\quad') == 1 and 'w_i(0) = 0' in bvp)
+check('2. mertebe: her uçta sınır terimi gerekçesi', bvp.count('x = 0:\\quad') == 1 and bvp.count('x = 1:\\quad') == 1 and '\\phi_i(0) = 0' in bvp)
 neu = fem_sheet.make_sheet(problem('-1', '', '', 'sin(pi*x)', D(0), {'type': 'neumann', 'value': '1'}, 2, 2))['text']
 check('Neumann ucu: Q = α u\' bilinen akı olarak yazılır', 'Q_1 = \\alpha(1)\\,u\'(1) = -1' in neu and 'Q_1 = -1\\ \\text{(doğal)}' in neu)
 check('karşılaştırma: düğüm, noktasal, L² ve H¹ ayrı', all(k in neu for k in ('(düğüm hatası)', '(noktasal hata', '_{L^2}', '_{H^1}')))
@@ -198,6 +199,15 @@ numeric_sheet = fem_sheet.build_sheet(*fem_sheet.run_pipeline(problem('1', '', '
 exact_sheet = fem_sheet.make_sheet(problem('1', '', '', 'x', D(0), D(0), 2, 1))['text']
 check('integral kuralı yazılır: sayısal yolda tanh–sinh, tam yolda SymPy', 'tanh–sinh' in numeric_sheet and 'süre sınırı' in numeric_sheet
       and 'SymPy ile tam' in exact_sheet and 'tanh–sinh' not in exact_sheet)
+
+# 1i-b. Kâğıt sunumu: düğüm sayısı ≠ bilinmeyen sayısı; eleman integrali x'ten s'ye dönüşümüyle (J = 1); hata ölçülerinin anlamı
+check('kâğıt: N = np + 1 düğüm ile temel koşuldan sonraki bilinmeyen sayısı ayrı', 'temel koşuldan sonra bilinmeyen: } 2' in hw and 'toplam düğüm = bilinmeyen' not in hw)
+check('kâğıt: eleman integrali önce x üzerinde, sonra s = x − x_e ile (J = 1)', 'K^{(e)}_{ij} = \\int_{x_e}^{x_e + h}' in hw and 'J = \\frac{dx}{ds} = 1' in hw
+      and '\\int_{1}^{2}(\\cdots)\\,dx = \\int_0^{1}(\\cdots)\\big|_{x = s + 1}\\,ds' in hw)
+check('kâğıt: her hata ölçüsünün ne ölçtüğü yazılır', 'düğüm hatası: yalnız düğümlerde' in hw and 'türevin hatası' in hw)
+same_sheet = fem_sheet.make_sheet(problem('1', '', '1', '1', D(0), D(0), 3, 1))['text']
+check('kâğıt: aynı eleman matrisi sessizce atlanmaz (gerekçe + e = 2, 3 satırı)', 'J = 1 \\Rightarrow s \\text{ cinsinden integrand }' in same_sheet
+      and 'e = 2,\\ 3:\\qquad \\mathbf{K}^{(e)} = \\mathbf{K}^{(1)}' in same_sheet)
 
 # 1j. V0.1 kalıcı kıyas problemleri (iç regresyon; arayüze girmez). Beklenen değerler ELLE türetildi (motordan değil).
 FL = lambda v: {'type': 'flux', 'value': str(v)}
