@@ -18,6 +18,7 @@ from pathlib import Path
 import sympy as sp
 
 import fem_sheet
+import fem_verify
 
 HERE = Path(__file__).resolve().parent
 D = lambda v: {'type': 'dirichlet', 'value': str(v)}
@@ -124,7 +125,7 @@ check('2. mertebe IVP → tek', cont('1', '', '1', '0', B(0, 1), NONE)[:2] == ('
 # 1f. Analitik çözüm doğrulaması (madde 1): yapay adaylar doğru nedenle reddedilir; benchmark analitikleri doğrulanır
 def verdict(a, b, g, f, l, r, cand, x0=0, x1=1):
     res = fem_sheet.solve_problem(problem(a, b, g, f, l, r, 2, 1, x0, x1))
-    return fem_sheet.verify_exact(res, cand)
+    return fem_verify.verify_exact(res, cand)
 X = fem_sheet.x
 for name, args, cand, start in [("u''=2, D/D, aday x² (u(1) ihlali)", ('1', '', '', '2', D(0), D(0)), X**2, 'u(1)'),
                                 ("u''=2, aday x³ (denklem ihlali)", ('1', '', '', '2', D(0), D(1)), X**3, 'R[u]'),
@@ -176,7 +177,7 @@ for label, needle in [('polinom u^e(s) = c₀ + c₁s', 'u^{e}(s) = c_{0} + c_{1
 check('1. mertebede kısmi integrasyon yapay olarak eklenmez', 'kısmi integrasyon gerekmez' in hw and 'v\\,(\\alpha u\')\'' not in hw)
 bvp = fem_sheet.make_sheet(problem('1', '', '1', 'x', D(0), D(0), 2, 1))['text']
 check('2. mertebe: C⁰ gerekçesi + kısmi integrasyon + satır denklemi', 'klasik anlamda tanımsız' in bvp and '(kısmi integrasyon)' in bvp
-      and '\\frac{11 a_{2}}{3}' in bvp and 'R(u_h, x)\\big|_{\\Omega_{1}} = a_{1} \\left(1 - 2 x\\right) + 2 a_{2} x - x' in bvp)
+      and '\\frac{11 a_{2}}{3}' in bvp and 'R_{1}(x) = a_{1} \\left(1 - 2 x\\right) + 2 a_{2} x - x' in bvp and 'dağılımsal kalıntı' in bvp)
 ivp = fem_sheet.make_sheet(problem('1', '', '1', '0', B(0, 1), NONE, 2, 1))['text']
 check('IVP: akısı bilinmeyen uçtaki test fonksiyonu gerekçesiyle dışarıda', '\\text{bilinmiyor: test uzayında }' in ivp and 'Petrov–Galerkin' in ivp)
 
@@ -191,12 +192,101 @@ check('2. mertebe: her uçta sınır terimi gerekçesi', bvp.count('x = 0:\\quad
 neu = fem_sheet.make_sheet(problem('-1', '', '', 'sin(pi*x)', D(0), {'type': 'neumann', 'value': '1'}, 2, 2))['text']
 check('Neumann ucu: Q = α u\' bilinen akı olarak yazılır', 'Q_1 = \\alpha(1)\\,u\'(1) = -1' in neu and 'Q_1 = -1\\ \\text{(doğal)}' in neu)
 check('karşılaştırma: düğüm, noktasal, L² ve H¹ ayrı', all(k in neu for k in ('(düğüm hatası)', '(noktasal hata', '_{L^2}', '_{H^1}')))
-em = fem_sheet.error_measures(fem_sheet.solve_problem(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2)), fem_sheet.x**2)
+em = fem_verify.error_measures(fem_sheet.solve_problem(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2)), fem_sheet.x**2)
 check("ödev hata ölçüleri elle hesaba eşit: düğüm 1/3, |e|_H¹ = √(8/9)", abs(em['nodal'] - 1 / 3) < 1e-12 and abs(em['h1'] - (8 / 9) ** 0.5) < 1e-12, f"{em['nodal']} {em['h1']}")
-rq = fem_sheet.solve_problem(problem('1', '', '', 'abs(x-0.3)', D(0), D(0), 2, 1), symbolic=False)
-numeric_sheet, exact_sheet = fem_sheet.build_sheet(rq)[0], fem_sheet.make_sheet(problem('1', '', '', 'x', D(0), D(0), 2, 1))['text']
-check('integral kuralı yazılır: sayısal yolda tanh–sinh, tam yolda SymPy', 'tanh–sinh' in numeric_sheet and '\\approx' in numeric_sheet
+numeric_sheet = fem_sheet.build_sheet(*fem_sheet.run_pipeline(problem('1', '', '', 'abs(x-0.3)', D(0), D(0), 2, 1), symbolic=False))
+exact_sheet = fem_sheet.make_sheet(problem('1', '', '', 'x', D(0), D(0), 2, 1))['text']
+check('integral kuralı yazılır: sayısal yolda tanh–sinh, tam yolda SymPy', 'tanh–sinh' in numeric_sheet and 'süre sınırı' in numeric_sheet
       and 'SymPy ile tam' in exact_sheet and 'tanh–sinh' not in exact_sheet)
+
+# 1j. V0.1 kalıcı kıyas problemleri (iç regresyon; arayüze girmez). Beklenen değerler ELLE türetildi (motordan değil).
+FL = lambda v: {'type': 'flux', 'value': str(v)}
+status = lambda sheet: {it['name']: it['status'] for it in sheet['verification']}
+R_ = sp.Rational
+# Test A: u' + u = 1, u(0) = 0 → u = 1 − e^{−x}. P1, h = 1/4: K^e = ∫N_i(N_j' + N_j) = [[−1/2 + h/3, 1/2 + h/6], [−1/2 + h/6, 1/2 + h/3]], F^e = [h/2, h/2]
+dA = problem('', '1', '1', '1', D(0), NONE, 4, 1)
+rA = fem_sheet.solve_problem(dA)
+check('A: K^(1) = [[−5/12, 13/24], [−11/24, 7/12]], F^(1) = [1/8, 1/8] (elle)',
+      rA['elements'][0]['K'] == sp.Matrix([[R_(-5, 12), R_(13, 24)], [R_(-11, 24), R_(7, 12)]]) and list(rA['elements'][0]['F']) == [R_(1, 8), R_(1, 8)])
+sA = fem_sheet.make_sheet(dA)
+check('A: kalıntı tüm terimleri içerir R = u_h′ + u_h − 1', 'R(u_h, x)\\big|_{\\Omega_{1}} = a_{1} \\left(- 4 x - 3\\right) + a_{2} \\left(4 x + 4\\right) - 1' in sA['text'])
+check('A: analitik 1 − e^{−x} sembolik doğrulandı', sA['exact'] == '1 - exp(-x)' and sA['exact_status'] == 'verified_symbolic', sA['exact'])
+check('A: atılan satır kalıntısı ve bağımsız yeniden hesabı, tüm doğrulamalar geçti',
+      all(v == 'geçti' for v in status(sA).values()) and '1. mertebe atılan satır (bağımsız)' in status(sA), str(status(sA)))
+emA = fem_verify.error_measures(fem_sheet.solve_problem(dA), 1 - sp.exp(-fem_sheet.x))
+check('A: hata ölçüleri pozitif ve göreli hata tanımlı', emA['l2'] > 0 and emA['h1'] > 0 and 0 < emA['rel_l2'] < 1, str(emA['l2']))
+# Test B: u'' = −2, u(0) = u(1) = 0 → u = x(1 − x). P1: K^e = (1/h)[[1, −1], [−1, 1]] = 4·[[1, −1], [−1, 1]], F_l^e = −∫N_i f = [h, h]·1 = [1/4, 1/4]
+dB = problem('1', '', '', '-2', D(0), D(0), 4, 1)
+rB = fem_sheet.solve_problem(dB)
+check('B: K^(1) = [[4, −4], [−4, 4]] (kısmi integrasyon işareti +), F_l^(1) = [1/4, 1/4]',
+      rB['elements'][0]['K'] == sp.Matrix([[4, -4], [-4, 4]]) and list(rB['elements'][0]['F']) == [R_(1, 4), R_(1, 4)])
+check('B: P1 düğümlerde tam: a = [0, 3/16, 1/4, 3/16, 0]', rB['a'] == [0, R_(3, 16), R_(1, 4), R_(3, 16), 0], str(rB['a']))
+emB = fem_verify.error_measures(rB, fem_sheet.x * (1 - fem_sheet.x))
+check('B: düğüm hatası 0 ama iç hata > 0 (L² = h²/√120·… > 0, H¹ > 0)', emB['nodal'] < 1e-15 and emB['l2'] > 1e-3 and emB['h1'] > 1e-2, f"{emB['nodal']} {emB['l2']} {emB['h1']}")
+dist = fem_verify.distributional_residual(rB)
+check('B: düğüm sıçramaları J = u_h′(x⁺) − u_h′(x⁻) = −2h = −1/2 (elle) ve ∫φ_i R_e + J_i = 0',
+      all(abs(j + 0.5) < 1e-25 for j in dist['jumps']) and dist['status'] == 'geçti', str(dist['jumps']))
+sB = fem_sheet.make_sheet(dB)
+check('B: kâğıt eleman içi / dağılımsal / zayıf kalıntıyı ayırır', all(k in sB['text'] for k in ('eleman içi klasik kalıntı', 'dağılımsal kalıntı', 'Weak Formulation (Integration by Parts)'))
+      and all(v == 'geçti' for v in status(sB).values()), str(status(sB)))
+# Test C: ((1+x)u')' = 4x + 2, u(0) = 0, (1+x)u'(1) = 4 (AKI koşulu) → u = x². P1, h = 1/4: K^(1) = 16·∫_0^{1/4}(1+x)dx·[[1, −1], [−1, 1]] = 9/2·[[1, −1], [−1, 1]]
+dC = problem('1+x', '', '', '4x+2', D(0), FL(4), 4, 1)
+rC = fem_sheet.solve_problem(dC)
+check('C: değişken katsayılı K^(1) = 9/2·[[1, −1], [−1, 1]] (elle)', rC['elements'][0]['K'] == R_(9, 2) * sp.Matrix([[1, -1], [-1, 1]]))
+check('C: akı koşulu Q₁ = 4 (u′(1) = 4 olsaydı Q₁ = α(1)·4 = 8 olurdu)', rC['Q']['right'] == 4
+      and fem_sheet.solve_problem(problem('1+x', '', '', '4x+2', D(0), Nm(4), 4, 1))['Q']['right'] == 8)
+check("C: aynı fiziksel koşul u′(1) = 2 ile aynı a (akı ↔ türev çevrilmeden, ayrı yoldan)",
+      rC['a'] == fem_sheet.solve_problem(problem('1+x', '', '', '4x+2', D(0), Nm(2), 4, 1))['a'])
+sC = fem_sheet.make_sheet(dC)
+check('C: analitik x² denklem + u(0) + α u′(1) = 4 ile doğrulandı', sC['exact'] == 'x**2' and any(c[0] == 'α u′(1) = 4' and c[1] for c in sC['exact_checks']), str(sC['exact_checks']))
+check('C: tüm bağımsız doğrulamalar geçti, L² hızı ≈ 2', all(v == 'geçti' for v in status(sC).values()), str(status(sC)))
+check('C: x² adayı u′(1) = 4 türev koşuluyla REDDEDİLİR (akı ≠ türev)',
+      fem_verify.verify_exact(fem_sheet.solve_problem(problem('1+x', '', '', '4x+2', D(0), Nm(4), 2, 1)), fem_sheet.x ** 2)['status'] == 'rejected')
+
+# 1k. Tanı testleri: beklenen sınıf ve uyarı davranışı
+def outcome(data):
+    try:
+        return 'çözüldü', fem_sheet.make_sheet(data)
+    except fem_sheet.Diagnosis as error:
+        return (error.category, error.level), str(error)
+check('tanı: çözüm yok (saf Neumann, ∫f ≠ akı farkı) → K1 sürekli', outcome(problem('1', '', '', '1', Nm(0), Nm(0), 4, 1))[0] == ('K1', 'sürekli problem'))
+check('tanı: sonsuz çözüm (u″ = 0, N/N) → K2 sürekli', outcome(problem('1', '', '', '0', Nm(0), Nm(0), 4, 1))[0] == ('K2', 'sürekli problem'))
+check('tanı: saf Neumann uyumlu (∫f = 0) → K2 (tek değil), uyumsuz → K1', outcome(problem('1', '', '', '2x-1', Nm(0), Nm(0), 4, 2))[0][0] == 'K2')
+kind, sheetN = outcome(problem('1', '', '9.8', '1', D(0), D(0), 8, 2))
+check('tanı: rezonansa yakın (γ = 9.8 ≈ π²) ama tek → çözülür, çözücü kalıntısı geçti', kind == 'çözüldü' and status(sheetN)['çözücü kalıntısı ve koşul sayısı'] == 'geçti')
+kind, sheetD = outcome(problem('x', '', '', '1', NONE, D(0), 4, 2))
+check('tanı: dejenere uç (α(0) = 0) → reddedilmez, kâğıtta dejenere uyarısı', kind == 'çözüldü' and 'dejenere' in sheetD['text'])
+kind, msg = outcome(problem('x-0.5', '', '', '1', D(0), D(0), 4, 1))
+check('tanı: işaret değiştiren α, düğüm x* = 1/2 → AYRIK sistem K1, sürekli hüküm yok, ilgisiz saf Neumann örneği yok',
+      kind == ('K1', 'ayrık sistem') and 'AYRIK' in msg and "saf Neumann" not in msg, msg[:90])
+check('tanı: çözücü başarısızlığı (IVP kaba ağ) → K3', category(problem('1', '', '1', '0', B(0, 1), NONE, 64, 1, 0, 512), symbolic=False) == 'K3')
+sH = fem_sheet.make_sheet(problem('1', '', '400', '1', D(0), D(0), 2, 1))
+check('tanı: çözünürlüğü yetersiz Helmholtz (k = 20, kh = 10) → dalga uyarısı, hız iddiası yok',
+      status(sH)['dalga çözünürlüğü (kh)'] == 'uyarı' and status(sH)['yakınsama çalışması (ifem, analitik çözüme karşı)'] != 'geçti')
+sP = fem_sheet.make_sheet(problem('-0.01', '1', '', '1', D(0), D(0), 4, 1))
+check('tanı: taşınım baskın (Pe = 12.5) → Péclet uyarısı; analitik yoksa hata/yakınsama "yapılmadı"',
+      status(sP)['Péclet sayısı'] == 'uyarı' and status(sP)['yakınsama çalışması'] == 'yapılmadı' and 'hesaplanmadı' in sP['text'])
+
+# 1l. Katman sınırları
+v1 = fem_sheet.validate_problem(fem_sheet.define_problem(dC))
+check('Katman 2: iz tablosunda her alan iki ayrıştırıcıyla eşdeğer', all(t['ok'] for t in v1['trace']) and {t['item'] for t in v1['trace']} >= {'α(x)', 'f(x)', 'x₁ koşulu', 'operatör'})
+check('Katman 2: eşdeğerlik denetimi gerçek farkı yakalar', not fem_sheet.same_expression(fem_sheet.x, fem_sheet.x + sp.Rational(1, 10**6), 0, 1)[0])
+check('Katman 2: ondalık girdi iki ayrıştırıcıda eşdeğer (0.05 ↔ 1/20)', fem_sheet.same_expression(fem_sheet.parse('0.05x', 't'), fem_sheet.independent_parse('0.05x'), 0, 1)[0])
+try:
+    fem_sheet.validate_problem(fem_sheet.define_problem({**dB, 'n': 4.5})); check('Katman 2: n = 4.5 sessizce yuvarlanmaz', False)
+except fem_sheet.UserError:
+    check('Katman 2: n = 4.5 sessizce yuvarlanmaz', True)
+import ast as _ast
+verify_src = (HERE / 'fem_verify.py').read_text(encoding='utf-8')
+called = {n.func.attr for n in _ast.walk(_ast.parse(verify_src)) if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)} | \
+         {n.func.id for n in _ast.walk(_ast.parse(verify_src)) if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)}
+check('Katman 4 motoru çağırmaz (fem_engine, lagrange_basis, integral, formulation_data, solve_reduced yok)',
+      not called & {'fem_engine', 'lagrange_basis', 'integral', 'formulation_data', 'solve_reduced', 'element_residual', 'shape_function_construction'})
+sheet_tree = next(n for n in _ast.parse((HERE / 'fem_sheet.py').read_text(encoding='utf-8')).body if getattr(n, 'name', '') == 'build_sheet')
+sheet_calls = {getattr(n.func, 'attr', getattr(n.func, 'id', '')) for n in _ast.walk(sheet_tree) if isinstance(n, _ast.Call)}
+check('Katman 5 hesap yapmaz (build_sheet içinde integrate/solve/diff/simplify/Abs/quad/exact_solution/error_measures çağrısı yok)',
+      not sheet_calls & {'integrate', 'solve', 'diff', 'simplify', 'Abs', 'quad', 'lambdify', 'exact_solution', 'error_measures', 'fem_engine', 'verify'},
+      str(sorted(sheet_calls & {'integrate', 'solve', 'diff', 'simplify', 'Abs', 'quad', 'lambdify'})))
 
 # 2. Ayrıştırıcı tarayıcıdakiyle aynı kuralları uygular
 x = fem_sheet.x

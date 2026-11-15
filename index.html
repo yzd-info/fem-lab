@@ -133,6 +133,11 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 .solution-head { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
 .solution h2 { font-size: 18px; }
+/* Kâğıt başlığı aç/kapa düğmesidir: başlık görünümü korunur, yalnız yön oku eklenir. */
+.sheet-toggle { all: unset; cursor: pointer; font: inherit; display: inline-flex; align-items: center; gap: 8px; }
+.sheet-toggle::before { content: '▸'; font-size: 0.8em; color: var(--muted); transition: transform 0.15s; }
+.sheet-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.sheet-toggle:focus-visible { outline: 2px solid var(--active-color, var(--ink)); outline-offset: 3px; }
 .solution h3 { font-size: 15px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--grid); }
 .solution h4 { font-size: 15px; margin: 18px 0 6px; }
 .solution p { margin: 6px 0; max-width: 75ch; }
@@ -173,6 +178,7 @@ input:disabled { opacity: 0.45; }
   main { display: block; }
   .solution { border: 0; padding: 0; background: none; }
   .sheet { border: 0; margin: 0; padding: 0; max-width: none; }
+  #sheet-body { display: block !important; }
 }
 
 @media (max-width: 860px) {
@@ -228,7 +234,7 @@ window.MathJax = {
       <div class="bc-row slope-row" id="bc-left-slope-row" hidden><span></span><label class="slope-label" for="bc-left-slope">u′(x₀) =</label><input type="text" id="bc-left-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
       <div class="bc-row"><span>x₁</span><select id="bc-right-type" aria-label="x₁ koşul türü"></select><input type="text" id="bc-right-value" placeholder="değer" aria-label="x₁ koşul değeri" spellcheck="false" autocomplete="off"></div>
       <div class="bc-row slope-row" id="bc-right-slope-row" hidden><span></span><label class="slope-label" for="bc-right-slope">u′(x₁) =</label><input type="text" id="bc-right-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
-      <p class="hint">Her uç için tür ve değer seç. <b>Sınır değer problemi:</b> iki koşulu farklı uçlara ver; koşul verilmeyen uçta doğal koşul α u′ = 0 uygulanır. <b>Başlangıç değer problemi:</b> bir uçta “u ve u′” seç (ör. konum ve hız), diğerini “verilmedi” bırak. Birinci mertebede yalnızca bir uçta u değeri verilir.</p>
+      <p class="hint">Her uç için tür ve değer seç. <b>Sınır değer problemi:</b> iki koşulu farklı uçlara ver; koşul verilmeyen uçta doğal koşul α u′ = 0 uygulanır. “u′ =” türev koşuludur; fiziksel akı vermek için “α u′ =” seç. <b>Başlangıç değer problemi:</b> bir uçta “u ve u′” seç (ör. konum ve hız), diğerini “verilmedi” bırak. Birinci mertebede yalnızca bir uçta u değeri verilir.</p>
     </div>
     <div class="field">
       <label class="label" for="method">Yöntem</label>
@@ -244,7 +250,7 @@ window.MathJax = {
       <div class="field-head"><label class="label" for="p-slider">Polinom derecesi p</label><output id="p-value" class="mono"></output></div>
       <input type="range" id="p-slider" min="1" max="4" step="1">
     </div>
-    <button class="primary" id="solve-btn" type="button">Çözüm kâğıdını yaz</button>
+    <button class="primary" id="solve-btn" type="button" aria-controls="sheet-body" aria-expanded="false">Çözüm kâğıdını aç</button>
   </aside>
 
   <main>
@@ -281,20 +287,23 @@ window.MathJax = {
 
     <section class="panel solution">
       <div class="solution-head no-print">
-        <h2>Çözüm kâğıdı</h2>
+        <h2><button type="button" class="sheet-toggle" id="sheet-toggle" aria-expanded="false" aria-controls="sheet-body">Çözüm kâğıdı</button></h2>
         <div class="actions" id="sheet-actions" hidden>
           <button class="ghost" id="pdf-btn" type="button">PDF indir</button>
           <button class="ghost" id="tex-btn" type="button">.tex indir</button>
           <button class="ghost" id="copy-btn" type="button">LaTeX kaynağını kopyala</button>
         </div>
       </div>
-      <div class="stale no-print" id="stale" hidden>Parametreler değişti. Güncel çözüm için “Çözüm kâğıdını yaz”a yeniden bas.</div>
-      <p class="hint no-print" id="sheet-hint">“Çözüm kâğıdını yaz”a bas: zayıf form, şekil fonksiyonları, tek tek alınmış integraller, K a = F sistemi ve çözüm, anlatımsız olarak yazılır.</p>
-      <div class="hint no-print" id="sheet-check"></div>
-      <article class="sheet" id="sheet" hidden>
-        <h3 class="sheet-title">Sonlu Eleman Çözüm Kâğıdı</h3>
-        <div id="derivation" class="math-text"></div>
-      </article>
+      <p class="hint no-print" id="sheet-closed">Kâğıt kapalı. Açmak için başlığa ya da “Çözüm kâğıdını aç”a tıkla; açıkken problem her değiştiğinde kendiliğinden yenilenir.</p>
+      <div id="sheet-body" hidden>
+        <div class="stale no-print" id="stale" hidden>Problem değişti — kâğıt güncelleniyor…</div>
+        <p class="hint no-print" id="sheet-hint"></p>
+        <div class="hint no-print" id="sheet-check"></div>
+        <article class="sheet" id="sheet" hidden>
+          <h3 class="sheet-title">Sonlu Eleman Çözüm Kâğıdı</h3>
+          <div id="derivation" class="math-text"></div>
+        </article>
+      </div>
     </section>
   </main>
 </div>
@@ -633,7 +642,9 @@ function makeMesh(a, b, n, p) {
    Bu biçim seçildi çünkü α u'' teriminin kısmi integrasyonu α'nın türevini gerektirmez ve
    birinci mertebe denklemler (α = 0) aynı formülün özel halidir. */
 
-/* Uç koşulu: { type: 'none' | 'dirichlet' (u = değer) | 'neumann' (u' = değer) | 'both' (aynı uçta u ve u'), value, slope }.
+/* Uç koşulu: { type: 'none' | 'dirichlet' (u = değer) | 'neumann' (u' = değer, TÜREV koşulu) | 'flux' (α u' = değer, AKI
+   koşulu) | 'both' (aynı uçta u ve u'), value, slope }. Türev ve akı koşulu birbirine dönüştürülmez: neumann'da Q = α(x_b)·g,
+   flux'ta Q = q.
    'both' başlangıç (ya da son) değer problemidir: u değeri value'da, u' değeri slope'ta gelir. */
 function readNumber(text, label) {
   let parsed;
@@ -644,10 +655,45 @@ function readNumber(text, label) {
 }
 function readCondition(raw, label) {
   if (raw.type === 'none') return { type: 'none', value: 0 };
-  if (!['dirichlet', 'neumann', 'both'].includes(raw.type)) throw new Error(`${label} koşulu: bilinmeyen tür.`);
+  if (!['dirichlet', 'neumann', 'flux', 'both'].includes(raw.type)) throw new Error(`${label} koşulu: bilinmeyen tür.`);
   const condition = { type: raw.type, value: readNumber(raw.value, label) };
   if (raw.type === 'both') condition.slope = readNumber(raw.slope, `${label} u′`);
   return condition;
+}
+
+/* Kararlılık göstergeleri (fem_verify.stability_indicators ile aynı tanım ve eşikler; uyarıdır, ret değil — büyük değer
+   sonucu geçersiz kılmaz, standart Galerkin'in bu çözünürlükte salınım/faz hatası üretebileceğini söyler). 401 eşit örnek:
+     2. mertebe, β ≠ 0:  Pe = max|β|h/(2|α|); P1 sabit katsayılı modelde Pe ≤ 1 salınımsızlık koşulu, p > 1 için Pe/p.
+     γ/α > 0 bölgesi:    k = √max(γ/α), dalga boyu başına aralık PPW = 2π/(k·h/p); < 10 faz hatası, < 4 çözümsüz.
+     1. mertebe:          λh/p, λ = max|γ/β|; > 1 büyük adım (bu sınıfta kararlılık garantisi yok). */
+const PECLET_WARN = 1, PPW_WARN = 10, PPW_SEVERE = 4;
+function stabilityIndicators(problem, h, p) {
+  const { x0, x1, order } = problem, { alpha, beta, gamma } = problem.coef, out = [];
+  const xs = Array.from({ length: 401 }, (_, i) => x0 + (x1 - x0) * i / 400);
+  if (order === 2) {
+    let pe = 0, vanish = false, k2 = 0;
+    for (const x of xs) {
+      const a = alpha.f(x), b = beta.f(x), g = gamma.f(x);
+      if (a === 0) { vanish = vanish || b !== 0; continue; }
+      pe = Math.max(pe, Math.abs(b) * h / (2 * Math.abs(a)));
+      if (g / a > 0) k2 = Math.max(k2, g / a);
+    }
+    if (pe > 0) out.push({ kind: 'peclet', value: pe, warn: pe / p > PECLET_WARN,
+      text: `Péclet Pe = max|β|h/(2|α|) = ${fmtNum(pe)}, Pe/p = ${fmtNum(pe / p)}${pe / p > PECLET_WARN ? ' > 1: taşınım baskın, ağ kaba — standart Galerkin salınım üretebilir' : ''}` });
+    if (vanish) out.push({ kind: 'peclet', value: Infinity, warn: true, text: 'α aralıkta sıfırlanıyor: Pe orada tanımsız (taşınım baskın bölge)' });
+    if (k2 > 0) {
+      const k = Math.sqrt(k2), ppw = 2 * Math.PI / (k * h / p);
+      out.push({ kind: 'wave', value: k * h, warn: ppw < PPW_WARN,
+        text: `dalga sayısı k = ${fmtNum(k)}, kh = ${fmtNum(k * h)}, dalga boyu başına ${fmtNum(ppw)} aralık`
+          + (ppw < PPW_SEVERE ? ' < 4: ağ dalgayı çözemiyor, sonuç fiziksel olarak güvenilmez' : ppw < PPW_WARN ? ' < 10: faz (kirlilik) hatası beklenir' : '') });
+    }
+  } else {
+    let lam = 0;
+    for (const x of xs) { const b = beta.f(x); if (b !== 0) lam = Math.max(lam, Math.abs(gamma.f(x) / b)); }
+    if (lam > 0) out.push({ kind: 'step', value: lam * h / p, warn: lam * h / p > 1,
+      text: `λ = max|γ/β| = ${fmtNum(lam)}, λh/p = ${fmtNum(lam * h / p)}${lam * h / p > 1 ? ' > 1: büyük adım; standart Galerkin bu sınıfta kararlılık garantisi vermez' : ''}` });
+  }
+  return out;
 }
 
 /* Önde gelen katsayının (2. mertebede α, 1. mertebede β) sıfırları, SAYISAL (2001 örnek, işaret değişiminde ikiye
@@ -693,7 +739,7 @@ function buildProblem({ alpha, beta, gamma, f, x0, x1, left, right }) {
   if (order === 0) throw new Error('α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil.');
   const bc = { left: readCondition(left, 'x₀'), right: readCondition(right, 'x₁') };
   const kinds = [bc.left.type, bc.right.type];
-  if (order === 1 && (kinds.includes('neumann') || kinds.includes('both') || kinds.filter((k) => k === 'dirichlet').length !== 1))
+  if (order === 1 && (['neumann', 'flux', 'both'].some((k) => kinds.includes(k)) || kinds.filter((k) => k === 'dirichlet').length !== 1))
     throw new Error('Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak.');
   /* Başlangıç değer problemi: iki koşul aynı uçta; öbür uca koşul eklenirse 2. mertebe denklem 3 koşulla aşırı belirlenir. */
   const ivp = kinds.includes('both');
@@ -702,6 +748,9 @@ function buildProblem({ alpha, beta, gamma, f, x0, x1, left, right }) {
   /* u' koşulu zayıf forma yalnızca akı Q = α u' ile girer; α(uç) = 0 ise verilen u' değeri sessizce kaybolurdu. */
   for (const [side, x] of [['left', x0], ['right', x1]])
     if (['neumann', 'both'].includes(bc[side].type) && coef.alpha.f(x) === 0) throw new Error("α bu uçta sıfır: u' koşulu denkleme girmez (α u' akısı sıfır olur).");
+  for (const [side, x] of [['left', x0], ['right', x1]])
+    if (bc[side].type === 'flux' && coef.alpha.f(x) === 0)
+      throw new Error("α bu uçta sıfır: akı koşulu α u' = q ancak q = 0 iken anlamlıdır ve o zaman doğal koşulun kendisidir; bu uçta koşulu 'verilmedi' bırak ya da α'yı kontrol et.");
   const degeneracy = leadingDegeneracy(order === 2 ? coef.alpha.f : coef.beta.f, x0, x1);
   return { coef, constant, x0, x1, order, bc, ivp, degeneracy };
 }
@@ -759,7 +808,7 @@ const METHODS = {
       if (problem.order === 2) {
         const flux = (side, x) => {
           const { type, value, slope } = problem.bc[side], alpha = problem.coef.alpha.f(x);
-          return type === 'neumann' ? alpha * value : type === 'both' ? alpha * slope : 0;
+          return type === 'neumann' ? alpha * value : type === 'flux' ? value : type === 'both' ? alpha * slope : 0;
         };
         F[0] -= flux('left', mesh.a);
         F[dofs - 1] += flux('right', mesh.b);
@@ -944,6 +993,7 @@ function exactConditionFailure(u, du, problem, scale, dscale) {
     const target = type === 'neumann' ? value : type === 'both' ? slope : null;
     if (target !== null && !tol(du(xb) - target, dscale)) return `u′(${fmtNum(xb)}) = ${fmtNum(du(xb))} ≠ ${fmtNum(target)}`;
     const a = problem.coef.alpha.f(xb);
+    if (type === 'flux' && !tol(a * du(xb) - value, Math.abs(a) * dscale)) return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ ${fmtNum(value)} (akı koşulu)`;
     if (type === 'none' && problem.order === 2 && !problem.ivp && a !== 0 && !tol(a * du(xb), Math.abs(a) * dscale))
       return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ 0 (doğal koşul)`;
   }
@@ -991,6 +1041,7 @@ function conditionsTex(problem) {
     const { type, value, slope } = problem.bc[side];
     if (type === 'dirichlet') return `u(${texNum(point)}) = ${texNum(value)}`;
     if (type === 'neumann') return `u'(${texNum(point)}) = ${texNum(value)}`;
+    if (type === 'flux') return `\\alpha(${texNum(point)})\\,u'(${texNum(point)}) = ${texNum(value)}`;
     if (type === 'both') return `u(${texNum(point)}) = ${texNum(value)},\\quad u'(${texNum(point)}) = ${texNum(slope)}`;
     return problem.order === 2 && !problem.ivp ? `\\alpha u'\\big|_{${texNum(point)}} = 0` : null;   // başlangıç değer probleminde öbür uç serbest
   };
@@ -1130,7 +1181,7 @@ async function requestPdf(payload) {
 /* ---------- 9. ARAYÜZ ---------- */
 const $ = (id) => document.getElementById(id);
 const seriesColor = (p) => `var(--series-${p})`;
-const CONDITION_TYPES = { none: 'verilmedi', dirichlet: 'u =', neumann: 'u′ =', both: 'u ve u′' };   // both: başlangıç değer problemi
+const CONDITION_TYPES = { none: 'verilmedi', dirichlet: 'u =', neumann: 'u′ =', flux: 'α u′ =', both: 'u ve u′' };   // flux: akı; both: başlangıç değer problemi
 const N_TICKS = [1, 2, 4, 8, 16, 32, 64];      // yakınsama grafiğindeki n değerleriyle aynı: sürgüde bu noktalara kolay gelinsin
 const N_TICK_LABELS = new Set([1, 8, 16, 32, 64]);
 
@@ -1146,7 +1197,9 @@ const state = {
   errorView: 'signed',        // noktasal hata: 'signed' (u − u_h) ya da 'abs' (|u − u_h|, log)
   convNorm: 'l2',             // yakınsama grafiğinin normu: 'l2' ya da 'h1'
   convMode: 'h',              // 'h': n değişir (h-inceltme) · 'p': n sabit, derece 1→4 (p-inceltme)
-  sheet: null, sheetKey: ''   // sunucudan gelen son kâğıt ve hangi girdilere ait olduğu
+  sheet: null, sheetKey: '',  // sunucudan gelen son kâğıt ve hangi girdilere ait olduğu
+  sheetFailedKey: '',         // sunucunun reddettiği son girdi (aynı istek döngüye girmesin)
+  sheetOpen: false            // kâğıt yalnız istendiğinde açık durur; açıkken problem değişince kendiliğinden yenilenir
 };
 let view = null;              // son başarılı hesabın sonucu
 let cache = { key: '', reference: null, study: null };      // n ve p'ye bağlı olmayan pahalı hesaplar
@@ -1341,6 +1394,8 @@ function renderDiagnostics() {
   const fo = view.results[state.degree].result.diagnostics.firstOrder;
   if (fo) lines.push(`1. mertebe: test uzayı v = 0 u verilen düğümde (ders kitabı); atılan denklem i = ${fo.row}, kalıntı r = ${fo.residual.toExponential(2)}; `
     + `sol sıfır uzayı |yᵀb|/(‖y‖‖b‖) = ${fo.scaled.toExponential(1)} → tam sistem ${fo.compatible ? 'uyumlu (satır seçimi sonucu değiştirmez)' : 'uyumsuz: başka bir satırın atılması (başka test uzayı) başka bir çözüm verir'}.`);
+  for (const s of stabilityIndicators(view.problem, (view.problem.x1 - view.problem.x0) / state.n, state.degree))
+    if (s.warn) lines.push(`Kararlılık (uyarı): ${s.text}.`);
   const condition = view.results[state.degree].result.diagnostics.condition;
   if (condition > COND_WARN)
     lines.push(`${CATEGORY.K3} (uyarı, ayrık sistem): κ₁ ≈ ${condition.toExponential(1)} — sonuçta yaklaşık κ·ε ≈ ${(condition * 2.2e-16).toExponential(0)} göreli hata olabilir.`);
@@ -1493,41 +1548,72 @@ function render() {
     $(id).hidden = !view;
     $(id).classList.toggle('outdated', !!view && !computed);
   }
-  $('solve-btn').disabled = sheetBusy || !computed;
+  renderSheetPanel(computed);
   if (!computed) return;
   renderTiles();
   renderDiagnostics();
   renderCharts();
-  $('stale').hidden = !state.sheet || state.sheetKey === JSON.stringify(sheetPayload());
 }
 
-/* Kâğıt sunucuda üretilir. Gelen düğüm değerleri tarayıcıdaki çözümle karşılaştırılır: iki bağımsız
-   uygulama (sayısal JavaScript, sembolik SymPy) aynı sonucu veriyorsa ikisi de doğrulanmış olur.
-   sheetBusy: istek sürerken düğme kilitlenir; çift tıklama aynı (pahalı) sembolik hesabı iki kez başlatmasın. */
-let sheetBusy = false;
-async function writeSolution() {
-  if (sheetBusy) return;
+/* Kâğıt sunucuda üretilir ve yalnız istendiğinde görünür (state.sheetOpen). Açıkken problem değişirse kâğıt kendiliğinden
+   yenilenir: yazarken her tuşta pahalı sembolik hesap başlamasın diye SHEET_DEBOUNCE ms beklenir; aynı anda en fazla bir
+   istek gider (sheetBusy), sürerken gelen değişiklik istek bitince ele alınır. Gelen düğüm değerleri tarayıcıdaki çözümle
+   karşılaştırılır (iki bağımsız uygulama). */
+const SHEET_DEBOUNCE = 700;
+let sheetBusy = false, sheetTimer = null;
+function renderSheetPanel(computed) {
+  const open = state.sheetOpen, current = state.sheet && state.sheetKey === JSON.stringify(sheetPayload());
+  $('sheet-body').hidden = !open;
+  $('sheet-closed').hidden = open;
+  $('sheet-toggle').setAttribute('aria-expanded', String(open));
+  const button = $('solve-btn');
+  button.setAttribute('aria-expanded', String(open));
+  button.textContent = open ? (sheetBusy ? 'Kâğıt hesaplanıyor… (kapat)' : 'Çözüm kâğıdını kapat') : 'Çözüm kâğıdını aç';
+  button.disabled = !open && !computed;
+  $('sheet-actions').hidden = !open || !state.sheet;
+  if (!open) return;
+  $('stale').hidden = !state.sheet || current || !computed;
+  if (!computed) {
+    $('sheet-hint').hidden = false;
+    $('sheet-hint').textContent = 'Geçerli bir problem yok: kâğıt son geçerli problemi gösteriyor.';
+  } else if (!current && !sheetBusy && state.sheetFailedKey !== JSON.stringify(sheetPayload())) {
+    clearTimeout(sheetTimer);
+    sheetTimer = setTimeout(writeSolution, state.sheet ? SHEET_DEBOUNCE : 0);
+  }
+}
+function toggleSheet() {
+  state.sheetOpen = !state.sheetOpen;
+  if (!state.sheetOpen) clearTimeout(sheetTimer);
   render();
+  if (state.sheetOpen) $('sheet-toggle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+async function writeSolution() {
+  if (sheetBusy || !state.sheetOpen) return;
   if (!compute()) return;                                    // geçersiz girdi: eski grafiğin problemini sunucuya yollama
-  const payload = sheetPayload(), hint = $('sheet-hint'), button = $('solve-btn');
+  const payload = sheetPayload(), key = JSON.stringify(payload), hint = $('sheet-hint');
+  if (state.sheet && state.sheetKey === key) return;
   sheetBusy = true;
-  button.disabled = true; button.textContent = 'Hesaplanıyor…'; button.setAttribute('aria-busy', 'true');
+  $('solve-btn').setAttribute('aria-busy', 'true');
   hint.hidden = false;
-  hint.textContent = 'Çözüm kâğıdı hesaplanıyor… (sembolik integraller; büyük n ve p birkaç saniye sürebilir)';
-  $('sheet-check').textContent = '';
+  hint.textContent = 'Çözüm kâğıdı hesaplanıyor… (sembolik integraller ve bağımsız doğrulama; büyük n ve p birkaç saniye sürebilir)';
+  render();
   try {
-    state.sheet = { payload, ...(await requestSheet(payload)) };
-    state.sheetKey = JSON.stringify(payload);
-    hint.hidden = true; $('stale').hidden = true;
-    $('sheet').hidden = false; $('sheet-actions').hidden = false;
+    const result = await requestSheet(payload);
+    state.sheet = { payload, ...result };
+    state.sheetKey = key; state.sheetFailedKey = '';
+    hint.hidden = true;
+    $('sheet').hidden = false;
     $('sheet-check').innerHTML = crossCheck(payload, state.sheet);
     await renderMathText($('derivation'), state.sheet.text);
   } catch (err) {
+    state.sheet = null; state.sheetKey = '';
+    $('sheet').hidden = true; $('sheet-check').textContent = '';
     hint.hidden = false;
     hint.textContent = err.message;
+    state.sheetFailedKey = key;                              // aynı hatalı problem için istek tekrarlanmasın
   } finally {
     sheetBusy = false;
-    button.textContent = 'Çözüm kâğıdını yaz'; button.removeAttribute('aria-busy');
+    $('solve-btn').removeAttribute('aria-busy');
     render();
   }
 }
@@ -1543,6 +1629,15 @@ function crossCheck(payload, sheet) {
   const maxAbs = (values) => Math.max(1, ...values.map(Math.abs));
   const lines = [];
   const line = (ok, text) => lines.push(`<li class="${ok ? '' : 'bad'}">${ok ? '✓' : '✗'} ${text}</li>`);
+  /* Katman 2, üçüncü ayrıştırıcı: sunucu iki ayrıştırıcıyla eşdeğerliği kanıtladı; tarayıcının kendi ayrıştırıcısı aynı 9
+     noktada aynı katsayıları vermeli. Tutmazsa grafiklerdeki problem kâğıttakiyle aynı değildir. */
+  if (sheet.coefficient_samples) {
+    const cs = sheet.coefficient_samples;
+    let gap = 0;
+    for (const key of ['alpha', 'beta', 'gamma', 'f'])
+      cs.points.forEach((x, k) => { gap = Math.max(gap, Math.abs(problem.coef[key].f(x) - cs[key][k]) / Math.max(1, Math.abs(cs[key][k]))); });
+    line(gap <= 1e-12, `problem tanımı: tarayıcı ayrıştırıcısı ↔ sunucu (iki ayrıştırıcı) α, β, γ, f aynı (en büyük göreli fark ${gap.toExponential(1)})`);
+  }
   const nodalGap = Math.max(...mine.c.map((v, i) => Math.abs(v - sheet.nodal[i])));
   const nodalTol = rel * maxAbs(sheet.nodal);
   line(nodalGap <= nodalTol, `düğüm katsayıları a: en büyük fark ${nodalGap.toExponential(1)} (tolerans ${nodalTol.toExponential(0)})`);
@@ -1566,7 +1661,12 @@ function crossCheck(payload, sheet) {
     line(gap <= rel * Math.max(1, Math.abs(sheet.first_order_residual), ...sheet.nodal.map(Math.abs)), `1. mertebe atılan denklem kalıntısı r: fark ${gap.toExponential(1)}`);
   }
   if (rough) lines.push('<li>· kuadratür uyarısı: tarayıcı integralleri yaklaşık, tolerans 1e-5’e gevşetildi</li>');
-  return `Çapraz kontrol (tarayıcı ↔ SymPy):<ul class="check-list">${lines.join('')}</ul>`;
+  const mark = { 'geçti': '✓', 'başarısız': '✗', 'uyarı': '!', 'yapılmadı': '–' };
+  const escape = (t) => t.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+  const verified = (sheet.verification || []).map((it) =>
+    `<li class="${it.status === 'başarısız' ? 'bad' : ''}">${mark[it.status] || '·'} ${escape(it.name)} (${it.status}): ${escape(it.detail)}</li>`).join('');
+  return `Çapraz kontrol (tarayıcı ↔ SymPy):<ul class="check-list">${lines.join('')}</ul>`
+    + (verified ? `Bağımsız doğrulama (sunucu, Katman 4):<ul class="check-list">${verified}</ul>` : '');
 }
 
 function download(blob, filename) {
@@ -1622,7 +1722,8 @@ function init() {
   for (const b of document.querySelectorAll('[data-error-view]')) b.addEventListener('click', () => { state.errorView = b.dataset.errorView; render(); });
   for (const b of document.querySelectorAll('[data-conv-norm]')) b.addEventListener('click', () => { state.convNorm = b.dataset.convNorm; render(); });
   for (const b of document.querySelectorAll('[data-conv-mode]')) b.addEventListener('click', () => { state.convMode = b.dataset.convMode; render(); });
-  $('solve-btn').addEventListener('click', writeSolution);
+  $('solve-btn').addEventListener('click', toggleSheet);
+  $('sheet-toggle').addEventListener('click', toggleSheet);
   /* PDF: sunucuda pdflatex varsa gerçek LaTeX çıktısı indirilir; yoksa tarayıcının yazdır → "PDF olarak kaydet" yolu kullanılır. */
   $('pdf-btn').addEventListener('click', async () => {
     try { download(await requestPdf(state.sheet.payload), 'fem-cozum-kagidi.pdf'); } catch { window.print(); }
