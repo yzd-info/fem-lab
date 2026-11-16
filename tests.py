@@ -465,4 +465,56 @@ for mode in ('--quick', '--compare'):
     run = subprocess.run([sys.executable, str(HERE / 'verification' / 'run_verification.py'), mode], capture_output=True, text=True)
     check(f'verification {mode}', run.returncode == 0, (run.stdout.strip().splitlines() or ['?'])[-1])
 
+# 7. Performans düzeltmeleri (CI'da HTTP 504: korpus C48/C50; sembolik yolun sessiz zaman aşımı: C31/C32). Sonucu değil
+#    süreyi değiştirdikleri için hem eşdeğerlik (eski yolla aynı sayılar) hem süre sınırı sınanır.
+import random as _random
+import mpmath as _mp
+_random.seed(7)
+worst, singular_ok = 0.0, True
+for trial in range(40):
+    n_, kl, ku = _random.randint(1, 25), _random.randint(0, 4), _random.randint(0, 4)
+    rows_ = [[_mp.mpf(_random.uniform(-3, 3)) if -kl <= j - i <= ku else _mp.mpf(0) for j in range(n_)] for i in range(n_)]
+    if trial % 5 == 0 and n_ > 2:                                    # sıfır köşegen: pivotlama zorunlu
+        for i in range(n_):
+            rows_[i][i] = _mp.mpf(0)
+    b_ = [_mp.mpf(_random.uniform(-1, 1)) for _ in range(n_)]
+    try:
+        ref, kref = _mp.lu_solve(_mp.matrix(rows_), _mp.matrix(b_)), _mp.cond(_mp.matrix(rows_))
+    except ZeroDivisionError:
+        ref = None
+    try:
+        got, kgot = fem_sheet.band_lu_solve(rows_, b_), fem_sheet.band_condition(rows_)
+    except ZeroDivisionError:
+        got = None
+    if (ref is None) != (got is None):
+        singular_ok = False
+        continue
+    if ref is not None:
+        scale = max(abs(ref[i]) for i in range(n_))
+        worst = max(worst, float(max(abs(ref[i] - got[i]) for i in range(n_)) / scale / (kref * _mp.eps)),
+                    float(abs(kref - kgot) / kref / (kref * _mp.eps)))
+check('bant LU / κ₁ ↔ mpmath.lu_solve / cond: 40 rastgele bant matris (pivotlamalı), fark yuvarlama düzeyinde (< κε)',
+      singular_ok and worst < 1, f'en büyük fark / (κε) = {worst:.1e}')
+singular = [[_mp.mpf(1), _mp.mpf(2)], [_mp.mpf(2), _mp.mpf(4)]]
+try:
+    fem_sheet.band_condition(singular); raised = False
+except ZeroDivisionError:
+    raised = True
+check('bant LU: tekil matris ZeroDivisionError (mpmath ile aynı sözleşme → K1/K2/K3 sınıflandırması)', raised)
+t0 = time.time(); r50 = fem_sheet.solve_problem(problem('-1', '', '', '1', D(0), D(0), 64, 4), symbolic=False); dt = time.time() - t0
+xs = [float(r50['x0'] + i * r50['h'] / 4) for i in range(r50['dofs'])]          # düğüm aralığı h/p
+check("C50 (−u'' = 1, n = 64, p = 4, 255 bilinmeyen): motor < 20 s ve düğümler x(1−x)/2 ile çakışır",
+      dt < 20 and max(abs(float(a) - xv * (1 - xv) / 2) for a, xv in zip(r50['a'], xs)) < 1e-12, f'{dt:.1f} s')
+t0 = time.time(); r31 = fem_sheet.solve_problem(problem('1/(1+x)', '', '', '1', D(0), D(0), 6, 1)); dt = time.time() - t0
+check("C31 α = 1/(1+x) (K'de log): tam yol yerine ondalıklı çözüm, gerekçe yazılı, < 20 s (önce > 10 dk)",
+      dt < 20 and not r31['exact'] and r31['solve_note'] == 'K rasyonel değil', f"{dt:.1f} s, {r31['solve_note']}")
+r_rat = fem_sheet.solve_problem(problem('1', '', '1', 'x', D(0), D(0), 2, 1))
+check('rasyonel K: tam (kesirli) yol değişmedi (a₂ = −3/44, solve_note yok)', r_rat['exact'] and r_rat['solve_note'] is None and r_rat['a'][1] == sp.Rational(-3, 44))
+check("kâğıt: ondalıklı çözümde gerekçe a'nın yanında", '(ondalıklı çözüm: K rasyonel değil)' in fem_sheet.make_sheet(problem('1/(1+x)', '', '', '1', D(0), D(0), 2, 1))['text'])
+sym_K = fem_sheet.solve_problem(problem('sqrt(1+x)', '', '', '1', D(0), D(0), 2, 2))['elements'][0]
+steps = {st['label']: st for st in sym_K['K_steps']}
+check("integral önbelleği: β = 0'da K^(1)_12 ve K^(1)_21 aynı değer ve adımlar, kendi etiketleriyle",
+      steps['K^{(1)}_{12}']['value'] == steps['K^{(1)}_{21}']['value'] and steps['K^{(1)}_{21}']['label'] == 'K^{(1)}_{21}'
+      and steps['K^{(1)}_{12}']['primitive'] == steps['K^{(1)}_{21}']['primitive'])
+
 sys.exit(1 if failures else 0)
