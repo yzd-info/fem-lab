@@ -253,6 +253,6 @@ Varlık durumları: EXISTENCE_CONFIRMED: 58, INCONCLUSIVE: 9, NONEXISTENCE_CONFI
 
 ## Taban (değişiklik öncesi) ile karşılaştırma
 
-- Her iki çalıştırmada kâğıt üretilen vaka: 63; düğüm değerlerinde en büyük göreli değişim: 0.00e+00
+- Her iki çalıştırmada kâğıt üretilen vaka: 63; düğüm değerlerinde en büyük göreli değişim: 6.66e-16
 - HTTP durumu ya da düğüm değeri değişen vakalar:
   - C46: 500 → 200 · önce: Çözüm kâğıdı üretilemedi: IndexError: list index out of range

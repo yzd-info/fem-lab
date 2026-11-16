@@ -176,3 +176,27 @@ Defects found in the new verification code itself (not in the engine) and fixed:
 
 After the fixes: `tests.py` 221/221, `tests.js` 167/167, corpus 80 cases with 0 FAIL, nodal values identical to the
 baseline (max relative change 0).
+
+## Phase 6 — CI failures of PR #5 (C48, C50) and silent symbolic-path timeouts (2026-11-16)
+
+CI run 43867191248: Python 3.9 FAIL C50; Python 3.12 FAIL C48 and C50. Both were **HTTP 504** from the server pipeline
+(`server.compute_sheet`: symbolic attempt 60 s, then numeric attempt 60 s). No numerical check failed: on 3.9 C48 completed
+in 107.5 s and passed every comparison (browser ↔ SymPy 1.1·10⁻¹⁴, scikit-fem elements 1.3·10⁻¹⁵). Failing layer:
+**backend execution (performance)**, not formulation, integration, assembly, boundary conditions or solver accuracy. The
+3.9/3.12 difference is runner speed around a fixed 60 s limit, not a language-version behaviour.
+
+| # | Finding | Root cause | Fix | Evidence |
+|---|---|---|---|---|
+| D5 | C48/C50 HTTP 504 | `solve_reduced` (numeric path) built a dense `mpmath.matrix` of the banded K_ff and called `mpmath.cond` (dense inverse) and `mpmath.lu_solve`: O(n³) pure Python. 255 unknowns: 39 s locally (cond 27 s + LU 13 s), i.e. > 60 s on CI runners; the symbolic attempt runs the same solve first | `band_lu` / `band_solve` / `band_lu_solve` / `band_condition` in `fem_sheet.py`: the **same** algorithm as `mpmath.LU_decomp` (scaled partial pivoting, same singularity threshold ‖A‖₁ε, +10 bits for the solve, +20 for the inverse; κ₁ exact via n banded solves, not an estimate), loops restricted to the band (kl, ku + kl after pivoting). Also used for the first-order compatibility solve | 255 unknowns: 39 s → 0.9 s; C50 pipeline 50 s → 13 s. `tests.py`: 40 random banded matrices (incl. zero diagonals → pivoting) agree with `mpmath.lu_solve`/`cond` to < κε, singular → `ZeroDivisionError`; C50 nodes = x(1−x)/2 to 1.2·10⁻¹⁴ in < 20 s |
+| D6 | C31 symbolic path > 10 min (server fell back to numeric after 60 s; integral steps lost) | exact (fraction) path chosen by size alone (≤ 8 free unknowns). α = 1/(1+x) puts `log` terms into K; `sp.simplify(det K)` and simplification of the LU solution (≈ 360 ops per entry) never finish | exact path only when the reduced K is **rational** (then det K is an exact rational and the solution is a rational combination of F). Otherwise decimal solve (D5), integrals still exact; reason (`solve_note`) printed next to **a** | C31 > 600 s → 1 s; rational cases unchanged (u'' + u = x: a₂ = −3/44 still exact) |
+| D7 | C32 symbolic path 124 s (fallback) | each K entry integrated twice more than needed: the display-only antiderivative used the *expanded* integrand (several × slower for √(1+x)·polynomial), and with β = 0 the integrands N_i'αN_j' and N_j'αN_i' are the same canonical SymPy expression but were integrated separately | antiderivative of the unexpanded integrand (same function; the existing F(h) − F(0) = value check still guards it); per-process memo keyed by (integrand, h, path) — each entry still written out with its own label | C32 124 s → 34 s; test: K^(1)_12 and K^(1)_21 share value and steps, labels distinct |
+
+**Not changed (documented limitations):**
+- C35 (57 s) and C63 (50 s) are still close to the 60 s symbolic limit locally (SymPy definite integrals of
+  cos(πx)·polynomial and tan x·polynomial). On slower runners they fall back to the numeric sheet (decimal integrals, no
+  steps) — a correct but less detailed sheet, not a failure. Further speed-up would need a different integration strategy.
+- `classify_problem` / `verify_exact` time out with `thread.join(timeout)`; the abandoned SymPy thread keeps running in the
+  same process and competes for the GIL. Results stay correct (a timeout gives INCONCLUSIVE / "undetermined", never a
+  verdict), but timing-dependent verdicts differ between runs (C32: "zaman aşımı" on 3.12 vs "not linear in constants" on
+  3.9). Killing a SymPy computation needs a subprocess per check; not done here (architecture change).
+- p = 5 is not supported by design (equally spaced nodes; Gauss–Lobatto would be required, CLAUDE.md §7).
