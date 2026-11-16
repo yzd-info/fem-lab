@@ -122,8 +122,10 @@ Solve $u' = 2x$ on $(0, 2)$ with $u(0) = 0$ (exact solution $u = x^2$):
 | n, p | 2, 1 |
 
 With linear elements the sheet derives $K^{(e)} = \begin{bmatrix} -\tfrac12 & \tfrac12 \\ -\tfrac12 & \tfrac12 \end{bmatrix}$
-and $\mathbf{a} = [\,0,\ 1/6,\ 1\,]^{\mathsf T}$, i.e. $u_h = x/3$ on $[0, 1]$ and $u_h = 5x/3 - 2/3$ on $[1, 2]$, with a
-nodal error of $1/12$ and $\|e\|_{L^2} = 0.030429$. Moving the $p$ slider to 2 or 3 reproduces $x^2$ to machine precision.
+and $\mathbf{a} = [\,0,\ 2/3,\ 4\,]^{\mathsf T}$, i.e. $u_h = 2x/3$ on $[0, 1]$ and $u_h = 10x/3 - 8/3$ on $[1, 2]$
+(continuous at the shared node: $u_h(1) = 2/3$), with a nodal error of $1/3$ (at $x = 1$),
+$\|e\|_{L^2} = \sqrt{4/135} \approx 0.172133$ and $|e|_{H^1} = \sqrt{8/9} \approx 0.942809$. Moving the $p$ slider to 2 or 3
+reproduces $x^2$ to machine precision.
 Example sheets are in [`ornekler/`](ornekler/).
 
 ## Verification and testing
@@ -160,7 +162,7 @@ python3 verification/run_verification.py --full
 ```
 
 `tests.js` checks the browser kernel (163 checks), `tests.py` the server pipeline and every sheet's LaTeX compilation
-(190 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
+(195 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
 against an independent solver and analytical solutions. GitHub Actions runs all three on every pull request and every
 push to `main`, with Python 3.9 and 3.12.
 

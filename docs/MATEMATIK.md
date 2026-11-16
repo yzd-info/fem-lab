@@ -65,7 +65,9 @@ Admissible combinations:
 
 - $n$ equal elements, $1 \le n \le 64$, element size $h = (x_1 - x_0)/n$.
 - Lagrange elements of degree $p = 1, \dots, 4$ (linear, quadratic, cubic, quartic) with equally spaced nodes;
-  each element has $p + 1$ nodes and the mesh has $N = np + 1$ nodes (unknowns).
+  each element has $p + 1$ nodes and the mesh has $N = np + 1$ nodes, i.e. $N$ nodal coefficients $a_j$. The number of
+  **unknowns** is smaller when essential conditions are given: every node with a prescribed value $u(x_b) = g$ is
+  removed from the unknowns (e.g. P1, $n = 4$: 5 nodes; 4 unknowns with one Dirichlet end, 3 with two).
 - Global numbering: local node $k$ of element $e$ (both 0-based) is global node $e\,p + k$.
 - Local coordinate $s = x - x_e \in [0, h]$, so $dx = ds$ (the Jacobian is 1).
 
@@ -261,8 +263,9 @@ with the element's own shape functions (no smoothing). All error measures use th
 $u' = 2x$, $u(0) = 0$, $x \in (0, 2)$, $n = 2$, P1 (exact solution $u = x^2$):
 
 - $K^{(e)} = \begin{bmatrix} -\tfrac12 & \tfrac12 \\ -\tfrac12 & \tfrac12 \end{bmatrix}$,
-  $\mathbf{a} = [\,0,\ 1/6,\ 1\,]^{\mathsf T}$, $u_h = x/3$ on $[0, 1]$ and $5x/3 - 2/3$ on $[1, 2]$;
-- nodal error $1/12$, $\|e\|_{L^2} = 0.030429$, $|e|_{H^1} = 1/3$;
+  $\mathbf{a} = [\,0,\ 2/3,\ 4\,]^{\mathsf T}$, $u_h = 2x/3$ on $[0, 1]$ and $10x/3 - 8/3$ on $[1, 2]$
+  (continuous at $x = 1$: $u_h(1) = 2/3$);
+- nodal error $1/3$ (at $x = 1$), $\|e\|_{L^2} = \sqrt{4/135} \approx 0.172133$, $|e|_{H^1} = \sqrt{8/9} \approx 0.942809$;
 - P2 and P3 reproduce $x^2$ to machine precision.
 
 These values are checked in `tests.py`.
