@@ -60,9 +60,12 @@ def solve(prob, n, p):
     fixed = {i: mp.mpf(prob[s][1]) for s, i in (('left', 0), ('right', dofs - 1)) if prob[s][0] in ('dirichlet', 'both')}
     free = [i for i in range(dofs) if i not in fixed]
     rows = list(range(dofs - 1)) if L[0] == 'both' else list(range(1, dofs)) if R[0] == 'both' else free
-    A = mp.matrix([[K[i, j] for j in free] for i in rows])
-    bb = mp.matrix([F[i] - sum(K[i, j] * v for j, v in fixed.items()) for i in rows])
-    sol = mp.lu_solve(A, bb)
+    if not free:                       # tüm düğümler temel koşulla belirli: çözülecek sistem yok (boş matris kurulmaz)
+        sol = []
+    else:
+        A = mp.matrix([[K[i, j] for j in free] for i in rows])
+        bb = mp.matrix([F[i] - sum(K[i, j] * v for j, v in fixed.items()) for i in rows])
+        sol = mp.lu_solve(A, bb)
     c = [None] * dofs
     for i, v in fixed.items():
         c[i] = v

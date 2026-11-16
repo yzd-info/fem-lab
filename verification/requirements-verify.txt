@@ -1,0 +1,4 @@
+# Yalnız doğrulama için (uygulamanın kendisi bunlara ihtiyaç duymaz; uygulama bağımlılığı ../requirements.txt).
+# scikit-fem: verification/skfem_reference.py — bağımsız FEM referansı (80 vakalık korpus, run_corpus.py).
+# Sürüm sabit: sonuçlar ve raporlar bu sürümü kaydeder. numpy ve scipy scikit-fem'in kendi bağımlılıklarıdır.
+scikit-fem==11.0.0

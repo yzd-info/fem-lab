@@ -1,6 +1,6 @@
 # FEM Lab
 
-**A browser-based Galerkin finite element laboratory for one-dimensional  differential equations — solve,
+**A browser-based Galerkin finite element laboratory for one-dimensional linear differential equations — solve,
 understand and verify.**
 
 [![CI](https://github.com/yzd-info/fem-lab/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yzd-info/fem-lab/actions/workflows/ci.yml)
@@ -161,10 +161,15 @@ python3 tests.py
 python3 verification/run_verification.py --full
 ```
 
-`tests.js` checks the browser kernel (163 checks), `tests.py` the server pipeline and every sheet's LaTeX compilation
-(195 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
-against an independent solver and analytical solutions. GitHub Actions runs all three on every pull request and every
-push to `main`, with Python 3.9 and 3.12.
+```bash
+python3 -m pip install -r verification/requirements-verify.txt && python3 verification/run_corpus.py
+```
+
+`tests.js` checks the browser kernel (167 checks), `tests.py` the server pipeline and every sheet's LaTeX compilation
+(221 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
+against an independent solver and analytical solutions. `run_corpus.py` runs 80 input-only cases through the server and
+the browser kernel and cross-checks them with scikit-fem and a continuous-level analysis. GitHub Actions runs all four on
+every pull request and every push to `main`, with Python 3.9 and 3.12.
 
 Details, thresholds and their justification: [docs/DOGRULAMA.md](docs/DOGRULAMA.md).
 
@@ -178,7 +183,7 @@ Details, thresholds and their justification: [docs/DOGRULAMA.md](docs/DOGRULAMA.
 | `server.py` | local server (Python standard library): page, solution sheet, PDF |
 | `fem_sheet.py` | problem definition, validation, symbolic FEM engine (SymPy), sheet formatting |
 | `fem_verify.py` | independent verification (does not call the engine) |
-| `verification/` | independent reference solver, benchmarks, regression baseline |
+| `verification/` | independent reference solver, benchmarks, regression baseline, 80-case input corpus with scikit-fem and continuous-level cross-verification |
 
 There is no framework and no build step. The five-layer pipeline, the server endpoints and the interface are described
 in [docs/MIMARI.md](docs/MIMARI.md).

@@ -1110,7 +1110,10 @@ def build_sheet(valid, r, V):
     D('\\phi_i(x) = N_i(x)\\qquad \\text{(' + ('Bubnov–Galerkin: ağırlık fonksiyonları şekil fonksiyonlarıyla aynı' if not r['ivp']
       else 'Petrov–Galerkin: ağırlıklar şekil fonksiyonlarından seçilir ama test uzayı deneme uzayından farklı') + ')}')
     tests_used = list(r['rows'])
-    D(f'\\phi_i \\in \\{{N_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
+    if tests_used:
+        D(f'\\phi_i \\in \\{{N_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
+    else:                                     # tüm düğümler temel koşulla belirli: ağırlık uzayı boş, çözülecek denklem yok
+        D('\\text{ağırlık uzayı boş: tüm düğüm değerleri temel koşullarla belirli (0 denklem, 0 bilinmeyen)}')
     for i in range(dofs):
         if i in tests_used:
             continue
@@ -1518,9 +1521,13 @@ def make_sheet(data, symbolic=True):
     solution = V['exact']['u']
     # K: tarayıcının montajladığı matrisle girdi girdi karşılaştırılsın diye (büyük sistemde yük olmasın: ≤ 65 bilinmeyen).
     K = [[float(v) for v in row] for row in r['K'].evalf(17).tolist()] if r['dofs'] <= 65 else None
+    # Eleman matrisleri ve yük vektörleri (motorun gerçekten montajladığı): bağımsız eleman düzeyi karşılaştırma için.
+    element_K = [[[float(v) for v in row] for row in rec['K'].evalf(17).tolist()] for rec in r['elements']]
+    element_F = [[float(v) for v in rec['F'].evalf(17)] for rec in r['elements']]
     return {'text': text, 'tex': build_tex(text), 'nodal': [float(sp.sympify(v).evalf()) for v in r['a']],
             'exact': str(solution) if solution is not None else None,
-            'exact_js': exact_for_browser(solution, r['x0'], r['x1']), 'K': K, **verdict_payload(V['exact']),
+            'exact_js': exact_for_browser(solution, r['x0'], r['x1']), 'K': K, 'element_K': element_K, 'element_F': element_F,
+            **verdict_payload(V['exact']),
             'fixed': {str(i): float(v) for i, v in r['fixed'].items()},
             'first_order_residual': float(r['first_order']['residual']) if r['first_order'] else None,
             **classification_payload(V['classification'], r['degeneracy']), **trace_payload(valid),

@@ -388,6 +388,77 @@ for name, data in [('tekil (koşulsuz u\'\'=1)', problem('1', '0', '0', '1', NON
     except fem_sheet.UserError as error:
         check(f'reddeder: {name}', True, str(error))
 
+# 5b. Korpus düzeltmelerinin regresyonları (verification/ENGINEERING_NOTES.md, D1–D3; sürekli düzey doğrulaması).
+#     Hiçbiri uygulamanın kendi çıktısını beklenen değer olarak kullanmaz: beklenenler elle ya da kapalı biçimden gelir.
+# D1: serbest bilinmeyen yok (C46) → eskiden HTTP 500. Kâğıt üretilmeli, doğrulama maddeleri bulunmalı, hiçbiri 'başarısız' olmamalı.
+zero = fem_sheet.make_sheet(problem('1', '', '', '1', D(0), D(0), 1, 1))
+zst = status(zero)
+check('D1: 0 serbest bilinmeyen (P1, n=1, iki uçta u) → kâğıt, a = [0, 0], boş ağırlık uzayı yazılı',
+      zero['nodal'] == [0.0, 0.0] and 'ağırlık uzayı boş' in zero['text'], str(zero['nodal']))
+check('D1: doğrulama maddeleri var, hiçbiri başarısız değil; ifem maddesi geçti',
+      bool(zst) and 'başarısız' not in zst.values() and zst.get('bağımsız yeniden montaj ve çözüm (ifem)') == 'geçti', str(zst))
+two = fem_sheet.make_sheet(problem('1', '', '', '0', D(2), D(5), 1, 1))
+check('D1: birden çok verilen değer (u(0)=2, u(1)=5, 0 serbest) → a = [2, 5]', two['nodal'] == [2.0, 5.0], str(two['nodal']))
+p2 = fem_sheet.solve_problem(problem('1', '', '', '1', D(0), D(0), 1, 2))
+check("D1 karşı-sınama: P2, n=1 (1 serbest iç düğüm) → a₂ = u(1/2) = −1/8 (u = x(x−1)/2)", p2['a'][1] == sp.Rational(-1, 8), str(p2['a']))
+for bad in ('abc', '2*(', '1/0'):   # boş alan bilinçli olarak 0 sayılır (parse), bozuk sayılmaz
+    try:
+        fem_sheet.make_sheet(problem('1', '', '', '1', D(bad), D(0), 1, 1)); check(f"D1: bozuk verilen değer '{bad}' reddedilir", False)
+    except fem_sheet.UserError as error:
+        check(f"D1: bozuk verilen değer '{bad}' reddedilir", True, str(error))
+boom = lambda *_: 1 / 0
+g1, g2 = fem_verify.guarded('deneme', boom), fem_verify.guarded('deneme', boom, pair=True)
+check('D1: istisna atan denetim başarısız + istisna metni (asla geçti değil); pair → (madde, None)',
+      g1['status'] == 'başarısız' and 'ZeroDivisionError' in g1['detail'] and g2[0]['status'] == 'başarısız' and g2[1] is None, g1['detail'])
+def _diagnose():
+    raise fem_verify.Diagnosis('K1', 'sürekli problem', 'deneme')
+try:
+    fem_verify.guarded('deneme', _diagnose); check('D1: Diagnosis yutulmaz (hat durur)', False)
+except fem_verify.Diagnosis:
+    check('D1: Diagnosis yutulmaz (hat durur)', True)
+
+# D3: karmaşık matriste rank (svd_c); sanal kısım atılmaz. Beklenen rank'lar elle.
+I = sp.I
+R = fem_verify.numerical_rank
+check('D3: gerçek tam rank 2', R(sp.Matrix([[1, 2], [3, 4]])) == 2)
+check('D3: karmaşık tam rank 2 (C40 sınır matrisi [[−2i, 0], [iπ/2, 1]])', R(sp.Matrix([[-2 * I, 0], [I * sp.pi / 2, 1]])) == 2)
+check('D3: gerçek tam rank eksikliği → 1', R(sp.Matrix([[1, 2], [2, 4]])) == 1)
+check('D3: karmaşık tam rank eksikliği [[1, i], [i, −1]] → 1', R(sp.Matrix([[1, I], [I, -1]])) == 1)
+check('D3: neredeyse eksik, σ_min ~ 1e-30 (eşik 1e-40 üstü) → 2', R(sp.Matrix([[1, 1], [1, 1 + sp.Rational(1, 10**30)]])) == 2)
+check('D3: σ_min ~ 1e-50 (eşik altı) → 1', R(sp.Matrix([[1, 1], [1, 1 + sp.Rational(1, 10**50)]])) == 1)
+check('D3: karmaşık ara biçim, gerçek sonuç: tam sanal sütun ölçeklemesi rank değiştirmez',
+      R(sp.Matrix([[I, 0], [2 * I, 1]])) == R(sp.Matrix([[1, 0], [2, 1]])) == 2)
+corpus = {c['id']: c['input'] for c in json.loads((HERE / 'verification' / 'corpus' / 'cases.json').read_text(encoding='utf-8'))['cases']}
+c40 = fem_sheet.make_sheet(corpus['C40'])
+u40 = sp.sympify(c40['exact'] or 'nan', locals={'x': x}) if c40['exact'] else None
+target = sp.log(1 + x**2) + sp.atan(x) - sp.pi / 4 - sp.log(2)            # elle: (1+x²)u′ = 2x + 1, u(1) = 0
+check('D3: C40 tek çözüm, gerçek analitik çözüm ln(1+x²) + atan x − π/4 − ln 2 doğrulandı',
+      u40 is not None and not u40.has(I) and sp.simplify(u40 - target) == 0 and c40['exact_status'].startswith('verified'), c40['exact'] or '')
+
+# Sürekli düzey (verification/continuous_problem.py): uygulamanın sınıflandırıcısını çağırmaz. Beklenenler elle.
+sys.path.insert(0, str(HERE / 'verification'))
+import continuous_problem as CP   # noqa: E402
+cp = {k: CP.analyze(corpus[k]) for k in ('C01', 'C46', 'C64', 'C65', 'C66', 'C67', 'C69', 'C70')}
+st3 = lambda k: (cp[k]['existence']['status'], cp[k]['uniqueness']['status'], cp[k]['compatibility']['status'])
+check('sürekli: C67 rezonans → NONEXISTENCE, uyumluluk ihlali C = ∫ f sin πx = 1/2, iki yöntem tutarlı',
+      st3('C67')[0] == 'NONEXISTENCE_CONFIRMED' and st3('C67')[2] == 'COMPATIBILITY_VIOLATED'
+      and 'fark C = 1/2' in cp['C67']['compatibility']['evidence'] and 'tutarlı' in cp['C67']['compatibility'].get('cross_check', ''), str(st3('C67')))
+check("sürekli: C64 u''=1, N/N → NONEXISTENCE (C = 1)", st3('C64')[0] == 'NONEXISTENCE_CONFIRMED' and 'fark C = 1' in cp['C64']['compatibility']['evidence'])
+check("sürekli: C65 u''=2x−1, N/N → EXISTENCE + NONUNIQUENESS, uyumlu", st3('C65') == ('EXISTENCE_CONFIRMED', 'NONUNIQUENESS_CONFIRMED', 'COMPATIBILITY_SATISFIED'), str(st3('C65')))
+check("sürekli: C66 u''=1 koşulsuz → NONEXISTENCE", st3('C66')[0] == 'NONEXISTENCE_CONFIRMED')
+check('sürekli: C46 düzenli D/D → EXISTENCE + UNIQUENESS', st3('C46')[:2] == ('EXISTENCE_CONFIRMED', 'UNIQUENESS_CONFIRMED'))
+check('sürekli: C01 1. mertebe IVP → Yöntem 1 (varlık + teklik)', st3('C01')[:2] == ('EXISTENCE_CONFIRMED', 'UNIQUENESS_CONFIRMED')
+      and 'Yöntem 1' in cp['C01']['existence']['method'])
+over = CP.analyze(problem('1', '', '1', '0', B(0, 1), D(0), 2, 1))          # 'u ve u′' + öbür uçta u: aşırı belirli
+check('sürekli: aşırı belirli koşul takımı Yöntem 1 kapsamı dışında → INCONCLUSIVE (varlık iddiası yok)',
+      over['existence']['status'] == 'INCONCLUSIVE' and 'kapsamında değil' in over['existence']['evidence'], over['existence']['evidence'])
+blocked = subprocess.run([sys.executable, '-c', "import sys; sys.modules['skfem'] = None; sys.path.insert(0, 'verification'); "
+                          "import continuous_problem; print('ok')"], cwd=HERE, capture_output=True, text=True)
+check('sürekli düzey doğrulaması scikit-fem olmadan içe aktarılır (tests.py yalnız requirements.txt ile çalışır)',
+      blocked.stdout.strip() == 'ok', blocked.stderr.strip()[-120:])
+check('sürekli: C69 (iç noktada α = 0) ve C70 (uçta α = 0) → INCONCLUSIVE, kanıtsız hüküm yok',
+      st3('C69')[0] == st3('C70')[0] == 'INCONCLUSIVE' and 'CONFIRMED' not in ' '.join(st3('C69') + st3('C70')), f"{st3('C69')} {st3('C70')}")
+
 # 6. Bağımsız doğrulama paketi (verification/): uygulama ↔ bağımsız mpmath FEM ↔ analitik çözüm, 16 benchmark.
 #    Beklenen değerler uygulamanın çıktısından değil analitik çözümden gelir; ayrıca temel kayıtla regresyon.
 for mode in ('--quick', '--compare'):
