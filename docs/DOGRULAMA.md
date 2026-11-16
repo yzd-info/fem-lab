@@ -216,9 +216,10 @@ The same definitions and thresholds are used in the browser's diagnostics box.
 
 | Command | What it checks |
 |---|---|
-| `node tests.js` | the browser kernel (163 checks): quadrature, shape functions, solutions against analytical results, rates, diagnostics categories, scaling, flux conditions, stability indicators |
-| `python3 tests.py` | the server pipeline (195 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
+| `node tests.js` | the browser kernel (167 checks): quadrature, shape functions, solutions against analytical results, rates, diagnostics categories, scaling, flux conditions, stability indicators |
+| `python3 tests.py` | the server pipeline (221 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
 | `python3 verification/run_verification.py --full` | the browser kernel against the independent solver and analytical solutions for benchmarks T1–T16 and edge cases E1–E4b, $n = 4 \dots 32$ |
+| `python3 verification/run_corpus.py` | the 80-case input-only corpus (§7a); needs `pip install -r verification/requirements-verify.txt` (scikit-fem) |
 
 `tests.py` skips its LaTeX compilation checks if `pdflatex` is not installed; the CI workflow installs LaTeX so that
 they always run.
@@ -237,8 +238,50 @@ Helmholtz problem and a convection-dominated problem.
 V0.1 changes; `run_verification.py --compare` compares the current values against it (relative tolerance
 $10^{-12}$).
 
-**Continuous integration:** `.github/workflows/ci.yml` runs the three commands above on every pull request and on every
+**Continuous integration:** `.github/workflows/ci.yml` runs the four commands above on every pull request and on every
 push to `main`, with Python 3.9 and 3.12 and Node 22.
+
+## 7a. Input-only adversarial corpus and scikit-fem reference
+
+`verification/corpus/cases.json` holds 80 problem **inputs only** (no expected values): first-order IVPs (10),
+second-order BVPs (15), variable coefficients (10), derivative/flux conditions (10), element order and mesh (10),
+trigonometric/exponential sources (8), singular/degenerate/compatibility cases (7) and invalid/adversarial inputs (10).
+Each case is `{id, meta, input}`; only `input` (the same fields the page sends to `POST /api/sheet`) reaches the
+application.
+
+`python3 verification/run_corpus.py` sends every input through the real server pipeline (`server.compute_sheet`) and
+the browser kernel (`node tests.js --solve`), and evaluates the results independently:
+
+- invalid inputs must be rejected cleanly by both paths (no crash, no hang, no numerical result);
+- valid inputs are compared with **scikit-fem** (`verification/skfem_reference.py`, version pinned in
+  `verification/requirements-verify.txt`), which assembles the documented weak form itself with `ElementLineP1`,
+  `ElementLineP2` and `ElementLinePp(p)`. Its interior DOFs for $p \ge 3$ are hierarchical, so results are mapped to
+  FEM Lab's equispaced nodal basis with $\Phi_{Jm} = \psi_m(x_J)$: $K_{\text{Lagrange}} = \Phi^{-\mathsf T} K\,\Phi^{-1}$.
+  Quadrature: Gauss–Legendre of order $2p + 40$, with order $2p + 8$ as an error estimate;
+- an analytical solution found by the application is re-checked against the equation and every condition with a separate
+  parser, and the $L^2$ / $H^1$ errors written on the sheet are recomputed independently;
+- element matrices and load vectors are compared element by element (worst element and entry reported), then the
+  global $K$ and the nodal values;
+- singular/incompatible verdicts are compared with the rank/conditioning of the scikit-fem system;
+- the **continuous** problem is analysed independently of the application's classifier
+  (`verification/continuous_problem.py`): (R) regularity; Method 1, linear existence–uniqueness theorem for a complete
+  initial-condition set; Method 2, a symbolically verified fundamental system (L[y] = 0, Wronskian ≠ 0) and the boundary
+  matrix $B c = r$; Method 3, Fredholm/Green compatibility $\int f v = [\alpha v u' - \alpha u v']_a^b$ for
+  $\beta \equiv 0$ and separated conditions; Method 4, direct substitution of a real, continuous candidate. Statuses:
+  EXISTENCE / NONEXISTENCE / UNIQUENESS / NONUNIQUENESS _CONFIRMED, COMPATIBILITY_SATISFIED / _VIOLATED,
+  INCONCLUSIVE, NOT_APPLICABLE. A continuous verdict is never drawn from a solver failure, from (non)singularity of
+  a FEM matrix or from sampling. A confirmed continuous result that contradicts the application's behaviour is a FAIL.
+
+Results (`verification/corpus_results/`: `results.json`, `skfem_results.json`, `continuous_results.json`,
+`baseline_comparison.json`, `report.md`) are kept apart from the corpus; `baseline_v1/` is the run before the corrective
+changes and the reference of the baseline comparison. Case statuses: PASS, WARN, LIMITATION (warning on an
+intentionally challenging case), DIAGNOSED (a valid input rejected with a diagnosis that is consistent with independent
+evidence), REJECTED_OK, FAIL, RUNNER_ERROR (a defect of the runner itself, reported separately). Each valid case also
+gets a cross-verification matrix row (browser ↔ server, FEM Lab ↔ ifem, scikit-fem element / global / nodal, analytical
+solution, continuous existence / uniqueness / compatibility, L²/H¹ recomputation, boundary condition) with
+PASS / FAIL / WARN / UNSUPPORTED / INCONCLUSIVE / NOT_RUN; only PASS counts as verified. scikit-fem
+uses the same documented weak form, so agreement does not exclude a common-mode error in that formulation; the
+analytical solutions and hand-derived element matrices guard against that.
 
 ## 8. Limits of the verification
 

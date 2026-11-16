@@ -35,8 +35,8 @@ Kullanıcı akışı:
 | `fem_sheet.py` | Katman 1 (define_problem), 2 (validate_problem), 3 (fem_engine: **sembolik/tam** FEM, SymPy), 5 (build_sheet: yalnız biçimleme) ve hat (run_pipeline) |
 | `fem_verify.py` | Katman 4: bağımsız doğrulama; motorun fonksiyonlarını ÇAĞIRMAZ (tests.py kaynakta denetler) |
 | `server.py` | Yerel sunucu (yalnızca standart kütüphane): sayfayı sunar, kâğıdı hesaplatır, PDF'e derler |
-| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 163 kontrol) |
-| `tests.py` | Kâğıt testleri (`python3 tests.py`, 195 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
+| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 167 kontrol) |
+| `tests.py` | Kâğıt testleri (`python3 tests.py`, 221 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
 | `requirements.txt` | `sympy` |
 
 Çalıştırma: `pip install -r requirements.txt` → `python3 server.py` → http://localhost:8000
@@ -105,7 +105,7 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 
 ## 5. Yapılacaklar
 
-1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (163 OK); `python3 tests.py` (195 OK,
+1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (167 OK); `python3 tests.py` (221 OK,
    pdflatex yoksa derleme kontrolleri atlanır). Bir test başarısızsa nedeni ortam mı kod mu ayır; kodu "düzeltmeden"
    önce raporla.
 2. **Gerçek tarayıcıda uçtan uca kontrol.** `python3 server.py`, http://localhost:8000. Altı örneğin her biri için:

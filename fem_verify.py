@@ -110,6 +110,21 @@ def classify_problem(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, i
     return box.get('res', {'kind': 'undetermined', 'reason': f'zaman aşımı ({timeout} s)'})
 
 
+# Sembolik rank kararının bağımsız sayısal karşılığı (60 basamak SVD). Modül düzeyinde: doğrudan sınanabilsin diye.
+# Genel çözüm karmaşık biçimde gelebilir (ör. log(x ± i)); rank sütun ölçeklemesinden bağımsızdır, bu yüzden karmaşık
+# SVD kullanılır (tekil değerler gerçek; Aᴴ örtük) ve sanal kısım atılmaz. Gerçek matriste gerçek SVD (aynı sonuç, daha hızlı).
+# Eşik göreli: σ > 10⁻⁴⁰·max(σ_max, 1).
+def numerical_rank(mat):
+    if mat.rows == 0:
+        return 0
+    with mpmath.workdps(60):
+        A = mpmath.matrix(mat.evalf(60).tolist())
+        complex_entries = any(mpmath.im(A[i, j]) != 0 for i in range(A.rows) for j in range(A.cols))
+        sv = (mpmath.svd_c if complex_entries else mpmath.svd_r)(A, compute_uv=False)
+        top = max(abs(v) for v in sv) if len(sv) else 0
+        return sum(1 for v in sv if abs(v) > mpmath.mpf('1e-40') * max(top, 1))
+
+
 def _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, degeneracy):
     if order not in (1, 2):
         return {'kind': 'unsupported', 'reason': 'yalnız 1. ve 2. mertebe sınıflandırılır'}
@@ -157,14 +172,7 @@ def _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, deg
             equations.append((f"\\alpha u'({sp.latex(point)}) = 0", at(alpha * reduced.diff(x))))   # formülasyonun doğal koşulu
     M, rhs = sp.linear_eq_to_matrix([e for _, e in equations], constants)
     rank_m, rank_a = M.rank(simplify=True), M.row_join(rhs).rank(simplify=True)
-    with mpmath.workdps(60):                              # bağımsız sayısal kontrol (SVD): sembolik rank kararının karşılığı
-        def num_rank(mat):
-            if mat.rows == 0:
-                return 0
-            sv = mpmath.svd_r(mpmath.matrix(mat.evalf(60).tolist()), compute_uv=False)
-            top = max(abs(v) for v in sv) if len(sv) else 0
-            return sum(1 for v in sv if abs(v) > mpmath.mpf('1e-40') * max(top, 1))
-        numeric = (num_rank(M), num_rank(M.row_join(rhs)))
+    numeric = (numerical_rank(M), numerical_rank(M.row_join(rhs)))   # bağımsız sayısal kontrol (SVD): sembolik rank kararının karşılığı
     method = 'sembolik' if numeric == (rank_m, rank_a) else 'sayısal (50 basamak)'
     if method != 'sembolik':
         rank_m, rank_a = numeric
@@ -278,6 +286,31 @@ def verify_exact(r, candidate, timeout=8):
     return {'status': status, 'checks': checks, 'reason': ''}
 
 
+# Karmaşık biçimde yazılmış (ör. log(x ± i) içeren) ama gerçek olması gereken aday. Sanal kısım atılmaz: önce Im u ≡ 0
+# sembolik olarak gösterilmeye çalışılır (x gerçek); olmazsa aralığın 17 Çebişev noktasında 50 basamakta |Im u| ≤ 1e-40·ölçek
+# aranır. İkisi de olmazsa aday kullanılmaz. Gerçek kısım sadeleştirilmiş biçimde döndürülür.
+def real_form(candidate, x0, x1):
+    expanded = sp.expand_complex(candidate)
+    re_part, im_part = sp.simplify(sp.re(expanded)), sp.simplify(sp.im(expanded))
+    # x gerçekken arg(g(x) + i·c) = atan2(c, g); sabit c ≠ 0 için atan2(c, g) = sign(c)·π/2 − atan(g/c) (her gerçek g için tam).
+    def atan2_real(y, g):
+        return sp.sign(y) * sp.pi / 2 - sp.atan(g / y) if (y.is_number and y != 0) else sp.atan2(y, g)
+    rewrite = lambda e: sp.simplify(e.replace(sp.arg, lambda z: atan2_real(sp.im(z), sp.re(z))).replace(sp.atan2, atan2_real))
+    re_part, im_part = rewrite(re_part), rewrite(im_part)   # aynı tam özdeşlik iki kısma da: Im u ≡ 0 sembolik gösterilebilsin
+    if im_part == 0:
+        return re_part, ''
+    points = [x0 + (x1 - x0) * (1 - sp.cos(sp.pi * (2 * k + 1) / 34)) / 2 for k in range(17)]
+    try:
+        with mpmath.workdps(50):
+            scale = max([1.0] + [abs(complex(sp.N(candidate.subs(x, pt), 50))) for pt in points])
+            worst = max(abs(float(sp.N(im_part.subs(x, pt), 50))) for pt in points)
+    except Exception:
+        return None, 'karmaşık biçimli aday: sanal kısım değerlendirilemedi'
+    if worst <= 1e-40 * scale:
+        return re_part, ''
+    return None, f'karmaşık biçimli aday: sanal kısım sıfır gösterilemedi (max |Im u| = {num(worst)})'
+
+
 # Analitik çözüm: sınıflandırmanın genel çözüm + koşul sisteminden bulduğu TEK çözüm. Aday verify_exact'ten geçmezse
 # kullanılmaz (u = None); kâğıt ve tarayıcı nedeni yazar ve hata hesaplanmaz.
 def exact_solution(r, c=None):
@@ -287,6 +320,10 @@ def exact_solution(r, c=None):
     candidate = c['solution']
     if candidate.has(sp.Integral) or candidate.free_symbols - {x}:
         return {'u': None, 'status': 'not_found', 'checks': [], 'reason': 'kapalı biçimde değil'}
+    if candidate.has(sp.I):
+        candidate, why = real_form(candidate, r['x0'], r['x1'])
+        if candidate is None:
+            return {'u': None, 'status': 'not_found', 'checks': [], 'reason': why}
     verdict = verify_exact(r, candidate)
     return {'u': candidate if verdict['status'].startswith('verified') else None, 'candidate': candidate, **verdict}
 
@@ -636,6 +673,19 @@ def stability_indicators(r):
 # ---------- 5. HEPSİ ----------
 # Katman 4'ün girişi: motor çıktısı r (yapılandırılmış veri). Sembolik olarak kanıtlanmış sürekli çözümsüzlük/teksizlik
 # hattı durdurur (Diagnosis). Diğer her madde durum bilgisiyle döner; 'yapılmadı' maddeleri açıkça listelenir.
+# İsteğe bağlı her denetim yalıtılmış çalışır: biri istisna atarsa o madde 'başarısız' olarak, istisnanın türü ve metniyle
+# raporlanır (asla 'geçti' sayılmaz) ve FEM sonucu ile diğer denetimler yine raporlanır. İstisna yutulmaz, görünür kalır.
+# pair=True: denetim (madde, ek veri) çifti döndürür; hata halinde ek veri None olur (sonraki denetim onu "yok" sayar).
+def guarded(name, fn, *args, pair=False):
+    try:
+        return fn(*args)
+    except Diagnosis:
+        raise
+    except Exception as error:
+        failed = item(name, 'başarısız', f'denetim çalışırken hata: {type(error).__name__}: {error}')
+        return (failed, None) if pair else failed
+
+
 def verify(r):
     c = r.get('classification') or classify(r)
     r['classification'] = c
@@ -644,14 +694,21 @@ def verify(r):
         raise stop
     exact = exact_solution(r, c)
     solution = exact['u']
-    solver, kappa = solver_check(r)
-    reference, ref = independent_solution(r, kappa or r.get('condition'))
-    V = {'classification': c, 'exact': exact, 'operator': operator_consistency(r), 'reference': reference,
-         'solver': solver, 'first_order': first_order_check(r, ref), 'distributional': distributional_residual(r),
-         'stability': stability_indicators(r)}
+    solver, kappa = guarded('çözücü kalıntısı ve koşul sayısı', solver_check, r, pair=True)
+    reference, ref = guarded('bağımsız yeniden montaj ve çözüm (ifem)', independent_solution, r, kappa or r.get('condition'), pair=True)
+    V = {'classification': c, 'exact': exact, 'operator': guarded('operatör tutarlılığı (yama testi)', operator_consistency, r),
+         'reference': reference, 'solver': solver, 'first_order': guarded('1. mertebe atılan satır (bağımsız)', first_order_check, r, ref),
+         'distributional': guarded('dağılımsal kalıntı (eleman içi + düğüm sıçramaları)', distributional_residual, r),
+         'stability': guarded('kararlılık göstergeleri', stability_indicators, r)}
+    if not isinstance(V['stability'], list):
+        V['stability'] = [V['stability']]
     if solution is not None:
-        V['errors'] = error_measures(r, solution)
-        V['convergence'], _ = convergence_study(r, solution)
+        try:
+            V['errors'] = error_measures(r, solution)
+        except Exception as error:                 # hata ölçüsü hesaplanamadı: kâğıt "hesaplanmadı" yazar, madde başarısız
+            V['errors'] = None
+            V['errors_failure'] = item('hata ölçüleri', 'başarısız', f'denetim çalışırken hata: {type(error).__name__}: {error}')
+        V['convergence'], _ = guarded('yakınsama çalışması (ifem, analitik çözüme karşı)', convergence_study, r, solution, pair=True)
     else:
         why = exact['reason'] or 'doğrulanmış analitik çözüm yok'
         V['errors'] = None
@@ -661,5 +718,5 @@ def verify(r):
                   item('analitik çözüm', 'başarısız' if exact['status'] == 'rejected' else 'yapılmadı',
                        ('aday reddedildi: ' if exact['status'] == 'rejected' else 'bulunamadı: ') + exact['reason']))
     V['items'] = [exact_item, V['operator'], V['reference'], V['solver']] + [v for v in (V['first_order'], V['distributional']) if v] \
-        + [V['convergence']] + V['stability']
+        + [V['convergence']] + V['stability'] + ([V['errors_failure']] if V.get('errors_failure') else [])
     return V
