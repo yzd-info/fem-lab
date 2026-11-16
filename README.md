@@ -166,7 +166,7 @@ python3 -m pip install -r verification/requirements-verify.txt && python3 verifi
 ```
 
 `tests.js` checks the browser kernel (167 checks), `tests.py` the server pipeline and every sheet's LaTeX compilation
-(221 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
+(228 checks; the LaTeX checks are skipped if `pdflatex` is missing), and `run_verification.py --full` the browser kernel
 against an independent solver and analytical solutions. `run_corpus.py` runs 80 input-only cases through the server and
 the browser kernel and cross-checks them with scikit-fem and a continuous-level analysis. GitHub Actions runs all four on
 every pull request and every push to `main`, with Python 3.9 and 3.12.
