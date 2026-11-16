@@ -298,6 +298,28 @@ check('Katman 5 hesap yapmaz (build_sheet içinde integrate/solve/diff/simplify/
       not sheet_calls & {'integrate', 'solve', 'diff', 'simplify', 'Abs', 'quad', 'lambdify', 'exact_solution', 'error_measures', 'fem_engine', 'verify'},
       str(sorted(sheet_calls & {'integrate', 'solve', 'diff', 'simplify', 'Abs', 'quad', 'lambdify'})))
 
+# 1m. Belgelerdeki çalışılmış örnek motorla aynı olmalı (README ve docs/MATEMATIK.md elle yazılır; bir kez aralık ile sayılar
+#     ayrışmıştı). Değerler motordan hesaplanır, belgede aynen geçmesi ve u_h'nin ortak düğümde sürekli olması sınanır.
+dW = problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2)
+rW = fem_sheet.solve_problem(dW)
+xW = fem_sheet.x
+piecesW = [sp.expand(sum(rW['a'][e + k] * rW['N'][k] for k in range(2)).subs(fem_sheet.s, xW - e * rW['h'])) for e in range(2)]
+emW = fem_verify.error_measures(rW, xW ** 2)
+check('çalışılmış örnek (0, 2): a = [0, 2/3, 4], u_h = 2x/3 | 10x/3 − 8/3, x = 1\'de sürekli',
+      rW['a'] == [0, R_(2, 3), 4] and piecesW == [2 * xW / 3, 10 * xW / 3 - R_(8, 3)] and piecesW[0].subs(xW, 1) == piecesW[1].subs(xW, 1), str(piecesW))
+check('çalışılmış örnek: düğüm 1/3, L² = √(4/135), H¹ = √(8/9) (elle)', abs(emW['nodal'] - 1 / 3) < 1e-12
+      and abs(emW['l2'] - (4 / 135) ** 0.5) < 1e-12 and abs(emW['h1'] - (8 / 9) ** 0.5) < 1e-12, f"{emW['l2']} {emW['h1']}")
+for doc in ('README.md', 'docs/MATEMATIK.md'):
+    txt = (HERE / doc).read_text(encoding='utf-8')
+    check(f'{doc}: örnek motorla aynı (a, u_h, hatalar) ve eski (0, 1) değerleri yok',
+          '0,\\ 2/3,\\ 4' in txt and '2x/3$ on $[0, 1]$' in txt and '10x/3 - 8/3$ on $[1, 2]$' in txt and '1/3$ (at $x = 1$)' in txt
+          and '0.172133' in txt and '0.942809' in txt and '1/6' not in txt and '0.030429' not in txt and '1/12' not in txt)
+math_doc = (HERE / 'docs/MATEMATIK.md').read_text(encoding='utf-8')
+r4 = fem_sheet.solve_problem(problem('1', '', '', '1', D(0), NONE, 4, 1)); r4b = fem_sheet.solve_problem(problem('1', '', '', '1', D(0), D(0), 4, 1))
+check('MATEMATIK.md: düğüm sayısı ≠ bilinmeyen sayısı (P1, n = 4: 5 düğüm, 4 / 3 bilinmeyen; motorla aynı)',
+      '(unknowns)' not in math_doc and '5 nodes; 4 unknowns with one Dirichlet end, 3 with two' in math_doc
+      and r4['dofs'] == 5 and len(r4['free']) == 4 and len(r4b['free']) == 3)
+
 # 2. Ayrıştırıcı tarayıcıdakiyle aynı kuralları uygular
 x = fem_sheet.x
 for text, want in [('1/2x', x / 2), ('2x^2', 2 * x**2), ('-x^2', -x**2), ('e^-x', sp.exp(-x)), ('(x+1)(x-1)', (x + 1) * (x - 1)), ('0.05', sp.Rational(1, 20))]:
