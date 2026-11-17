@@ -15,7 +15,7 @@ verification and testing in [DOGRULAMA.md](DOGRULAMA.md).
 | `tests.js` | Tests of the browser kernel (`node tests.js`) |
 | `tests.py` | Tests of the server pipeline and the sheet (`python3 tests.py`) |
 | `requirements.txt` | Python dependency: `sympy` (which brings `mpmath`) |
-| `verification/` | `ifem.py` (an independent mpmath FEM that imports nothing from the application), `benchmarks.py` (T1–T16, E1–E4b), `run_verification.py` (`--quick`, `--full`, `--baseline`, `--compare`), `baseline/` (recorded reference values) |
+| `verification/` | `ifem.py` (an independent mpmath FEM that imports nothing from the application), `benchmarks.py` (T1–T16, E1–E4b), `run_verification.py` (`--quick`, `--full`, `--baseline`, `--compare`), `baseline/` (recorded reference values); `corpus/cases.json` (80 input-only cases), `run_corpus.py` (corpus runner, cross-verification matrix), `skfem_reference.py` (scikit-fem reference), `continuous_problem.py` (continuous existence/uniqueness/compatibility), `ref_parser.py` (their shared SymPy input reader), `corpus_results/` (reports; `baseline_v1/` is the pre-fix run), `ENGINEERING_NOTES.md` (defect analysis and evidence) |
 | `.github/workflows/ci.yml` | Continuous integration |
 | `ornekler/` | Example solution sheets (PDF) |
 | `docs/` | Technical documentation and screenshots |

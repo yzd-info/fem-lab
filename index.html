@@ -663,9 +663,21 @@ function classifyDiscrete(A, b, ivp, hasDirichlet) {
 
 /* Ağ: [a,b] = [x₀,x₁] aralığı n eşit elemana bölünür; p polinom derecesidir. Eleman e'nin yerel düğümü k, global e·p + k numarasını alır;
    komşu elemanlar uç düğümü paylaşır, süreklilik (C⁰) buradan gelir. */
+/* Ağın yapısal geçerliliği çekirdeğin içinde denetlenir (yalnız arayüz sürgülerine güvenilmez): n = 0 sahte bir "çözüm"
+   ([0]), p = 5 TypeError üretiyordu. Burada üst n sınırı YOK: iç ince ağ referansı n = 128 kullanır. Kullanıcının verdiği
+   ağ için ayrıca userMesh (1 ≤ n ≤ MAX_ELEMENTS). Mesajlar sunucudakiyle (fem_sheet.validate_problem) aynıdır. */
 function makeMesh(a, b, n, p) {
+  if (!Number.isInteger(n) || !Number.isInteger(p)) throw new Error('n ve p tam sayı olmalı.');
+  if (n < 1 || p < 1 || p > 4) throw new Error(`n 1–${MAX_ELEMENTS}, p 1–4 aralığında olmalı.`);
+  if (!(Number.isFinite(a) && Number.isFinite(b) && a < b)) throw new Error('Aralıkta x₀, x₁\'den küçük olmalı.');
   const h = (b - a) / n;
   return { a, b, n, p, h, dofs: n * p + 1, nodeX: (i) => a + i * h / p };
+}
+
+/* Kullanıcının seçtiği ağ (arayüz, çapraz kontrol, tests.js --solve): desteklenen aralık n = 1…MAX_ELEMENTS, p = 1…4. */
+function userMesh(a, b, n, p) {
+  if (Number.isInteger(n) && n > MAX_ELEMENTS) throw new Error(`n 1–${MAX_ELEMENTS}, p 1–4 aralığında olmalı.`);
+  return makeMesh(a, b, n, p);
 }
 
 /* ---------- 4. PROBLEM VE YÖNTEM ----------
@@ -1473,7 +1485,7 @@ function compute() {
     const degrees = [...new Set([...state.compare, state.degree])].sort();
     const results = {};
     for (const p of degrees) {
-      const mesh = makeMesh(state.x0, state.x1, state.n, p);
+      const mesh = userMesh(state.x0, state.x1, state.n, p);
       const result = METHODS[state.method].solve(problem, mesh);
       results[p] = { mesh, result, norms: errorNorms(cache.u, mesh, result.c, cache.du) };
     }
@@ -1482,7 +1494,7 @@ function compute() {
     cache.pStudies ??= new Map();                       // n → p-inceltme verisi (problem değişince cache ile birlikte sıfırlanır)
     const pStudy = state.convMode !== 'p' ? null : cache.pStudies.get(state.n) ?? [1, 2, 3, 4].map((p) => {
       if (results[p]) return { p, dofs: results[p].mesh.dofs, ...results[p].norms };
-      const mesh = makeMesh(state.x0, state.x1, state.n, p);
+      const mesh = userMesh(state.x0, state.x1, state.n, p);
       return { p, dofs: mesh.dofs, ...errorNorms(cache.u, mesh, METHODS[state.method].solve(problem, mesh).c, cache.du) };
     });
     if (pStudy) cache.pStudies.set(state.n, pStudy);
@@ -1896,7 +1908,7 @@ async function writeSolution() {
    tolere eder ama gerçek bir formülasyon farkını — tipik ≥ 1e-3 — gizlemez). Kuadratür uyarısı varsa (köşeli/tekil
    katsayı) tarayıcı integralleri yaklaşıktır; o zaman 1e-5 kullanılır ve bu açıkça yazılır. */
 function crossCheck(payload, sheet) {
-  const problem = buildProblem(payload), mesh = makeMesh(payload.x0, payload.x1, payload.n, payload.degree);
+  const problem = buildProblem(payload), mesh = userMesh(payload.x0, payload.x1, payload.n, payload.degree);
   const mine = METHODS[payload.method].solve(problem, mesh);
   const rough = mine.quadratureError > QUADRATURE_WARNING, rel = rough ? 1e-5 : 1e-9;
   const maxAbs = (values) => Math.max(1, ...values.map(Math.abs));

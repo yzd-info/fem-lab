@@ -3,7 +3,7 @@
 const fs = require('fs');
 const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
 const core = html.split('/*CORE-START*/')[1].split('/*CORE-END*/')[0];
-const api = new Function(core + '; return { parseExpression, gaussLegendre, shapeFunctions, shapeDerivatives, makeMesh, buildProblem, METHODS, evaluate, referenceSolution, errorNorms, maxErrorRefined, evaluateDerivative, convergenceStudy, observedRate, equationTex, conditionsTex, QUADRATURE_WARNING, leadingDegeneracy, parseExact, analyzeSystem, conditionEstimate, solveLinear, Diagnosis, RANK_TOL, COMPAT_TOL, stabilityIndicators };')();
+const api = new Function(core + '; return { parseExpression, gaussLegendre, shapeFunctions, shapeDerivatives, makeMesh, buildProblem, METHODS, evaluate, referenceSolution, errorNorms, maxErrorRefined, evaluateDerivative, convergenceStudy, observedRate, equationTex, conditionsTex, QUADRATURE_WARNING, leadingDegeneracy, parseExact, analyzeSystem, conditionEstimate, solveLinear, Diagnosis, RANK_TOL, COMPAT_TOL, stabilityIndicators, userMesh, MAX_ELEMENTS };')();
 
 const D = (value) => ({ type: 'dirichlet', value: String(value) }), Nm = (value) => ({ type: 'neumann', value: String(value) }), NONE = { type: 'none', value: '' };
 const problem = (alpha, beta, gamma, f, left, right, x0 = 0, x1 = 1) => api.buildProblem({ alpha, beta, gamma, f, x0, x1, left, right });
@@ -15,9 +15,10 @@ if (process.argv[2] === '--solve-diag') {      // Python testleri için: 1. mert
   console.log(JSON.stringify(solve(api.buildProblem(input), input.n, input.degree).diagnostics.firstOrder));
   process.exit(0);
 }
-if (process.argv[2] === '--solve') {           // Python tarafı için: verilen problemi çöz, düğüm değerlerini yaz
+if (process.argv[2] === '--solve') {           // Python tarafı için: verilen problemi çöz, düğüm değerlerini yaz (kullanıcı ağı yolu)
   const input = JSON.parse(process.argv[3]);
-  console.log(JSON.stringify(solve(api.buildProblem(input), input.n, input.degree).c));
+  const pr = api.buildProblem(input), mesh = api.userMesh(pr.x0, pr.x1, input.n, input.degree);
+  console.log(JSON.stringify(api.METHODS.galerkin.solve(pr, mesh).c));
   process.exit(0);
 }
 
@@ -270,7 +271,18 @@ check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equat
   const pureNeumann = message(() => solve(problem('1', '0', '0', '1', NONE, NONE), 4, 1));
   check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('AYRIK') && !withU.includes('saf Neumann'), withU.slice(0, 70));
   check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('AYRIK') && pureNeumann.includes('saf Neumann')); }
-// 11. Grafik penceresi (index.html AXIS bloğu: saf eksen hesabı, DOM yok). Veriye dokunmadığı ve hiçbir değeri pencere dışında
+// 11. Ağ girdisi çekirdekte denetlenir (C76/C77): sahte çözüm yok, TypeError yok, Türkçe mesaj; iç referans (n = 128) çalışır
+{ const pr = problem('1', '0', '0', '1', D(0), D(0));
+  const outcome = (fn) => { try { const r = fn(); return { ok: true, r }; } catch (e) { return { ok: false, type: e.constructor.name, msg: e.message }; } };
+  const bad = [[0, 1], [-1, 1], [65, 1], [2.5, 1], [NaN, 1], [undefined, 1], ['4', 1], [4, 0], [4, 5], [4, 2.5], [4, undefined], [4, null]];
+  const results = bad.map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
+  check('geçersiz n/p (0, −1, 65, 2.5, NaN, eksik, metin; p 0, 5, 2.5, eksik) hep temiz ret',
+    results.every((o) => !o.ok && o.type === 'Error' && /n ve p tam sayı olmalı|aralığında olmalı/.test(o.msg)), JSON.stringify(results.map((o) => o.ok ? 'KABUL' : o.type)));
+  const good = [[1, 1], [64, 1], [1, 4], [64, 4]].map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
+  check('sınır değerler n = 1, 64 ve p = 1, 4 kabul edilir', good.every((o) => o.ok));
+  check('iç ince ağ referansı (n = 128) makeMesh ile hâlâ kurulur', outcome(() => api.makeMesh(0, 1, 128, 4)).ok && !outcome(() => api.userMesh(0, 1, 128, 4)).ok);
+  check('makeMesh boş/ters aralığı reddeder', !outcome(() => api.makeMesh(1, 1, 4, 1)).ok && !outcome(() => api.makeMesh(1, 0, 4, 1)).ok); }
+// 12. Grafik penceresi (index.html AXIS bloğu: saf eksen hesabı, DOM yok). Veriye dokunmadığı ve hiçbir değeri pencere dışında
 //     bırakmadığı burada sınanır; çizimin kendisi tarayıcıda denetlenir.
 { const axisSrc = html.split('/*AXIS-START*/')[1].split('/*AXIS-END*/')[0];
   const ax = new Function(axisSrc + '; return { niceTicks, minSpan, limitSpan, autoRange, zoomRange, panRange, fitRange, parseAxisRange, logTicks, AXIS_LIMITS };')();

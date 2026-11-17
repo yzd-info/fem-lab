@@ -298,8 +298,9 @@ exists only for second-order problems.
 
 Length rules: for $n \le 8$ every element's integrals are written out; for $n > 8$ the first two and the last element
 are written out and the others appear in the assembly. Matrices with up to 9 unknowns are printed in full, larger
-ones by their first 4 and last 2 rows and columns. Up to 8 free unknowns the system is solved exactly (fractions),
-beyond that in decimals. Per-element detail (global $N$, $u_h$, residual) is shown for the first two elements;
+ones by their first 4 and last 2 rows and columns. Up to 8 free unknowns, and only when the reduced $K$ is rational, the system is solved exactly (fractions);
+otherwise in decimals (banded LU with partial pivoting and $\kappa_1$, arithmetically the same as mpmath's dense LU), and the
+sheet states the reason next to $\mathbf{a}$. Per-element detail (global $N$, $u_h$, residual) is shown for the first two elements;
 per-row equations up to 9 unknowns. If the symbolic computation exceeds 60 s, the sheet is regenerated with numerical
 integrals (integration steps are then omitted).
 

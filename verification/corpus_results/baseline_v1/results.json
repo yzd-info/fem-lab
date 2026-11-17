@@ -1,0 +1,4306 @@
+{
+ "skfem_version": "11.0.0",
+ "results": [
+  {
+   "id": "C01",
+   "name": "u' = 2x, u(0)=0 on [0,2]",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.7e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.3e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.172133, bağımsız 0.172133"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.942809, bağımsız 0.942809"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.3,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C02",
+   "name": "u' + u = 1, u(0)=0",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.9e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00307986, bağımsız 0.00307986"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.049037, bağımsız 0.049037"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C03",
+   "name": "u' + 2u = 0, u(0)=1",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.9e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 2.1e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000422082, bağımsız 0.000422082"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0100581, bağımsız 0.0100581"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C04",
+   "name": "u' = cos x, u(0)=0 on [0,3]",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.8e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.6e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.3e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.90209e-05, bağımsız 1.90209e-05"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000609768, bağımsız 0.000609768"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 3.3,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C05",
+   "name": "u' = x^2, u(1)=1 (sağ uç)",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.3e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.3e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00137755, bağımsız 0.00137755"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0136626, bağımsız 0.0136626"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C06",
+   "name": "(1+x) u' = 1, u(0)=0",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.4e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 3.4e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000931844, bağımsız 0.000931844"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00584424, bağımsız 0.00584424"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.9,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C07",
+   "name": "u' - u = 0, u(0)=1 on [0,3]",
+   "category": "first_order_ivp",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "uygulama doğrulaması: yakınsama çalışması (ifem, analitik çözüme karşı)",
+     "status": "WARN",
+     "evidence": "L²: ardışık hızlar 1.46, 1.24: asimptotik bölgeye girilmedi; hız iddiası yok; H¹: ardışık hızlar 1.40, 1.04: asimptotik bölgeye girilmedi; hız iddiası yok"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.9e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-14 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 19.8725, bağımsız 19.8725"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 20.2208, bağımsız 20.2208"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "LIMITATION"
+  },
+  {
+   "id": "C08",
+   "name": "u' + 50u = 0, u(0)=1",
+   "category": "first_order_ivp",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "uygulama doğrulaması: yakınsama çalışması (ifem, analitik çözüme karşı)",
+     "status": "WARN",
+     "evidence": "L²: ardışık hızlar 0.83, 1.15: asimptotik bölgeye girilmedi; hız iddiası yok; H¹: ardışık hızlar 0.15, 0.37: asimptotik bölgeye girilmedi; hız iddiası yok"
+    },
+    {
+     "check": "uygulama doğrulaması: 1. mertebe adım göstergesi",
+     "status": "WARN",
+     "evidence": "λ = max|γ/β| = 50, λh/p = 12.5 > 1: büyük adım; standart Galerkin bu sınıfta kararlılık garantisi vermez"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.7e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 9.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.216113, bağımsız 0.216113"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.62745, bağımsız 4.62745"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "LIMITATION"
+  },
+  {
+   "id": "C09",
+   "name": "u' + x u = x, u(0)=0 on [0,2]",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.0e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.5e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 9.3698e-07, bağımsız 9.3698e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.6894e-05, bağımsız 1.6894e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 5.8,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C10",
+   "name": "u' = exp(-x), u(-1)=0 on [-1,1]",
+   "category": "first_order_ivp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "uygulama doğrulaması: yakınsama çalışması (ifem, analitik çözüme karşı)",
+     "status": "WARN",
+     "evidence": "L²: ardışık hızlar 4.37, 4.00: asimptotik bölgeye girilmedi; hız iddiası yok; H¹: gözlenen hız ≈ 3.00 (bu sınıf için kuramsal hız iddia edilmiyor)"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.1e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.9e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.7e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.73617e-05, bağımsız 1.73617e-05"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000171542, bağımsız 0.000171542"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 3.1,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "WARN"
+  },
+  {
+   "id": "C11",
+   "name": "-u'' = 1, D/D",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.9e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00570544, bağımsız 0.00570544"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0721688, bağımsız 0.0721688"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C12",
+   "name": "u'' + u = x, D/D, n=2 p=1",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 5.6e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0145058, bağımsız 0.0145058"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0879717, bağımsız 0.0879717"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C13",
+   "name": "-u'' = sin(pi x), P1",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.9e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00398034, bağımsız 0.00398034"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0505095, bağımsız 0.0505095"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C14",
+   "name": "u'' = -2, D/D, P2",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.1e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 8.3e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.34332e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 1.41303e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C15",
+   "name": "u'' - 4u = 0, u(0)=0, u(1)=1",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 9.6e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.6e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.4e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 3.93924e-06, bağımsız 3.93924e-06"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00018723, bağımsız 0.00018723"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C16",
+   "name": "-u'' + u' = 1, D/D",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.2e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.2e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00139311, bağımsız 0.00139311"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0375068, bağımsız 0.0375068"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C17",
+   "name": "u'' = 6x on [-1,2]",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.6e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.6e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0252119, bağımsız 0.0252119"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.217855, bağımsız 0.217855"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C18",
+   "name": "u'' = 0, u(0)=2, u(3)=5",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.8e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.41056e-16"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 0"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C19",
+   "name": "-u'' + 9u = 0 on [0,2]",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.2e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 6.1e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 6.1e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00218386, bağımsız 0.00218386"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0430205, bağımsız 0.0430205"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.1,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C20",
+   "name": "u'' = 12x^2, n=2 p=4",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.7e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.5e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 7.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 4.07482e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 7.90657e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C21",
+   "name": "-u'' = exp(x), P3",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.1e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.8e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 6.9e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 9.4683e-07, bağımsız 9.4683e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.49152e-05, bağımsız 4.49152e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C22",
+   "name": "u'' + 4u = 0, u(0)=0, u(1)=1",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.0e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.1e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000506477, bağımsız 0.000506477"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0129425, bağımsız 0.0129425"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C23",
+   "name": "-u'' = 1 on [0,10]",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 8.0e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.7e-14 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.83955e-15"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 4.77229e-15"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C24",
+   "name": "u'' = 1 on [5,6]",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.9e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00570544, bağımsız 0.00570544"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0721688, bağımsız 0.0721688"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C25",
+   "name": "-2u'' = 4, D/D",
+   "category": "second_order_bvp",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.1e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 8.3e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.34332e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 1.41303e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C26",
+   "name": "((1+x) u')' = 1",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.9e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.8e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.8e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000111403, bağımsız 0.000111403"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00288324, bağımsız 0.00288324"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.9,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C27",
+   "name": "((1+x^2) u')' + u = x",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.3e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 9.2e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.0e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C28",
+   "name": "(e^x u')' = e^x",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.6e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 4.3e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.0e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 6.38503e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 5.55443e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 3.1,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C29",
+   "name": "α=2+sin x, β=x, γ=-1, f=1",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.3e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 9.0e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 7.3,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C30",
+   "name": "((1+x) u')' + x u = x^2, D/doğal",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 5.8e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.3e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.4e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.1,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C31",
+   "name": "(u'/(1+x))' = 1",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 8.3e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 2.6e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00395351, bağımsız 0.00395351"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0747271, bağımsız 0.0747271"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 60.9,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C32",
+   "name": "(sqrt(1+x) u')' = 1",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.4e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "genel çözüm sabitlerde doğrusal değil"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 67.3,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C33",
+   "name": "(x u')' = 1, sol uç dejenere, u(1)=0",
+   "category": "variable_coefficient",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.0e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.9e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 4.94798e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 1.93472e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C34",
+   "name": "((x+1) u')' - x u' = 0",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 5.6e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 2.0e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.2,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C35",
+   "name": "((1+0.5cos(pi x)) u')' - u = sin(pi x), D/akı",
+   "category": "variable_coefficient",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.4e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 3.8e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 38.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C36",
+   "name": "u'' = -1, u(0)=0, u'(1)=0",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.4e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.8e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00570544, bağımsız 0.00570544"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0721688, bağımsız 0.0721688"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C37",
+   "name": "-u'' = 1, u'(0)=1, u(1)=0",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.6e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 7.6e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.83675e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 1.1945e-16"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.6,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C38",
+   "name": "((1+x)u')' = 4x+2, (1+x)u'(1) = 4",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 9.9e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 6.3e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 6.6e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0152753, bağımsız 0.0152753"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.144524, bağımsız 0.144524"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C39",
+   "name": "((1+x)u')' = 4x+2, u'(1) = 2",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 9.9e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 6.3e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 6.6e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0152753, bağımsız 0.0152753"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.144524, bağımsız 0.144524"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C40",
+   "name": "((1+x^2)u')' = 2, akı sol uçta",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 7.2e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 2.2e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 7.2e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "sembolik hesap tamamlanamadı (TypeError)"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C41",
+   "name": "u'' - u = 1, u(0)=0, sağ verilmedi",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-14 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.2e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 9.93672e-07, bağımsız 9.93672e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 3.7735e-05, bağımsız 3.7735e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C42",
+   "name": "u'' - u = 1, iki uç verilmedi",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-14 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 0.0e+00 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.3e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 0"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 0"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C43",
+   "name": "((1+2x)u')' = 0, u(0)=0, u'(1)=1",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 6.2e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.6e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00143124, bağımsız 0.00143124"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0272205, bağımsız 0.0272205"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C44",
+   "name": "2u'' = x, u(0)=1, 2u'(1) = -2",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.6e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.5e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.6e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 8.92999e-17"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 2.68169e-15"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C45",
+   "name": "-u'' = x on [2,4], u(2)=0, u'(4)=1",
+   "category": "derivative_flux_bc",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.0e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 4.4e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.1e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0630619, bağımsız 0.0630619"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.498602, bağımsız 0.498602"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 0.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C46",
+   "name": "u'' = 1, n=1 p=1",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "sunucu hattı",
+     "status": "FAIL",
+     "evidence": "HTTP 500: Çözüm kâğıdı üretilemedi: IndexError: list index out of range",
+     "layer": "unresolved (sunucu çöküşü/zaman aşımı)"
+    }
+   ],
+   "server": {
+    "code": 500,
+    "seconds": 0.3,
+    "error": "Çözüm kâğıdı üretilemedi: IndexError: list index out of range"
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "FAIL"
+  },
+  {
+   "id": "C47",
+   "name": "u'' = sin x, n=1 p=4",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.0e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.5e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.5e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.38855e-05, bağımsız 1.38855e-05"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00017222, bağımsız 0.00017222"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C48",
+   "name": "-u'' = sin(pi x), n=64 p=2",
+   "category": "element_order_mesh",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.4e-14 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.4e-13 (tolerans 2e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.87291e-08, bağımsız 4.87291e-08"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 2.02113e-05, bağımsız 2.02113e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 20.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C49",
+   "name": "u'' + u = x, n=32 p=3",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.3e-14 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 9.6e-16 (tolerans 2e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.96474e-10, bağımsız 1.96473e-10"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 5.96445e-08, bağımsız 5.96445e-08"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 9.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C50",
+   "name": "-u'' = 1, n=64 p=4",
+   "category": "element_order_mesh",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.8e-14 (tolerans 2e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-14 (tolerans 2e-09)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 1.07827e-16"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0, bağımsız 6.64955e-15"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 49.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C51",
+   "name": "u' = cos x, n=64 p=1 on [0,6]",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.8e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000820091, bağımsız 0.000820091"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0491025, bağımsız 0.0491025"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 5.2,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C52",
+   "name": "((1+x)u')' = x, n=7 p=3",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.9e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 9.0e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.10501e-07, bağımsız 1.10501e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 7.34832e-06, bağımsız 7.34832e-06"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.9,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C53",
+   "name": "u'' = x^3, n=9 p=2",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.2e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.9e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.9e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 1.05375e-05, bağımsız 1.05375e-05"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000614744, bağımsız 0.000614744"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C54",
+   "name": "u'' + u = 0, u(0)=0, u'(0)=1, n=3 p=4",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 4.2e-14 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.1e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 5.62402e-08, bağımsız 5.62402e-08"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 2.09263e-06, bağımsız 2.09263e-06"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.4,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C55",
+   "name": "u'' + u = 0, IVP on [0,6], n=16 p=1",
+   "category": "element_order_mesh",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 5.4e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.7e-17 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.1e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0341033, bağımsız 0.0341033"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.194669, bağımsız 0.194669"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 1.1,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C56",
+   "name": "-u'' = pi^2 sin(pi x), P2",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.1e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.3e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00195183, bağımsız 0.00195183"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0506198, bağımsız 0.0506198"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 7.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C57",
+   "name": "u'' = e^x, u(0)=1, u(1)=e",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 2.3e-15 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.8e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.0e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.56997e-07, bağımsız 4.56997e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 2.6014e-05, bağımsız 2.6014e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.6,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C58",
+   "name": "-u'' = cos(2 pi x), u'(0)=0, u(1)=0",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 7.3e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.8e-15 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.94405e-05, bağımsız 4.94405e-05"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00256443, bağımsız 0.00256443"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 17.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C59",
+   "name": "u'' + u = sin(3x) on [0,2]",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.4e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00069392, bağımsız 0.00069392"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0134026, bağımsız 0.0134026"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.6,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C60",
+   "name": "-u'' = x e^-x, P4",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.9e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.6e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 5.6e-17 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 8.93346e-09, bağımsız 8.93346e-09"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 5.54351e-07, bağımsız 5.54351e-07"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 4.0,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C61",
+   "name": "u'' = sinh x",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 5.6e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 3.6e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.000106327, bağımsız 0.000106327"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.00275662, bağımsız 0.00275662"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.5,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C62",
+   "name": "-u'' = e^x sin x, P3",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 3.3e-16 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 8.8e-15 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 2.9e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 7.11964e-07, bağımsız 7.11964e-07"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 4.05245e-05, bağımsız 4.05245e-05"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 20.9,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C63",
+   "name": "-u'' = tan x",
+   "category": "trig_exp_source",
+   "validity": "valid",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 8.3e-17 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 4.2e-16 (tolerans 1e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm",
+     "status": "UNAVAILABLE",
+     "evidence": "kapalı biçimde genel çözüm bulunamadı"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 48.2,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "PASS"
+  },
+  {
+   "id": "C64",
+   "name": "u'' = 1, u'(0)=0, u'(1)=0",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "sürekli teşhis",
+     "status": "PASS",
+     "evidence": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul)). (sembolik kanıt uygulamada; scikit-fem: SINGULAR, κ = 1.82e+16 — sürekli hükmü bağımsız olarak kanıtlamaz)"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "PASS",
+     "evidence": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 4 < 5; sağ taraf değer uzayında değil (η = 5.5e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma. Örn. saf Neumann'da ∫f ≠ akı fark"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul))."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 4 < 5; sağ taraf değer uzayında değil (η = 5.5e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma. Örn. saf Neumann'da ∫f ≠ akı fark"
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C65",
+   "name": "u'' = 2x-1, u'(0)=0, u'(1)=0",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "sürekli teşhis",
+     "status": "PASS",
+     "evidence": "Tek olmayan çözüm (boş uzay ≠ {0}) — sürekli problem: u + c·(1) de çözüm (rank M = 1, rank [M|r] = 1, m = 2 (2 koşul)). (sembolik kanıt uygulamada; scikit-fem: OK, κ = 8.34e+15 — sürekli hükmü bağımsız olarak kanıtlamaz)"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "PASS",
+     "evidence": "Diagnosis [Error]: Tek olmayan çözüm (boş uzay ≠ {0}) — ayrık sistem: rank 8 < 9; sağ taraf uyumlu (η = 1.3e-16), boş uzay boyutu 1, örnek: sabit vektör (u + c de çözüm). Bir uçta u değeri vermek ya da γ'yı değiştirmek boş uzayı kaldırabili"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "Tek olmayan çözüm (boş uzay ≠ {0}) — sürekli problem: u + c·(1) de çözüm (rank M = 1, rank [M|r] = 1, m = 2 (2 koşul))."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Diagnosis [Error]: Tek olmayan çözüm (boş uzay ≠ {0}) — ayrık sistem: rank 8 < 9; sağ taraf uyumlu (η = 1.3e-16), boş uzay boyutu 1, örnek: sabit vektör (u + c de çözüm). Bir uçta u değeri vermek ya da γ'yı değiştirmek boş uzayı kaldırabili"
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C66",
+   "name": "u'' = 1, koşulsuz",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "sürekli teşhis",
+     "status": "PASS",
+     "evidence": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul)). (sembolik kanıt uygulamada; scikit-fem: SINGULAR, κ = 1.82e+16 — sürekli hükmü bağımsız olarak kanıtlamaz)"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "PASS",
+     "evidence": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 4 < 5; sağ taraf değer uzayında değil (η = 5.5e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma. Örn. saf Neumann'da ∫f ≠ akı fark"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul))."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 4 < 5; sağ taraf değer uzayında değil (η = 5.5e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma. Örn. saf Neumann'da ∫f ≠ akı fark"
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C67",
+   "name": "u'' + pi^2 u = sin(pi x), D/D",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "sürekli teşhis",
+     "status": "PASS",
+     "evidence": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul)). (sembolik kanıt uygulamada; scikit-fem: OK, κ = 6.34e+04 — sürekli hükmü bağımsız olarak kanıtlamaz)"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "WARN",
+     "evidence": "çözdü (tarayıcı sürekli düzeyi bilmez; ayrık sistem tekil değil)"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 385.7,
+    "error": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 1, rank [M|r] = 2, m = 2 (2 koşul))."
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C68",
+   "name": "u'' + 9.8u = 1, D/D",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "kâğıt bütünlüğü",
+     "status": "PASS",
+     "evidence": "NaN/None yok, a vektörü yazılı"
+    },
+    {
+     "check": "uygulama doğrulaması: yakınsama çalışması (ifem, analitik çözüme karşı)",
+     "status": "WARN",
+     "evidence": "L²: gözlenen ≈ 3.95, beklenen 3: beklenen hız gözlenmedi (ağlar ön-asimptotik olabilir, ör. kaba kh/Pe, ya da düzgünlük varsayımı sağlanmıyor); H¹: ardışık hızlar 2.33, 2.03: asimptotik bölgeye girilm"
+    },
+    {
+     "check": "temel koşul düğümde",
+     "status": "PASS",
+     "evidence": "fark 0.0e+00",
+     "layer": "boundary-condition elimination"
+    },
+    {
+     "check": "tarayıcı ↔ SymPy düğüm",
+     "status": "PASS",
+     "evidence": "göreli fark 1.4e-12 (tolerans 1e-09: 1e-9 ya da 100κε)",
+     "layer": "element integration / assembly (iki çekirdekten biri)"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab global K",
+     "status": "PASS",
+     "evidence": "göreli 1.7e-16 (tolerans 1e-10: 1e-10 + 10×kuadratür tahmini)",
+     "layer": "element matrix / assembly"
+    },
+    {
+     "check": "scikit-fem ↔ FEM Lab düğüm katsayıları",
+     "status": "PASS",
+     "evidence": "göreli 1.0e-12 (tolerans 4e-10)",
+     "layer": "unresolved (sistem ya da sınır koşulu)"
+    },
+    {
+     "check": "analitik çözüm (bağımsız sınama)",
+     "status": "PASS",
+     "evidence": "denklem ve koşullar bağımsız olarak sağlandı"
+    },
+    {
+     "check": "kâğıttaki L² hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.0595606, bağımsız 0.0595606"
+    },
+    {
+     "check": "kâğıttaki H¹ hatası ↔ bağımsız",
+     "status": "PASS",
+     "evidence": "kâğıt 0.296415, bağımsız 0.296415"
+    }
+   ],
+   "server": {
+    "code": 200,
+    "seconds": 2.7,
+    "error": null
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "LIMITATION"
+  },
+  {
+   "id": "C69",
+   "name": "((x-0.5)u')' = 1, D/D",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "ayrık teşhis ↔ scikit-fem",
+     "status": "PASS",
+     "evidence": "FEM Lab: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank K = 2 < rank [K|F] = 3 (tam aritmetik): sağ taraf uyumsuz. Bu AYRIK sistemin hükmüdür; sürek · scikit-fem: OK, κ = 8.47e+16"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "PASS",
+     "evidence": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 2 < 3; sağ taraf değer uzayında değil (η = 5.2e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma."
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.3,
+    "error": "Çözüm yok (uyumsuz sistem) — ayrık sistem: rank K = 2 < rank [K|F] = 3 (tam aritmetik): sağ taraf uyumsuz. Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Diagnosis [Error]: Çözüm yok (uyumsuz sistem) — ayrık sistem: rank 2 < 3; sağ taraf değer uzayında değil (η = 5.2e-1 > 1e-10). Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma."
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C70",
+   "name": "(x u')' = 1, u(0)=u(1)=0",
+   "category": "singular_degenerate_compat",
+   "validity": "challenging",
+   "checks": [
+    {
+     "check": "sürekli teşhis",
+     "status": "PASS",
+     "evidence": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 2, rank [M|r] = 3, m = 2 (3 koşul); x = 0 dejenere uç: çözüm sınırlı varsayıl (sembolik kanıt uygulamada; scikit-fem: OK, κ = 7.55e+01 — sürekli hükmü bağımsız olarak kanıtlamaz)"
+    },
+    {
+     "check": "tarayıcı çekirdeği aynı girdiyi",
+     "status": "WARN",
+     "evidence": "çözdü (tarayıcı sürekli düzeyi bilmez; ayrık sistem tekil değil)"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.5,
+    "error": "Çözüm yok (uyumsuz sistem) — sürekli problem: koşullar denklemle uyumsuz (rank M = 2, rank [M|r] = 3, m = 2 (3 koşul); x = 0 dejenere uç: çözüm sınırlı varsayıldı (sonsuza giden temel çözüm dışlandı))."
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "DIAGNOSED"
+  },
+  {
+   "id": "C71",
+   "name": "bozuk ifade '2x+'",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: f(x): ifade okunamadı"
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "Error: f(x): İfade yarım kalmış"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "f(x): ifade okunamadı"
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Error: f(x): İfade yarım kalmış"
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C72",
+   "name": "bilinmeyen fonksiyon foo(x)",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: f(x): tanınmayan simge \"foo\""
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "Error: f(x): Tanınmayan simge: \"foo\""
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "f(x): tanınmayan simge \"foo\""
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Error: f(x): Tanınmayan simge: \"foo\""
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C73",
+   "name": "kod enjeksiyonu denemesi",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: α(x): beklenmeyen simge \"_\""
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "Error: α(x): Tanınmayan simge: \"_\""
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "α(x): beklenmeyen simge \"_\""
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Error: α(x): Tanınmayan simge: \"_\""
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C74",
+   "name": "bilimsel gösterim 1e-8",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: f(x): bilimsel gösterim (ör. 1e-8) desteklenmiyor; \"e\" Euler sayısıdır. 10^-8 biçiminde yaz."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "Error: f(x): Bilimsel gösterim (ör. 1e-8) desteklenmiyor: \"e\" Euler sayısı olarak okunur. 10^-8 biçiminde yaz."
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "f(x): bilimsel gösterim (ör. 1e-8) desteklenmiyor; \"e\" Euler sayısıdır. 10^-8 biçiminde yaz."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "Error: f(x): Bilimsel gösterim (ör. 1e-8) desteklenmiyor: \"e\" Euler sayısı olarak okunur. 10^-8 biçiminde yaz."
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C75",
+   "name": "x0 = x1",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: Aralıkta x₀, x₁'den küçük olmalı."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "  if (!(x0 < x1)) throw new Error('Aralıkta x₀, x₁\\'den küçük olmalı.');"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "Aralıkta x₀, x₁'den küçük olmalı."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "  if (!(x0 < x1)) throw new Error('Aralıkta x₀, x₁\\'den küçük olmalı.');"
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C76",
+   "name": "p = 5",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: n 1–64, p 1–4 aralığında olmalı."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "FAIL",
+     "evidence": "crash: TypeError: Cannot read properties of undefined (reading 'N')",
+     "layer": "input validation (tarayıcı çekirdeği: buildProblem/makeMesh)"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.2,
+    "error": "n 1–64, p 1–4 aralığında olmalı."
+   },
+   "js": {
+    "kind": "crash",
+    "detail": "TypeError: Cannot read properties of undefined (reading 'N')"
+   },
+   "status": "FAIL"
+  },
+  {
+   "id": "C77",
+   "name": "n = 0",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: n 1–64, p 1–4 aralığında olmalı."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "FAIL",
+     "evidence": "ok: girdi kabul edildi, c = [0]",
+     "layer": "input validation (tarayıcı çekirdeği: buildProblem/makeMesh)"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.3,
+    "error": "n 1–64, p 1–4 aralığında olmalı."
+   },
+   "js": {
+    "kind": "ok",
+    "detail": null
+   },
+   "status": "FAIL"
+  },
+  {
+   "id": "C78",
+   "name": "1. mertebe + türev koşulu",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "    throw new Error('Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak.');"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.3,
+    "error": "Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "    throw new Error('Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak.');"
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C79",
+   "name": "aşırı belirli: sol uçta u ve u', sağda u",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "    throw new Error(\"Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez.\");"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.3,
+    "error": "Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "    throw new Error(\"Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez.\");"
+   },
+   "status": "REJECTED_OK"
+  },
+  {
+   "id": "C80",
+   "name": "α = β = 0",
+   "category": "invalid_adversarial",
+   "validity": "invalid",
+   "checks": [
+    {
+     "check": "sunucu temiz ret",
+     "status": "PASS",
+     "evidence": "HTTP 400: α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil."
+    },
+    {
+     "check": "tarayıcı çekirdeği temiz ret",
+     "status": "PASS",
+     "evidence": "  if (order === 0) throw new Error('α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil.');"
+    }
+   ],
+   "server": {
+    "code": 400,
+    "seconds": 0.3,
+    "error": "α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil."
+   },
+   "js": {
+    "kind": "rejected",
+    "detail": "  if (order === 0) throw new Error('α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil.');"
+   },
+   "status": "REJECTED_OK"
+  }
+ ]
+}

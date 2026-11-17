@@ -2,6 +2,7 @@
 #   python3 tests.py                                 (kâğıt testleri; LaTeX derlemesi ve verification --quick/--compare dahil)
 #   node tests.js                                    (tarayıcı çekirdeği testleri; npm bağımlılığı yok, yalnız Node)
 #   python3 verification/run_verification.py --full (bağımsız doğrulama, n = 4…32)
+#   python3 verification/run_corpus.py               (80 vakalık girdi korpusu + scikit-fem bağımsız referansı)
 # Herhangi biri sıfırdan farklı çıkış kodu verirse iş başarısız olur.
 name: CI
 
@@ -44,6 +45,11 @@ jobs:
           python -m pip install -r requirements.txt
           python -c "import sympy, mpmath; print('sympy', sympy.__version__, '· mpmath', mpmath.__version__)"
 
+      # scikit-fem tests.py'den ÖNCE kurulur: tests.py sürekli düzey doğrulamasını (verification/continuous_problem.py)
+      # çalıştırır; o modül ayrıştırıcıyı skfem_reference'tan alır (üçüncü bir ayrıştırıcı yazılmasın diye).
+      - name: Doğrulama bağımlılıkları (scikit-fem)
+        run: python -m pip install -r verification/requirements-verify.txt
+
       # tests.py, pdflatex yoksa LaTeX derleme kontrollerini SESSİZCE atlar; CI'da atlanmasın diye kurulur ve
       # kâğıdın kullandığı paketlerin varlığı ayrıca denetlenir.
       - name: LaTeX (pdflatex ve kâğıdın paketleri)
@@ -64,3 +70,15 @@ jobs:
 
       - name: Bağımsız doğrulama (--full)
         run: python verification/run_verification.py --full
+
+      # 80 vakalık yalnız-girdi korpusu: gerçek sunucu hattı + tarayıcı çekirdeği + scikit-fem bağımsız referansı.
+      # Bir vaka FAIL ise iş başarısız olur; rapor her durumda yüklenir (başarısızlık sessizce kaybolmasın).
+      - name: Girdi korpusu ve scikit-fem doğrulaması
+        run: python verification/run_corpus.py
+
+      - name: Korpus raporunu sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-results-py${{ matrix.python }}
+          path: verification/corpus_results/

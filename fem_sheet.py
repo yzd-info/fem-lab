@@ -47,7 +47,7 @@ NAMES = {
 DEGREE_NAMES = {1: 'lineer', 2: 'kuadratik', 3: 'kübik', 4: 'kuartik'}
 MATRIX_CAP = 9        # bundan büyük matrisler ilk 4 / son 2 satır-sütunla gösterilir
 DETAIL_LIMIT = 8      # eleman sayısı bunu aşarsa integraller yalnızca ilk 2 ve son elemanda tek tek yazılır
-EXACT_SOLVE_LIMIT = 8 # serbest bilinmeyen sayısı bunu aşarsa sistem ondalıklı çözülür (tam çözüm sayfalarca kesir üretir)
+EXACT_SOLVE_LIMIT = 8 # serbest bilinmeyen sayısı bunu aşarsa (ya da K rasyonel değilse) sistem ondalıklı çözülür (tam çözüm sayfalarca kesir üretir)
 
 
 class UserError(ValueError):
@@ -465,8 +465,24 @@ def shape_function_construction(degree, h, N_engine):
 
 # Tek bir eleman integrali. Dönüş YAPILANDIRILMIŞ kayıttır: çarpanlar, açılmış integrand, ilkel fonksiyon, değer, yöntem
 # ('sıfır' / 'polinom' / 'sembolik' / 'sayısal'). Kapalı biçim bulunamazsa mpmath.quad (uyarlamalı tanh–sinh) ile 15 basamak.
+# Önbellek: aynı integrand (SymPy kanonik biçimi; çarpım değişmeli olduğundan β = 0 iken N_i'αN_j' ile N_j'αN_i' AYNI
+# ifadedir) aynı h ve yolla aynı sonucu verir; yeniden hesaplanmaz, kayıt kendi etiketiyle tek tek yazılır. Neden: aşkın
+# katsayıda (ör. α = √(1+x)) her integral saniyeler sürer; simetrik K'de yarısı tekrardı (korpus C32 sunucu sınırını aşıyordu).
+_INTEGRAL_CACHE = {}
+
+
 def integral(label, terms, h, symbolic):
     integrand = sum(sign * sp.prod(factors) for sign, factors in terms)
+    key = (integrand, h, bool(symbolic))
+    if key in _INTEGRAL_CACHE:
+        return {**_INTEGRAL_CACHE[key], 'label': label, 'terms': terms}
+    result = _integral(label, terms, h, symbolic, integrand)
+    _INTEGRAL_CACHE[key] = result
+    return dict(result)                         # kopya: çağıranın kaydı değiştirmesi önbelleği bozmasın
+
+
+# integral()'in hesabı (önbelleksiz). Ayrı fonksiyon: önbellek anahtarı ile hesap birbirine karışmasın.
+def _integral(label, terms, h, symbolic, integrand):
     record = {'label': label, 'terms': terms, 'h': h, 'integrand': None, 'primitive': None}
     polynomial = integrand.is_polynomial(s)
     if polynomial:
@@ -482,9 +498,11 @@ def integral(label, terms, h, symbolic):
             value = sp.simplify(sp.integrate(integrand, (s, 0, h)))
             if not value.has(sp.Integral) and value.is_finite and value.is_real:
                 # İlkel fonksiyon yalnız gösterim içindir: F(h) − F(0) değere sembolik olarak eşit değilse kâğıda yazılmaz.
+                # Açılmamış integrand integre edilir (aynı fonksiyon; açılmış biçimin belirsiz integrali √ ve trigonometrik
+                # çarpımlarda birkaç kat yavaştı); kâğıtta açılmış integrand gösterilir, eşitlik aşağıdaki denetimle güvencededir.
                 expanded = sp.expand(integrand)
                 try:
-                    primitive = sp.integrate(expanded, s)
+                    primitive = sp.integrate(integrand, s)
                     ok = not primitive.has(sp.Integral) and sp.simplify(primitive.subs(s, h) - primitive.subs(s, 0) - value) == 0
                 except Exception:
                     ok = False
@@ -538,6 +556,92 @@ def classify_discrete_numeric(A, b, ivp, condition):
     return Diagnosis('K3', 'ayrık sistem', f'sayısal olarak tekil: tam rank ama κ₁ ≈ {condition:.1e}; sonuç güvenilmez.')
 
 
+# Bant matris LU'su. Neden var: indirgenmiş FEM matrisi bantlıdır (eleman başına p + 1 düğüm, yarı bant ≤ p + 1), ama
+# mpmath'in yoğun LU_decomp'u ve cond'u (ters matrisle) O(n³) saf Python'dur: n = 64, p = 4'te (255 bilinmeyen) ~40 s sürüyor,
+# sunucunun 60 s sınırını aşıp HTTP 504 veriyordu (korpus C48/C50). Algoritma mpmath.LU_decomp'un AYNISIDIR — ölçekli kısmi
+# pivotlama (|A_kj| / Σ_l |A_kl|, eşitlikte ilk satır), aynı tekillik eşiği |pivot| ≤ ‖A‖₁·ε → ZeroDivisionError — yalnız
+# bant dışındaki kesin sıfırlar üzerinde döngü kurulmaz. Pivotlamada üst bant en çok alt bant kadar genişler (LAPACK gbtrf),
+# bu yüzden sınırlar kl ve ku + kl'dir. Maliyet O(n·kl·(ku + kl)). Satırlar mpf listeleri: mpmath.matrix girdi erişimi yavaştır.
+def band_lu(rows):
+    n = len(rows)
+    A = [list(row) for row in rows]
+    kl = max([i - j for i in range(n) for j in range(i) if A[i][j]] or [0])
+    ku = max([j - i for i in range(n) for j in range(i + 1, n) if A[i][j]] or [0])
+    width = ku + kl
+    tol = mpmath.mnorm(mpmath.matrix(A), 1) * mpmath.eps if n else 0
+    perm, first = [], list(range(n))           # first[i]: i. satırda saklı çarpanların başladığı sütun (ileri çözüm sınırı)
+    for j in range(n - 1):
+        last = min(n - 1, j + width)
+        best, pivot = 0, None
+        for k in range(j, min(n - 1, j + kl) + 1):
+            s = mpmath.fsum(abs(A[k][l]) for l in range(j, last + 1))
+            if s <= tol:
+                raise ZeroDivisionError('matrix is numerically singular')
+            current = abs(A[k][j]) / s
+            if current > best:
+                best, pivot = current, k
+        if pivot is None:
+            raise ZeroDivisionError('matrix is numerically singular')
+        A[j], A[pivot] = A[pivot], A[j]
+        first[j], first[pivot] = first[pivot], first[j]
+        perm.append(pivot)
+        if abs(A[j][j]) <= tol:
+            raise ZeroDivisionError('matrix is numerically singular')
+        for i in range(j + 1, min(n - 1, j + kl) + 1):
+            m = A[i][j] = A[i][j] / A[j][j]
+            first[i] = min(first[i], j)
+            if m:
+                Aj, Ai = A[j], A[i]
+                for c in range(j + 1, last + 1):
+                    Ai[c] -= m * Aj[c]
+    if n and abs(A[n - 1][n - 1]) <= tol:
+        raise ZeroDivisionError('matrix is numerically singular')
+    return {'A': A, 'perm': perm, 'first': first, 'width': width, 'n': n}
+
+
+# Bant LU ile A x = b (mpmath.L_solve + U_solve sırası: önce satır değişimleri, sonra birim alt üçgen, sonra üst üçgen).
+# start: b'nin ilk sıfır olmayan (permütasyondan sonraki) konumu; birim vektör çözümlerinde ileri çözüm oradan başlar.
+def band_solve(lu, b, start=0):
+    A, n, width = lu['A'], lu['n'], lu['width']
+    y = list(b)
+    for j, k in enumerate(lu['perm']):
+        y[j], y[k] = y[k], y[j]
+    for i in range(start + 1, n):
+        row = A[i]
+        y[i] -= mpmath.fsum(row[j] * y[j] for j in range(max(lu['first'][i], start), i))
+    for i in range(n - 1, -1, -1):
+        row = A[i]
+        y[i] = (y[i] - mpmath.fsum(row[j] * y[j] for j in range(i + 1, min(n, i + width + 1)))) / row[i]
+    return y
+
+
+# mpmath.lu_solve ile aynı sözleşme (+10 bit çalışma duyarlığı, tekilde ZeroDivisionError), bant yapısıyla.
+def band_lu_solve(rows, b):
+    with mpmath.extraprec(10):
+        return band_solve(band_lu(rows), b)
+
+
+# κ₁ = ‖A‖₁ ‖A⁻¹‖₁ (mpmath.cond'un varsayılanı, tahmin değil kesin değer). ‖A⁻¹‖₁ = max_j ‖A⁻¹ e_j‖₁: n bant çözümü,
+# ters matrisin tamamı yazılmaz. e_j permütasyondan sonra tek bir konumda 1'dir; ileri çözüm o konumdan başlar.
+def band_condition(rows):
+    n = len(rows)
+    if not n:
+        return mpmath.mpf(1)
+    with mpmath.extraprec(20):                      # mpmath.inverse'ün çalışma duyarlığı
+        lu = band_lu(rows)
+        where = list(range(n))
+        for j, k in enumerate(lu['perm']):
+            where[j], where[k] = where[k], where[j]
+        position = {v: i for i, v in enumerate(where)}
+        inv_norm = 0
+        for j in range(n):
+            e = [mpmath.mpf(0)] * n
+            e[j] = mpmath.mpf(1)
+            col = band_solve(lu, e, start=position[j])
+            inv_norm = max(inv_norm, mpmath.fsum(abs(v) for v in col))
+    return mpmath.mnorm(mpmath.matrix(rows), 1) * inv_norm
+
+
 # Birinci mertebe uyumluluk (madde 3). Ders kitabı kuralı korunur: u verilen düğümün (d) test fonksiyonu V_h,0'da yoktur,
 # denklemi atılır. Tam sistem A a = b (A = K[:, serbest], N × (N−1)) ancak b, A'nın değer uzayındaysa uyumludur; yani her
 # yᵀA = 0 için yᵀb = 0. Atılan satır kalıntısı r_d = Σ K_dj a_j − F_d. A₂ (kalan satırlar) tekil değilse sol sıfır uzayı tek
@@ -558,7 +662,7 @@ def first_order_compatibility(K, F, a, fixed, free, exact):
     else:
         rows2 = [i for i in range(K.rows) if i != d]
         A2T = mpmath.matrix(A.extract(rows2, list(range(A.cols))).T.evalf(30).tolist())
-        z = mpmath.lu_solve(A2T, mpmath.matrix([float(v) for v in A.row(d)]))
+        z = band_lu_solve(A2T.tolist(), [mpmath.mpf(float(v)) for v in A.row(d)])   # bant: 1. mertebe n = 64, p = 4'te de saniyeler
         y = [mpmath.mpf(1) if i == d else -z[rows2.index(i)] for i in range(K.rows)]
         bn = [mpmath.mpf(float(v)) for v in b]
         yb = sum(yi * bi for yi, bi in zip(y, bn))
@@ -568,7 +672,8 @@ def first_order_compatibility(K, F, a, fixed, free, exact):
 
 
 # İndirgenmiş sistemin çözümü (önceki gövde aynen; yalnız ayrı fonksiyona alındı ki ayrık teşhis hatası sınıflandırma
-# bilgisiyle birlikte taşınabilsin). Tam yolda kesirli LU, sayısal yolda mpmath LU + κ₁.
+# bilgisiyle birlikte taşınabilsin). Tam yolda kesirli LU, sayısal yolda bant LU + κ₁ (mpmath.lu_solve / cond ile aynı
+# aritmetik; tests.py ikisini karşılaştırır).
 def solve_reduced(K_ff, F_f, exact, ivp_unique, has_dirichlet):
     if exact:
         if sp.simplify(K_ff.det()) == 0:
@@ -576,13 +681,14 @@ def solve_reduced(K_ff, F_f, exact, ivp_unique, has_dirichlet):
         return [sp.simplify(v) for v in K_ff.LUsolve(F_f)], None
     A = mpmath.matrix(K_ff.evalf(30).tolist())
     bvec = mpmath.matrix(F_f.evalf(30).tolist())
-    try:                                    # tam tekil matriste mpmath.cond ZeroDivisionError atar: o da sınıflandırılır
-        condition = float(mpmath.cond(A)) if K_ff.shape[0] else 1.0
+    rows = A.tolist()
+    try:                                    # tam tekil matriste ZeroDivisionError: o da sınıflandırılır
+        condition = float(band_condition(rows)) if K_ff.shape[0] else 1.0
     except ZeroDivisionError:
         condition = float('inf')
     if not condition <= COND_SINGULAR:
         raise classify_discrete_numeric(A, bvec, ivp_unique, condition)
-    return [sp.Float(v, 15) for v in mpmath.lu_solve(A, bvec)], condition
+    return [sp.Float(v, 15) for v in band_lu_solve(rows, [bvec[i] for i in range(bvec.rows)])], condition
 
 
 # Elemanın global koordinattaki yaklaşımı: x = x_e + s, â_k = a_{(e−1)p+k}.
@@ -692,7 +798,15 @@ def fem_engine(valid, symbolic=True):
 
     # Başlangıç değer probleminde tekillik "çözüm tek değil" demek değildir (sürekli problem tek çözümlüdür): yöntem koşullu
     # kararlıdır; kaba ağda ayrık rezonans (ör. p = 2'de ω²h² = 10) ya da üstel büyüme (p = 1'de ωh > 2√3) sistemi bozar.
-    exact = not (K_ff.has(sp.Float) or F_f.has(sp.Float)) and len(free) <= EXACT_SOLVE_LIMIT
+    # Tam (kesirli) yol yalnız K_ff RASYONELKEN: o zaman det K tam rasyoneldir (tekillik kararı kesin ve anlık) ve çözüm
+    # bileşenleri F'nin girdilerinin rasyonel katsayılı birleşimidir. K'de log/kök/π gibi aşkın girdiler varsa (ör. α = 1/(1+x)
+    # → log) simplify(det K) ve çözümün sadeleştirilmesi dakikalarca sürüyordu (korpus C31: > 10 dk; sunucu 60 s sonra
+    # sayısal yola düşüyordu) ve sonuç yüzlerce terimlik, okunmaz ifadeydi. O durumda integraller yine tam yazılır, yalnız
+    # indirgenmiş sistem ondalıklı çözülür; neden solve_note'ta taşınır ve kâğıtta a'nın yanına yazılır.
+    decimal_input = K_ff.has(sp.Float) or F_f.has(sp.Float)
+    solve_note = ('ondalık katsayı' if decimal_input else f'{len(free)} > {EXACT_SOLVE_LIMIT} serbest bilinmeyen' if len(free) > EXACT_SOLVE_LIMIT
+                  else 'K rasyonel değil' if not all(v.is_Rational for v in K_ff) else None)
+    exact = solve_note is None
     a_free, condition = solve_reduced(K_ff, F_f, exact, ivp_unique, bool(fixed))
     a = [None] * dofs
     for i, v in fixed.items():
@@ -715,7 +829,7 @@ def fem_engine(valid, symbolic=True):
     r = dict(alpha=alpha, beta=beta, gamma=gamma, f=f, x0=x0, x1=x1, n=n, degree=degree, order=order, h=h, dofs=dofs, first_order=first_order,
              conditions=conditions, slopes=slopes, ivp=ivp, N=N, dN=dN, shape=shape, elements=elements, detailed=detailed, uniform_K=uniform_K,
              uniform_F=uniform_F, K=K, F_l=F_l, F_b=F_b, Q=Q, fixed=fixed, free=free, rows=rows, K_ff=K_ff, F_f=F_f, a=a,
-             exact=exact, reactions=reactions, reaction_slopes=reaction_slopes, symbolic=symbolic, condition=condition, degeneracy=degeneracy, classification=None)
+             exact=exact, solve_note=solve_note, reactions=reactions, reaction_slopes=reaction_slopes, symbolic=symbolic, condition=condition, degeneracy=degeneracy, classification=None)
     r['formulation'] = formulation_data(r)
     return r
 
@@ -1110,7 +1224,10 @@ def build_sheet(valid, r, V):
     D('\\phi_i(x) = N_i(x)\\qquad \\text{(' + ('Bubnov–Galerkin: ağırlık fonksiyonları şekil fonksiyonlarıyla aynı' if not r['ivp']
       else 'Petrov–Galerkin: ağırlıklar şekil fonksiyonlarından seçilir ama test uzayı deneme uzayından farklı') + ')}')
     tests_used = list(r['rows'])
-    D(f'\\phi_i \\in \\{{N_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
+    if tests_used:
+        D(f'\\phi_i \\in \\{{N_i\\}},\\quad {index_range(tests_used[0] + 1, tests_used[-1] + 1)}\\qquad \\text{{({len(tests_used)} denklem, {len(r["free"])} bilinmeyen)}}')
+    else:                                     # tüm düğümler temel koşulla belirli: ağırlık uzayı boş, çözülecek denklem yok
+        D('\\text{ağırlık uzayı boş: tüm düğüm değerleri temel koşullarla belirli (0 denklem, 0 bilinmeyen)}')
     for i in range(dofs):
         if i in tests_used:
             continue
@@ -1283,7 +1400,7 @@ def build_sheet(valid, r, V):
 
     # --- çözüm
     section('Çözüm')
-    D('\\mathbf{a} = ' + tex_row(r['a']))
+    D('\\mathbf{a} = ' + tex_row(r['a']) + (f"\\qquad \\text{{(ondalıklı çözüm: {r['solve_note']})}}" if r.get('solve_note') else ''))
     if r['exact'] and any(not sp.sympify(v).is_Rational for v in r['a']):
         D('\\mathbf{a} \\approx ' + tex_row(r['a'], lambda v: dec(sp.sympify(v).evalf())))
     for side, name, point in (('left', 'Q_0', x0), ('right', 'Q_1', x1)):
@@ -1518,9 +1635,13 @@ def make_sheet(data, symbolic=True):
     solution = V['exact']['u']
     # K: tarayıcının montajladığı matrisle girdi girdi karşılaştırılsın diye (büyük sistemde yük olmasın: ≤ 65 bilinmeyen).
     K = [[float(v) for v in row] for row in r['K'].evalf(17).tolist()] if r['dofs'] <= 65 else None
+    # Eleman matrisleri ve yük vektörleri (motorun gerçekten montajladığı): bağımsız eleman düzeyi karşılaştırma için.
+    element_K = [[[float(v) for v in row] for row in rec['K'].evalf(17).tolist()] for rec in r['elements']]
+    element_F = [[float(v) for v in rec['F'].evalf(17)] for rec in r['elements']]
     return {'text': text, 'tex': build_tex(text), 'nodal': [float(sp.sympify(v).evalf()) for v in r['a']],
             'exact': str(solution) if solution is not None else None,
-            'exact_js': exact_for_browser(solution, r['x0'], r['x1']), 'K': K, **verdict_payload(V['exact']),
+            'exact_js': exact_for_browser(solution, r['x0'], r['x1']), 'K': K, 'element_K': element_K, 'element_F': element_F,
+            **verdict_payload(V['exact']),
             'fixed': {str(i): float(v) for i, v in r['fixed'].items()},
             'first_order_residual': float(r['first_order']['residual']) if r['first_order'] else None,
             **classification_payload(V['classification'], r['degeneracy']), **trace_payload(valid),

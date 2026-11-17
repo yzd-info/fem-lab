@@ -1,0 +1,2325 @@
+{
+ "schema": "FEM Lab problem girdisi (index.html → POST /api/sheet ile aynı alanlar); meta motora gönderilmez",
+ "cases": [
+  {
+   "id": "C01",
+   "meta": {
+    "name": "u' = 2x, u(0)=0 on [0,2]",
+    "category": "first_order_ivp",
+    "purpose": "ders ödevi; tam çözüm P1'in uzayında değil",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "2x",
+    "x0": 0,
+    "x1": 2,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 2,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C02",
+   "meta": {
+    "name": "u' + u = 1, u(0)=0",
+    "category": "first_order_ivp",
+    "purpose": "reaksiyonlu 1. mertebe; atılan satır uyumluluğu",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "1",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C03",
+   "meta": {
+    "name": "u' + 2u = 0, u(0)=1",
+    "category": "first_order_ivp",
+    "purpose": "üstel sönüm, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "2",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C04",
+   "meta": {
+    "name": "u' = cos x, u(0)=0 on [0,3]",
+    "category": "first_order_ivp",
+    "purpose": "trigonometrik yük, P3, birim olmayan aralık",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "cos(x)",
+    "x0": 0,
+    "x1": 3,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C05",
+   "meta": {
+    "name": "u' = x^2, u(1)=1 (sağ uç)",
+    "category": "first_order_ivp",
+    "purpose": "koşul sağ uçta; atılan satır son düğüm",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "x^2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C06",
+   "meta": {
+    "name": "(1+x) u' = 1, u(0)=0",
+    "category": "first_order_ivp",
+    "purpose": "değişken β (önde gelen katsayı), log çözüm",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1+x",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C07",
+   "meta": {
+    "name": "u' - u = 0, u(0)=1 on [0,3]",
+    "category": "first_order_ivp",
+    "purpose": "üstel büyüme, λh/p = 1 sınırında",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "-1",
+    "f": "0",
+    "x0": 0,
+    "x1": 3,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C08",
+   "meta": {
+    "name": "u' + 50u = 0, u(0)=1",
+    "category": "first_order_ivp",
+    "purpose": "sert problem, kaba ağ (λh/p = 12.5): salınım beklenir",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "50",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C09",
+   "meta": {
+    "name": "u' + x u = x, u(0)=0 on [0,2]",
+    "category": "first_order_ivp",
+    "purpose": "değişken γ, P4",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "x",
+    "f": "x",
+    "x0": 0,
+    "x1": 2,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C10",
+   "meta": {
+    "name": "u' = exp(-x), u(-1)=0 on [-1,1]",
+    "category": "first_order_ivp",
+    "purpose": "negatif başlangıçlı aralık, tek n, P3",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "exp(-x)",
+    "x0": -1,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 7,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C11",
+   "meta": {
+    "name": "-u'' = 1, D/D",
+    "category": "second_order_bvp",
+    "purpose": "temel Poisson",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C12",
+   "meta": {
+    "name": "u'' + u = x, D/D, n=2 p=1",
+    "category": "second_order_bvp",
+    "purpose": "kabul ölçütü: K11 = 11/6, a2 = -3/44",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 2,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C13",
+   "meta": {
+    "name": "-u'' = sin(pi x), P1",
+    "category": "second_order_bvp",
+    "purpose": "P1 düğümlerde tam olmalı (1B süperyakınsama)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "sin(pi*x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C14",
+   "meta": {
+    "name": "u'' = -2, D/D, P2",
+    "category": "second_order_bvp",
+    "purpose": "tam çözüm P2 uzayında",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "-2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C15",
+   "meta": {
+    "name": "u'' - 4u = 0, u(0)=0, u(1)=1",
+    "category": "second_order_bvp",
+    "purpose": "reaksiyon-difüzyon, P3, homojen olmayan Dirichlet",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "-4",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C16",
+   "meta": {
+    "name": "-u'' + u' = 1, D/D",
+    "category": "second_order_bvp",
+    "purpose": "hafif taşınım (Pe küçük)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "1",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C17",
+   "meta": {
+    "name": "u'' = 6x on [-1,2]",
+    "category": "second_order_bvp",
+    "purpose": "negatif uçlu aralık, kübik tam çözüm, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "6x",
+    "x0": -1,
+    "x1": 2,
+    "left": {
+     "type": "dirichlet",
+     "value": "-1",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "8",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C18",
+   "meta": {
+    "name": "u'' = 0, u(0)=2, u(3)=5",
+    "category": "second_order_bvp",
+    "purpose": "iki uçta sıfır olmayan Dirichlet, n=3",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "0",
+    "x0": 0,
+    "x1": 3,
+    "left": {
+     "type": "dirichlet",
+     "value": "2",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "5",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C19",
+   "meta": {
+    "name": "-u'' + 9u = 0 on [0,2]",
+    "category": "second_order_bvp",
+    "purpose": "güçlü reaksiyon, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "9",
+    "f": "0",
+    "x0": 0,
+    "x1": 2,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C20",
+   "meta": {
+    "name": "u'' = 12x^2, n=2 p=4",
+    "category": "second_order_bvp",
+    "purpose": "dördüncü derece tam çözüm P4 uzayında",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "12x^2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 2,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C21",
+   "meta": {
+    "name": "-u'' = exp(x), P3",
+    "category": "second_order_bvp",
+    "purpose": "üstel yük",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "exp(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C22",
+   "meta": {
+    "name": "u'' + 4u = 0, u(0)=0, u(1)=1",
+    "category": "second_order_bvp",
+    "purpose": "dalga tipi (k = 2), rezonanstan uzak",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "4",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C23",
+   "meta": {
+    "name": "-u'' = 1 on [0,10]",
+    "category": "second_order_bvp",
+    "purpose": "uzun aralık, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 10,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 10,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C24",
+   "meta": {
+    "name": "u'' = 1 on [5,6]",
+    "category": "second_order_bvp",
+    "purpose": "kaydırılmış aralık (x_e ≠ 0)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 5,
+    "x1": 6,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C25",
+   "meta": {
+    "name": "-2u'' = 4, D/D",
+    "category": "second_order_bvp",
+    "purpose": "negatif sabit α, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-2",
+    "beta": "",
+    "gamma": "",
+    "f": "4",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C26",
+   "meta": {
+    "name": "((1+x) u')' = 1",
+    "category": "variable_coefficient",
+    "purpose": "değişken α, P2",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C27",
+   "meta": {
+    "name": "((1+x^2) u')' + u = x",
+    "category": "variable_coefficient",
+    "purpose": "değişken α + reaksiyon, P3",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x^2",
+    "beta": "",
+    "gamma": "1",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C28",
+   "meta": {
+    "name": "(e^x u')' = e^x",
+    "category": "variable_coefficient",
+    "purpose": "üstel α",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "exp(x)",
+    "beta": "",
+    "gamma": "",
+    "f": "exp(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C29",
+   "meta": {
+    "name": "α=2+sin x, β=x, γ=-1, f=1",
+    "category": "variable_coefficient",
+    "purpose": "tüm katsayılar değişken",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "2+sin(x)",
+    "beta": "x",
+    "gamma": "-1",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C30",
+   "meta": {
+    "name": "((1+x) u')' + x u = x^2, D/doğal",
+    "category": "variable_coefficient",
+    "purpose": "değişken α ve γ, sağ uç doğal, P4",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x",
+    "beta": "",
+    "gamma": "x",
+    "f": "x^2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C31",
+   "meta": {
+    "name": "(u'/(1+x))' = 1",
+    "category": "variable_coefficient",
+    "purpose": "rasyonel α",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1/(1+x)",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C32",
+   "meta": {
+    "name": "(sqrt(1+x) u')' = 1",
+    "category": "variable_coefficient",
+    "purpose": "kök içeren α, P3",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "sqrt(1+x)",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C33",
+   "meta": {
+    "name": "(x u')' = 1, sol uç dejenere, u(1)=0",
+    "category": "variable_coefficient",
+    "purpose": "α(0)=0: dejenerelik uyarısı, sınırlı çözüm",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "x",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C34",
+   "meta": {
+    "name": "((x+1) u')' - x u' = 0",
+    "category": "variable_coefficient",
+    "purpose": "değişken taşınım, homojen olmayan Dirichlet",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "x+1",
+    "beta": "-x",
+    "gamma": "",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C35",
+   "meta": {
+    "name": "((1+0.5cos(pi x)) u')' - u = sin(pi x), D/akı",
+    "category": "variable_coefficient",
+    "purpose": "değişken α + akı koşulu, ondalık katsayı",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+0.5cos(pi*x)",
+    "beta": "",
+    "gamma": "-1",
+    "f": "sin(pi*x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "flux",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C36",
+   "meta": {
+    "name": "u'' = -1, u(0)=0, u'(1)=0",
+    "category": "derivative_flux_bc",
+    "purpose": "sağ uçta türev koşulu",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "-1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C37",
+   "meta": {
+    "name": "-u'' = 1, u'(0)=1, u(1)=0",
+    "category": "derivative_flux_bc",
+    "purpose": "sol uçta türev koşulu (işaret: -Q0)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "neumann",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C38",
+   "meta": {
+    "name": "((1+x)u')' = 4x+2, (1+x)u'(1) = 4",
+    "category": "derivative_flux_bc",
+    "purpose": "akı koşulu (test C)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x",
+    "beta": "",
+    "gamma": "",
+    "f": "4x+2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "flux",
+     "value": "4",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C39",
+   "meta": {
+    "name": "((1+x)u')' = 4x+2, u'(1) = 2",
+    "category": "derivative_flux_bc",
+    "purpose": "aynı fiziksel koşul türev olarak",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x",
+    "beta": "",
+    "gamma": "",
+    "f": "4x+2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "2",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C40",
+   "meta": {
+    "name": "((1+x^2)u')' = 2, akı sol uçta",
+    "category": "derivative_flux_bc",
+    "purpose": "sol uçta akı koşulu",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x^2",
+    "beta": "",
+    "gamma": "",
+    "f": "2",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "flux",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C41",
+   "meta": {
+    "name": "u'' - u = 1, u(0)=0, sağ verilmedi",
+    "category": "derivative_flux_bc",
+    "purpose": "doğal koşul α u' = 0, P3",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "-1",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C42",
+   "meta": {
+    "name": "u'' - u = 1, iki uç verilmedi",
+    "category": "derivative_flux_bc",
+    "purpose": "yalnız doğal koşullar ama γ ≠ 0 (tek çözüm)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "-1",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C43",
+   "meta": {
+    "name": "((1+2x)u')' = 0, u(0)=0, u'(1)=1",
+    "category": "derivative_flux_bc",
+    "purpose": "türev koşulu, α(1) = 3 (Q = 3)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+2x",
+    "beta": "",
+    "gamma": "",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C44",
+   "meta": {
+    "name": "2u'' = x, u(0)=1, 2u'(1) = -2",
+    "category": "derivative_flux_bc",
+    "purpose": "negatif akı, P4",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "2",
+    "beta": "",
+    "gamma": "",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "flux",
+     "value": "-2",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C45",
+   "meta": {
+    "name": "-u'' = x on [2,4], u(2)=0, u'(4)=1",
+    "category": "derivative_flux_bc",
+    "purpose": "birim olmayan aralıkta türev koşulu",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "x",
+    "x0": 2,
+    "x1": 4,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "1",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C46",
+   "meta": {
+    "name": "u'' = 1, n=1 p=1",
+    "category": "element_order_mesh",
+    "purpose": "en küçük ağ (1 bilinmeyen yok: tüm düğümler bilinir)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 1,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C47",
+   "meta": {
+    "name": "u'' = sin x, n=1 p=4",
+    "category": "element_order_mesh",
+    "purpose": "tek eleman, en yüksek derece",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "sin(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 1,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C48",
+   "meta": {
+    "name": "-u'' = sin(pi x), n=64 p=2",
+    "category": "element_order_mesh",
+    "purpose": "büyük ağ, sayısal çözüm yolu",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "sin(pi*x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 64,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C49",
+   "meta": {
+    "name": "u'' + u = x, n=32 p=3",
+    "category": "element_order_mesh",
+    "purpose": "97 düğüm",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 32,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C50",
+   "meta": {
+    "name": "-u'' = 1, n=64 p=4",
+    "category": "element_order_mesh",
+    "purpose": "en büyük ağ (257 düğüm); doğrulama boyut sınırı",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 64,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C51",
+   "meta": {
+    "name": "u' = cos x, n=64 p=1 on [0,6]",
+    "category": "element_order_mesh",
+    "purpose": "1. mertebe büyük ağ",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "cos(x)",
+    "x0": 0,
+    "x1": 6,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 64,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C52",
+   "meta": {
+    "name": "((1+x)u')' = x, n=7 p=3",
+    "category": "element_order_mesh",
+    "purpose": "tek eleman sayısı, değişken α",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1+x",
+    "beta": "",
+    "gamma": "",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 7,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C53",
+   "meta": {
+    "name": "u'' = x^3, n=9 p=2",
+    "category": "element_order_mesh",
+    "purpose": "n > 8: kâğıtta eleman kısaltma kuralı",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "x^3",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 9,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C54",
+   "meta": {
+    "name": "u'' + u = 0, u(0)=0, u'(0)=1, n=3 p=4",
+    "category": "element_order_mesh",
+    "purpose": "2. mertebe başlangıç değer problemi, P4",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "both",
+     "value": "0",
+     "slope": "1"
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 3,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C55",
+   "meta": {
+    "name": "u'' + u = 0, IVP on [0,6], n=16 p=1",
+    "category": "element_order_mesh",
+    "purpose": "IVP, P1, ωh = 0.375 (kararlı bölge)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "0",
+    "x0": 0,
+    "x1": 6,
+    "left": {
+     "type": "both",
+     "value": "0",
+     "slope": "1"
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 16,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C56",
+   "meta": {
+    "name": "-u'' = pi^2 sin(pi x), P2",
+    "category": "trig_exp_source",
+    "purpose": "klasik üretilmiş çözüm sin(pi x)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "pi^2 sin(pi x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C57",
+   "meta": {
+    "name": "u'' = e^x, u(0)=1, u(1)=e",
+    "category": "trig_exp_source",
+    "purpose": "e sabiti koşul değerinde",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "exp(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "e",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C58",
+   "meta": {
+    "name": "-u'' = cos(2 pi x), u'(0)=0, u(1)=0",
+    "category": "trig_exp_source",
+    "purpose": "trigonometrik yük + türev koşulu",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "cos(2 pi x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C59",
+   "meta": {
+    "name": "u'' + u = sin(3x) on [0,2]",
+    "category": "trig_exp_source",
+    "purpose": "kaynak ile homojen çözüm farklı frekans",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "sin(3x)",
+    "x0": 0,
+    "x1": 2,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C60",
+   "meta": {
+    "name": "-u'' = x e^-x, P4",
+    "category": "trig_exp_source",
+    "purpose": "karışık üstel-polinom yük",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "x exp(-x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 5,
+    "degree": 4
+   }
+  },
+  {
+   "id": "C61",
+   "meta": {
+    "name": "u'' = sinh x",
+    "category": "trig_exp_source",
+    "purpose": "hiperbolik yük",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "sinh(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C62",
+   "meta": {
+    "name": "-u'' = e^x sin x, P3",
+    "category": "trig_exp_source",
+    "purpose": "çarpım yük",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "exp(x) sin(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 6,
+    "degree": 3
+   }
+  },
+  {
+   "id": "C63",
+   "meta": {
+    "name": "-u'' = tan x",
+    "category": "trig_exp_source",
+    "purpose": "tan yük (kapalı biçim ilkel zor)",
+    "validity": "valid"
+   },
+   "input": {
+    "alpha": "-1",
+    "beta": "",
+    "gamma": "",
+    "f": "tan(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C64",
+   "meta": {
+    "name": "u'' = 1, u'(0)=0, u'(1)=0",
+    "category": "singular_degenerate_compat",
+    "purpose": "saf Neumann, uyumsuz (∫f ≠ akı farkı)",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C65",
+   "meta": {
+    "name": "u'' = 2x-1, u'(0)=0, u'(1)=0",
+    "category": "singular_degenerate_compat",
+    "purpose": "saf Neumann, uyumlu (tek değil)",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "2x-1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "neumann",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C66",
+   "meta": {
+    "name": "u'' = 1, koşulsuz",
+    "category": "singular_degenerate_compat",
+    "purpose": "hiç koşul yok, γ = 0",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C67",
+   "meta": {
+    "name": "u'' + pi^2 u = sin(pi x), D/D",
+    "category": "singular_degenerate_compat",
+    "purpose": "tam rezonans, uyumsuz",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "pi^2",
+    "f": "sin(pi x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C68",
+   "meta": {
+    "name": "u'' + 9.8u = 1, D/D",
+    "category": "singular_degenerate_compat",
+    "purpose": "rezonansa yakın ama tek",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "9.8",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 8,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C69",
+   "meta": {
+    "name": "((x-0.5)u')' = 1, D/D",
+    "category": "singular_degenerate_compat",
+    "purpose": "işaret değiştiren α, sıfır düğümde",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "x-0.5",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C70",
+   "meta": {
+    "name": "(x u')' = 1, u(0)=u(1)=0",
+    "category": "singular_degenerate_compat",
+    "purpose": "dejenere uç + iki Dirichlet: sınırlı çözüm sınıfında çözüm yok",
+    "validity": "challenging"
+   },
+   "input": {
+    "alpha": "x",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 2
+   }
+  },
+  {
+   "id": "C71",
+   "meta": {
+    "name": "bozuk ifade '2x+'",
+    "category": "invalid_adversarial",
+    "purpose": "sözdizimi hatası",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "2x+",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C72",
+   "meta": {
+    "name": "bilinmeyen fonksiyon foo(x)",
+    "category": "invalid_adversarial",
+    "purpose": "beyaz liste dışı ad",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "foo(x)",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C73",
+   "meta": {
+    "name": "kod enjeksiyonu denemesi",
+    "category": "invalid_adversarial",
+    "purpose": "__import__ beyaz listede değil",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "__import__('os')",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C74",
+   "meta": {
+    "name": "bilimsel gösterim 1e-8",
+    "category": "invalid_adversarial",
+    "purpose": "sessizce 1·e − 8 okunmamalı",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1e-8",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C75",
+   "meta": {
+    "name": "x0 = x1",
+    "category": "invalid_adversarial",
+    "purpose": "boş aralık",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 1,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C76",
+   "meta": {
+    "name": "p = 5",
+    "category": "invalid_adversarial",
+    "purpose": "desteklenmeyen derece",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 5
+   }
+  },
+  {
+   "id": "C77",
+   "meta": {
+    "name": "n = 0",
+    "category": "invalid_adversarial",
+    "purpose": "eleman yok",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 0,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C78",
+   "meta": {
+    "name": "1. mertebe + türev koşulu",
+    "category": "invalid_adversarial",
+    "purpose": "1. mertebe yalnız u değeri alır",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "1",
+    "gamma": "",
+    "f": "1",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "neumann",
+     "value": "1",
+     "slope": ""
+    },
+    "right": {
+     "type": "none",
+     "value": "",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C79",
+   "meta": {
+    "name": "aşırı belirli: sol uçta u ve u', sağda u",
+    "category": "invalid_adversarial",
+    "purpose": "üç koşul",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "1",
+    "beta": "",
+    "gamma": "1",
+    "f": "0",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "both",
+     "value": "0",
+     "slope": "1"
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  },
+  {
+   "id": "C80",
+   "meta": {
+    "name": "α = β = 0",
+    "category": "invalid_adversarial",
+    "purpose": "diferansiyel denklem değil",
+    "validity": "invalid"
+   },
+   "input": {
+    "alpha": "",
+    "beta": "",
+    "gamma": "1",
+    "f": "x",
+    "x0": 0,
+    "x1": 1,
+    "left": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "right": {
+     "type": "dirichlet",
+     "value": "0",
+     "slope": ""
+    },
+    "n": 4,
+    "degree": 1
+   }
+  }
+ ]
+}

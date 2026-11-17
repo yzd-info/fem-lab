@@ -35,8 +35,8 @@ Kullanıcı akışı:
 | `fem_sheet.py` | Katman 1 (define_problem), 2 (validate_problem), 3 (fem_engine: **sembolik/tam** FEM, SymPy), 5 (build_sheet: yalnız biçimleme) ve hat (run_pipeline) |
 | `fem_verify.py` | Katman 4: bağımsız doğrulama; motorun fonksiyonlarını ÇAĞIRMAZ (tests.py kaynakta denetler) |
 | `server.py` | Yerel sunucu (yalnızca standart kütüphane): sayfayı sunar, kâğıdı hesaplatır, PDF'e derler |
-| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 163 kontrol) |
-| `tests.py` | Kâğıt testleri (`python3 tests.py`, 195 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
+| `tests.js` | Tarayıcı çekirdeği testleri (`node tests.js`, 167 kontrol) |
+| `tests.py` | Kâğıt testleri (`python3 tests.py`, 228 kontrol; `verification/` paketini de çalıştırır): SymPy ↔ JavaScript ↔ analitik çözüm ↔ LaTeX derlemesi |
 | `requirements.txt` | `sympy` |
 
 Çalıştırma: `pip install -r requirements.txt` → `python3 server.py` → http://localhost:8000
@@ -84,7 +84,8 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 - n ≤ 8: bütün elemanların integralleri tek tek yazılır. n > 8: ilk iki ve son eleman tek tek, diğerleri montajda.
 - Katsayılar sabitse eleman matrisi bir kez hesaplanır ("tüm elemanlar için aynı").
 - 9 bilinmeyene kadar matrisler tam yazılır; daha büyüklerde ilk 4 / son 2 satır-sütun.
-- 8 serbest bilinmeyene kadar sistem tam (kesirli) çözülür; daha büyüklerde ondalıklı.
+- 8 serbest bilinmeyene kadar ve indirgenmiş K rasyonelse sistem tam (kesirli) çözülür; aksi halde ondalıklı
+  (bant LU, κ₁ ile; neden kâğıtta a'nın yanında yazılır — K'de log/kök/π varsa tam sadeleştirme dakikalar sürer).
 
 ## 4. Mimari kurallar (pazarlıksız)
 
@@ -105,7 +106,7 @@ Uzunluk kuralları (`fem_sheet.py` başındaki sabitler):
 
 ## 5. Yapılacaklar
 
-1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (163 OK); `python3 tests.py` (195 OK,
+1. **Kur ve doğrula.** `pip install -r requirements.txt`; `node tests.js` (167 OK); `python3 tests.py` (228 OK,
    pdflatex yoksa derleme kontrolleri atlanır). Bir test başarısızsa nedeni ortam mı kod mu ayır; kodu "düzeltmeden"
    önce raporla.
 2. **Gerçek tarayıcıda uçtan uca kontrol.** `python3 server.py`, http://localhost:8000. Altı örneğin her biri için:
