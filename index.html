@@ -127,6 +127,15 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .chart .cross { stroke: var(--muted); stroke-width: 1; }
 .chart text { fill: var(--muted); font: 11px var(--font-mono); }
 .chart .ring { stroke: var(--surface); stroke-width: 2; }
+/* Hata ve yakınsama grafiklerinin pencere araçları: .seg ile aynı görsel dil (mono 12 px, ince kenar); dar ekranda alt satıra kayar. */
+.chart-tools { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 6px; font: 12px var(--font-mono); color: var(--muted); }
+.chart-tools label { display: inline-flex; gap: 4px; align-items: center; }
+.chart-tools input[type="text"] { width: 12ch; padding: 3px 6px; font-size: 12px; }
+.chart-tools .seg button:disabled { opacity: 0.45; cursor: default; }
+.zoom-help { margin-top: 4px; font-size: 11.5px; }
+.zoomable svg { cursor: grab; user-select: none; -webkit-user-select: none; }
+.zoomable.dragging svg { cursor: grabbing; }
+.zoomable.zoomed svg { touch-action: none; }   /* yakınlaştırılmışken dokunmatik sürükleme sayfayı değil grafiği kaydırsın */
 .tip { position: absolute; top: 8px; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 6px; padding: 6px 9px; font: 12px var(--font-mono); white-space: nowrap; }
 .tip[hidden] { display: none; }
 .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
@@ -274,14 +283,34 @@ window.MathJax = {
         <div class="card-head"><h3 id="error-title">İşaretli noktasal hata</h3>
           <div class="seg" role="group" aria-label="Hata görünümü"><button type="button" data-error-view="signed">işaretli</button><button type="button" data-error-view="abs">mutlak (log)</button></div></div>
         <p class="hint" id="error-hint"></p>
-        <div class="chart" id="chart-error"></div>
+        <div class="chart zoomable" id="chart-error"></div>
+        <div class="chart-tools" data-zoom="error">
+          <div class="seg" role="group" aria-label="Yakınlaştırma"><button type="button" data-zoom-act="out" aria-label="Uzaklaştır" title="Uzaklaştır">−</button><button type="button" data-zoom-act="in" aria-label="Yakınlaştır" title="Yakınlaştır">+</button></div>
+          <div class="seg"><button type="button" data-zoom-act="fit" title="y eksenini görünür x aralığındaki değerlere sığdır">y: veriye sığdır</button></div>
+          <div class="seg"><button type="button" data-zoom-act="reset" title="Otomatik ölçeğe dön">sıfırla</button></div>
+          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="y alt sınırı"></label>
+          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="y üst sınırı"></label>
+          <span data-zoom-status></span>
+        </div>
+        <p class="error" data-zoom-msg="error" role="status"></p>
+        <p class="hint zoom-help">Ctrl/⌘ + tekerlek ya da iki parmak sıkıştırma: imleç çevresinde yakınlaştır (Shift: yalnız y) · sürükle: kaydır · çift tık: otomatik ölçek · y kutuları: Enter ile uygula</p>
       </div>
       <div class="panel chart-card">
         <div class="card-head"><h3 id="conv-title">Yakınsama</h3>
           <div class="seg-row"><div class="seg" role="group" aria-label="İnceltme türü"><button type="button" data-conv-mode="h">h</button><button type="button" data-conv-mode="p">p</button></div>
           <div class="seg" role="group" aria-label="Norm"><button type="button" data-conv-norm="l2">L²</button><button type="button" data-conv-norm="h1">H¹</button></div></div></div>
         <p class="hint" id="conv-hint"></p>
-        <div class="chart" id="chart-conv"></div>
+        <div class="chart zoomable" id="chart-conv"></div>
+        <div class="chart-tools" data-zoom="conv">
+          <div class="seg" role="group" aria-label="Yakınlaştırma"><button type="button" data-zoom-act="out" aria-label="Uzaklaştır" title="Uzaklaştır">−</button><button type="button" data-zoom-act="in" aria-label="Yakınlaştır" title="Yakınlaştır">+</button></div>
+          <div class="seg"><button type="button" data-zoom-act="fit" title="y eksenini görünür x aralığındaki değerlere sığdır">y: veriye sığdır</button></div>
+          <div class="seg"><button type="button" data-zoom-act="reset" title="Otomatik ölçeğe dön">sıfırla</button></div>
+          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="y alt sınırı"></label>
+          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="y üst sınırı"></label>
+          <span data-zoom-status></span>
+        </div>
+        <p class="error" data-zoom-msg="conv" role="status"></p>
+        <p class="hint zoom-help">Ctrl/⌘ + tekerlek ya da iki parmak sıkıştırma: imleç çevresinde yakınlaştır (Shift: yalnız y) · sürükle: kaydır · çift tık: otomatik ölçek · y kutuları: Enter ile uygula</p>
       </div>
     </section>
 
@@ -1052,16 +1081,112 @@ function conditionsTex(problem) {
 /*CORE-END*/
 
 /* ---------- 7. GRAFİK ----------
-   Tek genel çizici. cfg = { height, series:[{name,color,points:[[x,y]],width,dash,markers,highlight,endLabel,onTop}], xLog, yLog, xTicks, vlines, zeroLine, band, xTitle, yTitle }
+   Tek genel çizici. cfg = { height, series:[{name,color,points:[[x,y]],width,dash,markers,highlight,endLabel,onTop}], xLog, yLog, xTicks, vlines,
+   zeroLine, band, bandAbs, yInclude, yAutoMin, pinBelow, zoom:{x,y}, xTitle, yTitle }
    Her çağrıda SVG baştan kurulur: veri küçük olduğu için bu, artımlı güncellemeden hem basit hem yeterince hızlı. */
+/*AXIS-START*/
+/* ---- 7a. Eksen penceresi (saf hesap; DOM'a dokunmaz, tests.js bu bloğu ayrıca çıkarıp sınar) ----
+   Bütün aralıklar DÖNÜŞTÜRÜLMÜŞ uzaydadır: doğrusal eksende değerin kendisi, log y ekseninde log10, log x ekseninde log2.
+   Bu fonksiyonlar veriye dokunmaz (yuvarlamaz, kırpmaz, sıfırlamaz); yalnız verinin hangi pencereden görüleceğini hesaplar. */
+
+/* Pencere genişliğinin sınırları bir hata eşiği değil, GÖSTERİM sınırıdır: eksen etiketleri 10 anlamlı basamakla yazılır;
+   pencere merkezinin 1e-8'inden darsa komşu etiketler aynı sayıya düşer ve float64 çizimi anlamsızlaşır. absSpan: doğrusal
+   eksende (v − y0)/(y1 − y0) bölmesi taşmasın. logSpan: log eksende 1e-6 onluk ≈ 2.3e-6 göreli pencere. Üst sınırlar float64'ten. */
+const AXIS_LIMITS = { relSpan: 1e-8, absSpan: 1e-290, logSpan: 1e-6, maxSpan: 1e300, maxLogSpan: 600 };
+const AUTO_MARGIN = 0.06;     // doğrusal eksende veri kenara yapışmasın; önceki çizicinin payıyla aynı
+const ZOOM_STEP = 2;          // bir düğme basışı pencereyi yarıya indirir / iki katına çıkarır
+
+/* Adım 1/2/5 × 10^k: insanın okuyabildiği çizgi aralıkları. Döngü indeksle yürür ve en çok 50 çizgi üretir: yakınlaştırılmış dar
+   pencerede v += step birikimi yuvarlama yüzünden takılmasın ya da kaymasın. */
 function niceTicks(lo, hi, target = 6) {
+  if (!(hi > lo) || !isFinite(hi - lo)) return [];
   const raw = (hi - lo) / target, base = Math.pow(10, Math.floor(Math.log10(raw))), ratio = raw / base;
   const step = base * (ratio >= 7.5 ? 10 : ratio >= 3.5 ? 5 : ratio >= 1.5 ? 2 : 1);
   const ticks = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step)
-    ticks.push(Math.abs(v) < step * 1e-9 ? 0 : parseFloat(v.toPrecision(10)));   // sıfıra denk gelen çizgi yuvarlama gürültüsüyle 3e-18 yazmasın
+  for (let i = Math.ceil(lo / step); i * step <= hi + step * 1e-9 && ticks.length < 50; i++) {
+    const v = i * step;
+    ticks.push(Math.abs(v) < step * 1e-9 ? 0 : parseFloat(v.toPrecision(10)));   // sıfıra denk gelen çizgi 3e-18 yazmasın
+  }
   return ticks;
 }
+
+/* En dar izinli pencere (bkz. AXIS_LIMITS); doğrusal eksende pencerenin büyüklüğüne göreli. */
+function minSpan(range, log) {
+  return log ? AXIS_LIMITS.logSpan : Math.max(AXIS_LIMITS.absSpan, AXIS_LIMITS.relSpan * Math.max(Math.abs(range[0]), Math.abs(range[1])));
+}
+
+/* Pencereyi izinli genişliğe getirir. anchor pencerede aynı oranda kalır: sınıra dayanan yakınlaştırma imlecin altındaki
+   noktayı kaydırmasın. İzinli genişlikteki pencere olduğu gibi döner. */
+function limitSpan(range, log, anchor = (range[0] + range[1]) / 2) {
+  const span = range[1] - range[0], lo = minSpan(range, log), hi = log ? AXIS_LIMITS.maxLogSpan : AXIS_LIMITS.maxSpan;
+  if (span >= lo && span <= hi) return range;
+  const target = span < lo ? lo : hi, t = span > 0 ? (anchor - range[0]) / span : 0.5;
+  return [anchor - t * target, anchor + (1 - t) * target];
+}
+
+/* Otomatik ölçek: bütün değerler ve include'daki zorunlu noktalar (sıfır çizgisi, ±ölçüm tabanı) pencereye girer; işaret ne
+   olursa olsun hiçbir değer dışarıda kalmaz. lower yalnız log eksende kullanılır ve yalnız OTOMATİK ölçeğin alt ucunu belirler
+   (önceki çizicideki "taban/10"); altındaki değerler silinmez, çizici onları alt kenarda gösterir, pencere indirilince yerinde görünür.
+   top yalnız üst ucu yükseltir (ör. ölçüm tabanı çizgisi): veri tabanın altındaysa taban çizgisi pencerede görünsün ve
+   yuvarlama kalıntısı "eğilim" gibi bütün yüksekliğe yayılmasın; veri tabanın üstündeyse pencere hiç değişmez.
+   Log eksende uçlar tam onluğa yuvarlanır (çizgiler 10^k'ye düşsün). */
+function autoRange(values, { include = [], log = false, margin = AUTO_MARGIN, lower = -Infinity, top = -Infinity } = {}) {
+  let lo = Infinity, hi = -Infinity;
+  for (const v of values) if (isFinite(v)) { const w = Math.max(v, lower); lo = Math.min(lo, w); hi = Math.max(hi, w); }
+  for (const v of include) if (isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  if (!(hi >= lo)) return null;
+  hi = Math.max(hi, top);
+  if (log) { lo = Math.floor(lo); return [lo, Math.max(Math.ceil(hi), lo + 1)]; }
+  if (hi === lo) { const half = (Math.abs(lo) || 1) * 0.5; return [lo - half, hi + half]; }
+  const pad = (hi - lo) * margin;
+  return limitSpan([lo - pad, hi + pad], false);
+}
+
+/* factor < 1 yakınlaştırır, > 1 uzaklaştırır; anchor (dönüştürülmüş uzayda, ör. imlecin altındaki nokta) yerinde kalır. */
+function zoomRange(range, factor, anchor = (range[0] + range[1]) / 2, log = false) {
+  return limitSpan([anchor - (anchor - range[0]) * factor, anchor + (range[1] - anchor) * factor], log, anchor);
+}
+/* Kaydırma genişliği değiştirmez; yalnız pencereyi öteler. */
+function panRange(range, delta) { return [range[0] + delta, range[1] + delta]; }
+
+/* "y: veriye sığdır": yalnız görünür x penceresindeki değerlere göre y. Log eksende ≤ 0 değerin eksende yeri olmadığı için hesaba
+   katılamaz (silinmez; çizici onu alt kenarda gösterir). Pencerede değer yoksa null. */
+function fitRange(points, xRange, fx, fy, log) {
+  const ys = [];
+  for (const [x, y] of points) {
+    const tx = fx(x);
+    if (tx >= xRange[0] && tx <= xRange[1] && isFinite(y) && (!log || y > 0)) ys.push(fy(y));
+  }
+  return ys.length ? autoRange(ys, { log }) : null;
+}
+
+/* Elle girilen y aralığı (gerçek değerlerle; log eksende de 1e-15 gibi). Virgül ondalık ayıracı kabul edilir (Türkçe klavye).
+   Geçersizse Türkçe açıklama döner; girdi sessizce düzeltilmez. */
+function parseAxisRange(loText, hiText, log) {
+  const read = (t) => { const s = String(t).trim().replace(',', '.'); return s === '' ? NaN : Number(s); };
+  const lo = read(loText), hi = read(hiText);
+  if (!isFinite(lo) || !isFinite(hi)) return { error: 'y sınırları sayı olmalı (ör. -2e-15 ya da 0.001).' };
+  if (!(hi > lo)) return { error: 'y üst sınırı alt sınırdan büyük olmalı.' };
+  if (log && !(lo > 0)) return { error: 'Log eksende y sınırları pozitif olmalı.' };
+  const range = log ? [Math.log10(lo), Math.log10(hi)] : [lo, hi];
+  if (range[1] - range[0] < minSpan(range, log)) return { error: 'y aralığı çok dar: eksen etiketleri ayırt edilemez (genişlik, sınırların büyüklüğünün en az 1e-8 katı olmalı).' };
+  if (range[1] - range[0] > (log ? AXIS_LIMITS.maxLogSpan : AXIS_LIMITS.maxSpan)) return { error: 'y aralığı çok geniş.' };
+  return { range };
+}
+
+/* Log y ekseni çizgileri. En az iki onluk görünüyorsa 10^k (en çok ~6 çizgi). Pencere yakınlaştırılıp iki onluktan darsa onluk
+   çizgisi yetmez; o zaman penceredeki "yuvarlak" doğrusal değerler kullanılır. power: 10^k etiketi mi, düz sayı mı. */
+function logTicks(lo, hi) {
+  const first = Math.ceil(lo - 1e-9), last = Math.floor(hi + 1e-9);
+  if (last - first >= 1) {
+    const step = Math.max(1, Math.ceil((last - first) / 6)), ticks = [];
+    for (let k = first; k <= last; k += step) ticks.push({ value: Math.pow(10, k), power: k });
+    return ticks;
+  }
+  return niceTicks(Math.pow(10, lo), Math.pow(10, hi), 4).filter((v) => v > 0).map((value) => ({ value, power: null }));
+}
+/*AXIS-END*/
+
 const formatValue = (v) => (v !== 0 && (Math.abs(v) < 1e-3 || Math.abs(v) >= 1e5) ? v.toExponential(3) : String(parseFloat(v.toPrecision(5))));
 /* Eksen etiketi kısa olmalı: "-2.000e-4" yerine "-2e-4"; tick değerleri zaten yuvarlak sayılardır. */
 const tickLabel = (v) => {
@@ -1072,6 +1197,9 @@ const tickLabel = (v) => {
 /* Log eksende 10^k biçimi "1e-6"dan daha okunur; SVG metninde üst simge tspan ile yazılır. */
 const powerLabel = (k) => `10<tspan dy="-5" font-size="8.5">${k < 0 ? '−' + -k : k}</tspan>`;
 
+/* cfg.zoom verilirse pencere odur (yakınlaştırma/kaydırma), yoksa otomatik ölçek. Dönüş: pencere bilgisi (otomatik ve gerçek
+   pencere, dönüşümler, geometri, çizilen noktalar); yakınlaştırma araçları bundan hesaplar. Veri değerleri hiçbir yerde
+   değiştirilmez: pencere dışı kırpma yolu (clipPath) ile gizlenir, imleç kutusu her zaman gerçek değeri yazar. */
 function drawChart(host, cfg) {
   const labelled = cfg.series.some((s) => s.endLabel);
   const W = Math.max(host.clientWidth, 260), H = cfg.height;
@@ -1079,38 +1207,58 @@ function drawChart(host, cfg) {
   const fx = cfg.xLog ? Math.log2 : (v) => v;
   const fy = cfg.yLog ? (v) => Math.log10(Math.max(v, LOG_FLOOR)) : (v) => v;
   const finite = cfg.series.flatMap((s) => s.points).filter((pt) => isFinite(pt[1]));
-  if (!finite.length) { host.replaceChildren(); return; }
+  if (!finite.length) { host.replaceChildren(); return null; }
 
-  let x0 = Math.min(...finite.map((pt) => fx(pt[0]))), x1 = Math.max(...finite.map((pt) => fx(pt[0])));
-  let y0 = Math.min(...finite.map((pt) => fy(pt[1]))), y1 = Math.max(...finite.map((pt) => fy(pt[1])));
-  if (cfg.zeroLine) { y0 = Math.min(y0, 0); y1 = Math.max(y1, 0); }
-  if (cfg.yLog) { y0 = Math.floor(y0); y1 = Math.max(Math.ceil(y1), y0 + 1); }
-  else { const margin = (y1 - y0 || 1) * 0.06; y0 -= margin; y1 += margin; }
+  const auto = {
+    x: autoRange(finite.map((pt) => fx(pt[0])), { margin: 0 }),
+    y: autoRange(finite.map((pt) => fy(pt[1])), {
+      log: cfg.yLog, include: [...(cfg.zeroLine ? [0] : []), ...(cfg.yInclude || [])],
+      lower: cfg.yAutoMin === undefined ? -Infinity : fy(cfg.yAutoMin),
+      top: cfg.yLog && cfg.band > 0 ? fy(cfg.band) + 0.5 : -Infinity   // log eksende taban çizgisinin üstünde yarım onluk boşluk
+    })
+  };
+  const [x0, x1] = cfg.zoom?.x || auto.x, [y0, y1] = cfg.zoom?.y || auto.y;
 
-  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
-  const sx = (v) => pad.l + (fx(v) - x0) / (x1 - x0) * plotW;
-  const sy = (v) => pad.t + plotH - (fy(v) - y0) / (y1 - y0) * plotH;
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b, bottom = pad.t + plotH;
+  /* Pencere dışındaki koordinat ±10H'ye sıkıştırılır: 1e12 px'lik koordinatı SVG tek duyarlıkla işler ve görünen çizgi parçası
+     bozulur. Sıkıştırma pencere içindeki hiçbir noktayı oynatmaz. pinBelow (log mutlak hata): pencerenin altında kalan değer
+     alt kenara oturtulur (önceki çizicinin taban davranışı); değeri değişmez, imleç kutusunda gerçeği yazar. */
+  const reach = 10 * H, clampPx = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  const sx = (v) => clampPx(pad.l + (fx(v) - x0) / (x1 - x0) * plotW, -reach, W + reach);
+  const sy = (v) => {
+    const raw = bottom - (fy(v) - y0) / (y1 - y0) * plotH;
+    return clampPx(cfg.pinBelow ? Math.min(raw, bottom) : raw, -reach, H + reach);
+  };
+  const inX = (v) => fx(v) >= x0 - (x1 - x0) * 1e-9 && fx(v) <= x1 + (x1 - x0) * 1e-9;
+  const inPlot = (px, py) => px >= pad.l - 0.5 && px <= W - pad.r + 0.5 && py >= pad.t - 0.5 && py <= bottom + 0.5;
 
-  const xTicks = cfg.xTicks || niceTicks(x0, x1, Math.max(3, Math.floor(plotW / 90)));
-  const logStep = Math.max(1, Math.ceil((y1 - y0) / 6));
-  const yTicks = cfg.yLog
-    ? Array.from({ length: Math.floor((y1 - y0) / logStep) + 1 }, (_, i) => Math.pow(10, y0 + i * logStep))
-    : niceTicks(y0, y1, 5);
-  const yLabel = (v) => (cfg.yLog ? powerLabel(Math.round(Math.log10(v))) : tickLabel(v));
+  const xCount = Math.max(3, Math.floor(plotW / 90));
+  let xTicks = cfg.xTicks ? cfg.xTicks.filter(inX) : niceTicks(x0, x1, xCount);
+  if (cfg.xTicks && xTicks.length < 2)                 // sabit çizgiler (n = 1…64, p = 1…4) yakınlaştırınca pencereden çıkar
+    xTicks = cfg.xLog ? niceTicks(x0, x1, xCount).map((t) => parseFloat(Math.pow(2, t).toPrecision(4))) : niceTicks(x0, x1, xCount);
+  const yTicks = cfg.yLog ? logTicks(y0, y1) : niceTicks(y0, y1, 5).map((value) => ({ value, power: null }));
+  const yLabel = (t) => (t.power !== null ? powerLabel(t.power) : tickLabel(t.value));
 
-  let svg = '';
-  /* Güvenilmez ölçüm bölgesi (ör. 1e-12 altı yuvarlama gürültüsü): bu bölgedeki noktalar gerçek hata sanılmasın diye taranır. */
+  const clipId = `clip-${host.id}`;
+  let svg = `<defs><clipPath id="${clipId}"><rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}"/></clipPath></defs>`;
+  let plot = '', marks = '';
+  /* Güvenilmez ölçüm bölgesi (ör. 1e-12 altı yuvarlama gürültüsü): bu bölgedeki noktalar gerçek hata sanılmasın diye taranır.
+     band: log eksende tabandan aşağısı; bandAbs: doğrusal (işaretli) eksende ±taban. */
   if (cfg.band !== undefined && fy(cfg.band) > y0) {
     const top = Math.max(pad.t, sy(cfg.band));
-    svg += `<rect class="band" x="${pad.l}" y="${top}" width="${plotW}" height="${pad.t + plotH - top}"/>`;
+    plot += `<rect class="band" x="${pad.l}" y="${top}" width="${plotW}" height="${bottom - top}"/>`;
   }
-  for (const v of yTicks) svg += `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(v)}" y2="${sy(v)}"/><text x="${pad.l - 8}" y="${sy(v) + 4}" text-anchor="end">${yLabel(v)}</text>`;
+  if (cfg.bandAbs > 0) {
+    const top = Math.max(pad.t, sy(cfg.bandAbs)), low = Math.min(bottom, sy(-cfg.bandAbs));
+    if (low > top) plot += `<rect class="band" x="${pad.l}" y="${top}" width="${plotW}" height="${low - top}"/>`;
+  }
+  for (const t of yTicks) svg += `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(t.value)}" y2="${sy(t.value)}"/><text x="${pad.l - 8}" y="${sy(t.value) + 4}" text-anchor="end">${yLabel(t)}</text>`;
   for (const v of xTicks) svg += `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${tickLabel(v)}</text>`;
   if (cfg.xTitle) svg += `<text class="axis-title" x="${pad.l - 20}" y="${H - 8}" text-anchor="end">${cfg.xTitle} →</text>`;
   if (cfg.yTitle) svg += `<text class="axis-title" x="${pad.l}" y="12" text-anchor="start">↑ ${cfg.yTitle}</text>`;
-  for (const v of cfg.vlines || []) svg += `<line class="vline" x1="${sx(v)}" x2="${sx(v)}" y1="${pad.t}" y2="${pad.t + plotH}"/>`;
-  const baseY = cfg.zeroLine ? sy(0) : pad.t + plotH;
-  svg += `<line class="axis" x1="${pad.l}" x2="${W - pad.r}" y1="${baseY}" y2="${baseY}"/>`;
+  for (const v of (cfg.vlines || []).filter(inX)) plot += `<line class="vline" x1="${sx(v)}" x2="${sx(v)}" y1="${pad.t}" y2="${bottom}"/>`;
+  const baseY = cfg.zeroLine && y0 <= 0 && y1 >= 0 ? sy(0) : bottom;   // sıfır pencere dışındaysa eksen alt kenarda
+  plot += `<line class="axis" x1="${pad.l}" x2="${W - pad.r}" y1="${baseY}" y2="${baseY}"/>`;
 
   /* onTop serileri (ör. kesikli referans) en son çizilir: renkli eğrinin altında kaybolmasın. */
   const drawOrder = [...cfg.series].sort((a, b) => (a.onTop ? 1 : 0) - (b.onTop ? 1 : 0));
@@ -1120,33 +1268,40 @@ function drawChart(host, cfg) {
       if (!isFinite(y)) { pen = 'M'; continue; }            // tanımsız noktada çizgiyi kır
       d += `${pen}${sx(x).toFixed(1)},${sy(y).toFixed(1)}`; pen = 'L';
     }
-    svg += `<path d="${d}" fill="none" style="stroke:${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
-    /* İşaret: [x, y, {r, hollow}]. Boş halka = farklı anlam (eleman içi düğüm ya da ölçüm tabanındaki nokta). */
+    plot += `<path d="${d}" fill="none" style="stroke:${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
+    /* İşaret: [x, y, {r, hollow}]. Boş halka = farklı anlam (eleman içi düğüm ya da ölçüm tabanındaki nokta). İşaretler kırpılmaz
+       (kenardaki yarım daire okunmaz), pencere dışındakiler hiç çizilmez. */
     for (const [x, y, style = {}] of s.markers || []) {
-      if (!isFinite(y)) continue;
-      svg += style.hollow
+      if (!isFinite(y) || !inPlot(sx(x), sy(y))) continue;
+      marks += style.hollow
         ? `<circle cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:var(--surface);stroke:${s.color}" stroke-width="1.6"/>`
         : `<circle class="ring" cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:${s.color}"/>`;
     }
-    if (s.highlight && isFinite(s.highlight[1])) svg += `<circle class="ring" cx="${sx(s.highlight[0])}" cy="${sy(s.highlight[1])}" r="6" style="fill:${s.color}"/>`;
+    if (s.highlight && isFinite(s.highlight[1]) && inPlot(sx(s.highlight[0]), sy(s.highlight[1])))
+      marks += `<circle class="ring" cx="${sx(s.highlight[0])}" cy="${sy(s.highlight[1])}" r="6" style="fill:${s.color}"/>`;
   }
-  /* Doğrudan etiket: serinin son noktasının sağına yazılır; üst üste binmesinler diye en az 13 px aralıkla dizilir. */
+  svg += `<g clip-path="url(#${clipId})">${plot}</g>${marks}`;
+  /* Doğrudan etiket: serinin son noktasının sağına yazılır (pencere dışındaysa en yakın kenara); üst üste binmesinler diye
+     en az 13 px aralıkla dizilir. */
   const labels = cfg.series.filter((s) => s.endLabel && s.points.length)
-    .map((s) => ({ s, y: sy(s.points[s.points.length - 1][1]) })).sort((a, b) => a.y - b.y);
+    .map((s) => ({ s, y: clampPx(sy(s.points[s.points.length - 1][1]), pad.t, bottom) })).sort((a, b) => a.y - b.y);
   labels.forEach((item, i) => { if (i > 0) item.y = Math.max(item.y, labels[i - 1].y + 13); });
-  const overflow = labels.length ? labels[labels.length - 1].y - (pad.t + plotH + 4) : 0;
+  const overflow = labels.length ? labels[labels.length - 1].y - (bottom + 4) : 0;
   for (const item of labels) svg += `<text class="end-label" x="${W - pad.r + 8}" y="${item.y - Math.max(0, overflow) + 4}" style="fill:${item.s.color}">${item.s.endLabel}</text>`;
-  svg += `<line class="cross" y1="${pad.t}" y2="${pad.t + plotH}" visibility="hidden"/>`;
+  svg += `<line class="cross" y1="${pad.t}" y2="${bottom}" visibility="hidden"/>`;
   host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${cfg.label}">${svg}</svg><div class="tip" hidden></div>`;
 
-  /* Üzerine gelince: en yakın örnek noktasına kilitlenen dikey çizgi + tüm serilerin o noktadaki değeri. */
+  /* Üzerine gelince: en yakın örnek noktasına kilitlenen dikey çizgi + tüm serilerin o noktadaki GERÇEK değeri.
+     Sürükleme sürerken kapalı: kaydırma ile imleç kutusu birbirine karışmasın. */
   const svgEl = host.querySelector('svg'), cross = host.querySelector('.cross'), tip = host.querySelector('.tip');
   const nearest = (s, target) => s.points.reduce((best, pt) => (Math.abs(fx(pt[0]) - target) < Math.abs(fx(best[0]) - target) ? pt : best));
   svgEl.onpointermove = (event) => {
+    if (host.classList.contains('dragging')) return;
     const px = (event.clientX - svgEl.getBoundingClientRect().left) * (W / svgEl.getBoundingClientRect().width);
     if (px < pad.l || px > W - pad.r) return svgEl.onpointerleave();
     const target = x0 + (px - pad.l) / plotW * (x1 - x0);
     const anchor = nearest(cfg.series[0], target);
+    if (!inX(anchor[0])) return svgEl.onpointerleave();
     cross.setAttribute('x1', sx(anchor[0])); cross.setAttribute('x2', sx(anchor[0])); cross.setAttribute('visibility', 'visible');
     tip.innerHTML = `${cfg.xName} = ${formatValue(anchor[0])}` + cfg.series.map((s) =>
       `<br><i style="background:${s.color}"></i>${s.name}: ${formatValue(nearest(s, fx(anchor[0]))[1])}`).join('');
@@ -1156,6 +1311,7 @@ function drawChart(host, cfg) {
     tip.style.right = left > host.clientWidth / 2 ? `${host.clientWidth - left + 12}px` : '';
   };
   svgEl.onpointerleave = () => { cross.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+  return { auto, range: { x: [x0, x1], y: [y0, y1] }, fx, fy, xLog: !!cfg.xLog, yLog: !!cfg.yLog, geometry: { W, H, pad, plotW, plotH }, points: finite };
 }
 
 /* ---------- 8. SUNUCU ----------
@@ -1201,9 +1357,14 @@ const state = {
   convMode: 'h',              // 'h': n değişir (h-inceltme) · 'p': n sabit, derece 1→4 (p-inceltme)
   sheet: null, sheetKey: '',  // sunucudan gelen son kâğıt ve hangi girdilere ait olduğu
   sheetFailedKey: '',         // sunucunun reddettiği son girdi (aynı istek döngüye girmesin)
-  sheetOpen: false            // kâğıt yalnız istendiğinde açık durur; açıkken problem değişince kendiliğinden yenilenir
+  sheetOpen: false,           // kâğıt yalnız istendiğinde açık durur; açıkken problem değişince kendiliğinden yenilenir
+  /* Hata ve yakınsama grafiğinin elle seçilen penceresi {key, x, y} (dönüştürülmüş uzayda). null ya da key bugünkü görünüme
+     (problem + görünüm türü) uymuyorsa otomatik ölçek: başka eksenli bir görünüme eski pencere taşınmasın. */
+  chartZoom: { error: null, conv: null },
+  zoomNote: { error: '', conv: '' }   // y kutusuna girilen geçersiz aralığın Türkçe açıklaması
 };
 let view = null;              // son başarılı hesabın sonucu
+const chartInfo = {};         // son çizilen hata/yakınsama grafiğinin pencere bilgisi (drawChart dönüşü + key); durum değil, çizimin türevi
 let cache = { key: '', reference: null, study: null };      // n ve p'ye bağlı olmayan pahalı hesaplar
 
 /* Kâğıdı (ve referans çözümü) belirleyen girdiler; anahtar değişmediyse yeniden hesap gerekmez. */
@@ -1427,6 +1588,14 @@ function renderCharts() {
   const U = refName(), active = results[state.degree];
   const xs = sampleXs(active.mesh);                          // çizim örnekleri: ağdan bağımsız, eleman sınırları dahil
   const curve = (p) => xs.map((x) => [x, evaluate(results[p].mesh, results[p].result.c, x)]);
+  const problemKey = JSON.stringify(problemInputs());
+  const zoomKey = { error: `${state.errorView}|${problemKey}`, conv: `${state.convMode}|${state.convNorm}|${problemKey}` };
+  const zoomOf = (id) => (state.chartZoom[id]?.key === zoomKey[id] ? state.chartZoom[id] : null);
+  const drawZoomable = (id, cfg) => {
+    const info = drawChart($(`chart-${id}`), { ...cfg, zoom: zoomOf(id) });
+    chartInfo[id] = info && { ...info, key: zoomKey[id] };
+    renderZoomTools(id);
+  };
   const boundaries = state.n <= 32 ? Array.from({ length: state.n + 1 }, (_, e) => state.x0 + e * active.mesh.h) : [];
 
   const series = degrees.map((p) => ({
@@ -1440,26 +1609,29 @@ function renderCharts() {
     + (hidden.length ? ` · ${hidden.map((p) => `p=${p}`).join(', ')}: düğüm çok sık, işaret gösterilmiyor` : '')
     + (boundaries.length ? '' : ' (n > 32: sınır çizgileri gizli)');
 
-  /* Noktasal hata: işaretli (u − u_h) doğrusal eksende ya da mutlak |u − u_h| log eksende. Mutlak görünümde düğüm
-     hataları ayrıca işaretlenir; ölçüm tabanının altındaki değerler taban çizgisine oturtulur ve bölge taranır. */
+  /* Noktasal hata: işaretli (u − u_h) doğrusal eksende ya da mutlak |u − u_h| log eksende. Değerler olduğu gibi çizilir.
+     İşaretli görünümde otomatik ölçek ±ölçüm tabanını (floors.point, mutlak görünüm ve yakınsamadaki tabanın aynısı) her zaman
+     kapsar ve bu bant taranır: 1e-15'lik yuvarlama kalıntısı tam yükseklikte "salınım" gibi büyütülmesin; kalıntı silinmez,
+     yakınlaştırınca ya da "y: veriye sığdır" ile görünür. Mutlak görünümde otomatik ölçeğin alt ucu taban/10'dur (önceki
+     davranış); daha küçük değerler (0 dahil) alt kenarda gösterilir, gerçek değer imleç kutusundadır. */
   const absolute = state.errorView === 'abs';
   const W = errWord();
   $('error-title').textContent = absolute ? `Mutlak noktasal ${W}` : `İşaretli noktasal ${W}`;
   $('error-hint').innerHTML = (absolute
-    ? `|${U}(x) − u<sub>h</sub>(x)|, log eksen; noktalar: düğümde |${U}(x<sub>i</sub>) − a<sub>i</sub>|; taralı: ölçüm tabanı`
-    : `${U}(x) − u<sub>h</sub>(x), seçili n için (pozitif: u<sub>h</sub> altta)`)
+    ? `|${U}(x) − u<sub>h</sub>(x)|, log eksen; noktalar: düğümde |${U}(x<sub>i</sub>) − a<sub>i</sub>|; taralı: ölçüm tabanı (altındakiler alt kenarda)`
+    : `${U}(x) − u<sub>h</sub>(x), seçili n için (pozitif: u<sub>h</sub> altta); taralı: ±ölçüm tabanı ${formatValue(floors.point)}, içindeki dalgalanma yuvarlama düzeyinde`)
     + (view.analytic ? '' : ' · ince ağa göre fark, gerçek hata değil');
   const floorPoint = floors.point;
-  drawChart($('chart-error'), absolute ? {
-    height: 240, yLog: true, band: floorPoint, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `|${U} − u_h|`, label: 'Mutlak noktasal hata',
+  drawZoomable('error', absolute ? {
+    height: 240, yLog: true, band: floorPoint, yAutoMin: floorPoint / 10, pinBelow: true, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `|${U} − u_h|`, label: 'Mutlak noktasal hata',
     series: degrees.map((p) => ({
       name: DEGREE_NAMES[p], color: seriesColor(p), width: p === state.degree ? 2 : 1.5,
-      points: curve(p).map(([x, v]) => [x, Math.max(Math.abs(u(x) - v), floorPoint / 10)]),
+      points: curve(p).map(([x, v]) => [x, Math.abs(u(x) - v)]),
       markers: p === state.degree && results[p].mesh.dofs <= MARKER_LIMIT.active
-        ? results[p].result.c.map((a, i) => { const x = results[p].mesh.nodeX(i); return [x, Math.max(Math.abs(u(x) - a), floorPoint / 10), { r: 3 }]; }) : []
+        ? results[p].result.c.map((a, i) => { const x = results[p].mesh.nodeX(i); return [x, Math.abs(u(x) - a), { r: 3 }]; }) : []
     }))
   } : {
-    height: 240, zeroLine: true, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `${U} − u_h`, label: 'İşaretli noktasal hata',
+    height: 240, zeroLine: true, bandAbs: floorPoint, yInclude: [-floorPoint, floorPoint], vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `${U} − u_h`, label: 'İşaretli noktasal hata',
     series: degrees.map((p) => ({ name: DEGREE_NAMES[p], color: seriesColor(p), points: curve(p).map(([x, v]) => [x, u(x) - v]), width: p === state.degree ? 2 : 1.5 }))
   });
 
@@ -1478,7 +1650,7 @@ function renderCharts() {
       + view.pStudy.map((o) => o.dofs).join(' → ') + `). Yalnız ölçülen ${W}lar; p-inceltmede h-hızı tanımsızdır. `
       + 'h-inceltme n\'yi (h\'yi), p-inceltme dereceyi, hp-inceltme ikisini birden değiştirir (burada gösterilmez). ○ ölçüm tabanında; taralı bölge bu taban.';
     const floor = floors[norm], h = active.mesh.h;
-    drawChart($('chart-conv'), {
+    drawZoomable('conv', {
       height: 240, yLog: true, xTicks: [1, 2, 3, 4], xName: 'p', xTitle: 'p', yTitle, band: floor(h), label: 'Sabit ağda derece artışıyla hata',
       series: [{ name: `n = ${state.n}`, color: 'var(--ink-2)', width: 1.25, points: view.pStudy.map((o) => [o.p, o[norm]]) },
         ...view.pStudy.map((o) => ({ name: `p=${o.p}`, color: seriesColor(o.p), width: 0, points: [[o.p, o[norm]]],
@@ -1508,10 +1680,109 @@ function renderCharts() {
     convSeries.push({ name: `kuramsal h^${slope}`, color: 'var(--ink-2)', width: 1, dash: '2 4',
       points: ns.map((n) => [n, anchor.E * ((problem.x1 - problem.x0) / n / anchor.h) ** slope]), endLabel: `kuramsal h^${slope}` });
   }
-  drawChart($('chart-conv'), {
+  drawZoomable('conv', {
     height: 240, xLog: true, yLog: true, xTicks: CONVERGENCE_NS, xName: 'n', xTitle: 'n', yTitle,
     band: floors[norm](hMin), label: 'Hatanın eleman sayısıyla değişimi', series: convSeries
   });
+}
+
+/* Araç çubuğu çizimden sonra güncellenir: y kutuları o an çizilen pencereyi (gerçek değerlerle) gösterir; kullanıcı yazarken
+   (kutu odaktayken) üzerine yazılmaz. "sıfırla" yalnız elle pencere varken etkin. */
+const axisText = (v) => String(parseFloat(v.toPrecision(4)));   // "-7.994e-17" kutuya sığsın; pencereyi gösterir, veriyi değil
+function renderZoomTools(id) {
+  const info = chartInfo[id], tools = document.querySelector(`[data-zoom="${id}"]`);
+  const zoomed = !!info && state.chartZoom[id]?.key === info.key;
+  $(`chart-${id}`).classList.toggle('zoomed', zoomed);
+  tools.querySelector('[data-zoom-act="reset"]').disabled = !zoomed;
+  tools.querySelector('[data-zoom-status]').textContent = zoomed ? 'ölçek: elle' : 'ölçek: otomatik';
+  document.querySelector(`[data-zoom-msg="${id}"]`).textContent = state.zoomNote[id];
+  if (!info) return;
+  [['lo', 0], ['hi', 1]].forEach(([which, i]) => {
+    const input = tools.querySelector(`[data-zoom-y="${which}"]`), v = info.range.y[i];
+    if (document.activeElement !== input) input.value = axisText(info.yLog ? Math.pow(10, v) : v);
+  });
+}
+
+/* Bütün yakınlaştırma yolları (düğme, tekerlek, sürükleme, y kutusu) tek kapıdan geçer: yalnız state.chartZoom değişir, çizim
+   render()'dan gelir. live: sürükleme/tekerlek saniyede onlarca olay üretir; karede bir render() yeter. */
+let zoomFrame = 0;
+function setZoom(id, x, y, live = false) {
+  const info = chartInfo[id];
+  if (!info) return;
+  state.chartZoom[id] = { key: info.key, x: limitSpan(x, info.xLog), y: limitSpan(y, info.yLog) };
+  state.zoomNote[id] = '';
+  if (!live) return render();
+  if (!zoomFrame) zoomFrame = requestAnimationFrame(() => { zoomFrame = 0; render(); });
+}
+function zoomAction(id, act) {
+  const info = chartInfo[id];
+  if (!info) return;
+  const { x, y } = info.range;
+  if (act === 'reset') { state.chartZoom[id] = null; state.zoomNote[id] = ''; return render(); }
+  if (act === 'fit') {
+    const fitted = fitRange(info.points, x, info.fx, info.fy, info.yLog);
+    if (!fitted) { state.zoomNote[id] = 'Görünür x aralığında eksene yerleştirilebilir değer yok.'; return render(); }
+    return setZoom(id, x, fitted);
+  }
+  const factor = act === 'in' ? 1 / ZOOM_STEP : ZOOM_STEP;
+  setZoom(id, zoomRange(x, factor, undefined, info.xLog), zoomRange(y, factor, undefined, info.yLog));
+}
+function applyYRange(id) {
+  const info = chartInfo[id], tools = document.querySelector(`[data-zoom="${id}"]`);
+  if (!info) return;
+  const parsed = parseAxisRange(tools.querySelector('[data-zoom-y="lo"]').value, tools.querySelector('[data-zoom-y="hi"]').value, info.yLog);
+  if (parsed.error) { state.zoomNote[id] = parsed.error; return render(); }
+  setZoom(id, info.range.x, parsed.range);
+}
+
+/* Sürükleme ve tekerlek dinleyicileri grafiğin kalıcı kabına (.chart) bağlanır: SVG her çizimde yeniden kurulduğu için işaretçi
+   yakalaması SVG'de olsaydı ilk yeniden çizimde kaybolurdu. Düz tekerlek sayfayı kaydırmaya devam eder (240 px'lik grafik uzun
+   sayfada tuzağa dönmesin); Ctrl/⌘ + tekerlek ya da dokunmatik yüzeyde iki parmak sıkıştırma (tarayıcı bunu ctrlKey'li tekerlek
+   olarak verir) imlecin altındaki noktayı sabit tutarak yakınlaştırır; Shift ile yalnız y. Yalnız çizim alanında etkindir. */
+function attachPanZoom(id) {
+  const host = $(`chart-${id}`);
+  let drag = null;
+  const locate = (event) => {
+    const info = chartInfo[id], svg = host.querySelector('svg');
+    if (!info || !svg) return null;
+    const rect = svg.getBoundingClientRect(), { W, H, pad, plotW, plotH } = info.geometry;
+    const kx = W / rect.width, ky = H / rect.height, px = (event.clientX - rect.left) * kx, py = (event.clientY - rect.top) * ky;
+    return { info, px, py, kx, ky, inside: px >= pad.l && px <= pad.l + plotW && py >= pad.t && py <= pad.t + plotH };
+  };
+  host.addEventListener('wheel', (event) => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    const at = locate(event);
+    if (!at || !at.inside) return;
+    event.preventDefault();
+    const { info, px, py } = at, { x, y } = info.range, { pad, plotW, plotH } = info.geometry;
+    const delta = event.deltaY || event.deltaX;          // Shift'li tekerleği bazı sistemler yatay kaydırmaya çevirir
+    const factor = Math.exp(Math.max(-1, Math.min(1, delta * 0.01)));
+    const ax = x[0] + (px - pad.l) / plotW * (x[1] - x[0]), ay = y[0] + (pad.t + plotH - py) / plotH * (y[1] - y[0]);
+    setZoom(id, event.shiftKey ? x : zoomRange(x, factor, ax, info.xLog), zoomRange(y, factor, ay, info.yLog), true);
+  }, { passive: false });
+  host.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    const at = locate(event);
+    if (!at || !at.inside) return;
+    drag = { pointer: event.pointerId, cx: event.clientX, cy: event.clientY, range: at.info.range, moved: false };
+    host.setPointerCapture(event.pointerId);
+    host.classList.add('dragging');
+    host.querySelector('.tip').hidden = true;
+  });
+  host.addEventListener('pointermove', (event) => {
+    if (!drag || event.pointerId !== drag.pointer) return;
+    const at = locate(event);
+    if (!at) return;
+    const { plotW, plotH } = at.info.geometry, { x, y } = drag.range;
+    const dx = (event.clientX - drag.cx) * at.kx, dy = (event.clientY - drag.cy) * at.ky;
+    if (!drag.moved && Math.hypot(dx, dy) < 3) return;   // tıklamayı sürüklemeden ayır: 3 px'ten az hareket pencereyi değiştirmez
+    drag.moved = true;
+    setZoom(id, panRange(x, -dx / plotW * (x[1] - x[0])), panRange(y, dy / plotH * (y[1] - y[0])), true);
+  });
+  const end = (event) => { if (drag && event.pointerId === drag.pointer) { drag = null; host.classList.remove('dragging'); } };
+  host.addEventListener('pointerup', end);
+  host.addEventListener('pointercancel', end);
+  host.addEventListener('dblclick', (event) => { if (locate(event)?.inside) zoomAction(id, 'reset'); });
 }
 
 function renderPreview() {
@@ -1724,6 +1995,12 @@ function init() {
   for (const b of document.querySelectorAll('[data-error-view]')) b.addEventListener('click', () => { state.errorView = b.dataset.errorView; render(); });
   for (const b of document.querySelectorAll('[data-conv-norm]')) b.addEventListener('click', () => { state.convNorm = b.dataset.convNorm; render(); });
   for (const b of document.querySelectorAll('[data-conv-mode]')) b.addEventListener('click', () => { state.convMode = b.dataset.convMode; render(); });
+  for (const id of ['error', 'conv']) {
+    const tools = document.querySelector(`[data-zoom="${id}"]`);
+    tools.addEventListener('click', (e) => { const act = e.target.closest('[data-zoom-act]')?.dataset.zoomAct; if (act) zoomAction(id, act); });
+    tools.addEventListener('change', (e) => { if (e.target.matches('[data-zoom-y]')) applyYRange(id); });
+    attachPanZoom(id);
+  }
   $('solve-btn').addEventListener('click', toggleSheet);
   $('sheet-toggle').addEventListener('click', toggleSheet);
   /* PDF: sunucuda pdflatex varsa gerçek LaTeX çıktısı indirilir; yoksa tarayıcının yazdır → "PDF olarak kaydet" yolu kullanılır. */
