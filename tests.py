@@ -459,6 +459,32 @@ check('sürekli düzey doğrulaması scikit-fem olmadan içe aktarılır (tests.
 check('sürekli: C69 (iç noktada α = 0) ve C70 (uçta α = 0) → INCONCLUSIVE, kanıtsız hüküm yok',
       st3('C69')[0] == st3('C70')[0] == 'INCONCLUSIVE' and 'CONFIRMED' not in ' '.join(st3('C69') + st3('C70')), f"{st3('C69')} {st3('C70')}")
 
+# 5c. Doğrulama katmanının bant çözücüsü (verification/ifem.py) mpmath.lu_solve ve A**-1 ile BİT BİT aynı sonucu verir.
+#     Neden: hız için yoğun O(n³) çözüm bant içine alındı (CI süre sınırı, korpus C48/C50); sonuç değişmemeli.
+import random as _random  # noqa: E402
+import mpmath as _mpm  # noqa: E402
+import ifem as _ifem  # noqa: E402
+_rng = _random.Random(7)
+_same_solve = _same_inv = True
+for _n, _kl, _ku, _sh in [(1, 0, 0, 0), (6, 1, 1, 0), (30, 2, 2, 0), (40, 3, 3, 0), (25, 1, 1, 1), (25, 2, 2, -1), (50, 4, 4, 0)]:
+    _A = [[_mpm.mpf(0)] * _n for _ in range(_n)]
+    for _i in range(_n):
+        for _j in range(max(0, _i - _kl + _sh), min(_n, _i + _ku + _sh + 1)):
+            _A[_i][_j] = _mpm.mpf(_rng.uniform(-1, 1)) + (3 if _i == _j and _rng.random() < 0.5 else 0)
+    _b = [_mpm.mpf(_rng.uniform(-1, 1)) for _ in range(_n)]
+    with _mpm.workdps(30):
+        _x1, _x2 = _mpm.lu_solve(_mpm.matrix(_A), _mpm.matrix(_b)), _ifem.band_lu_solve(_A, _b)
+        _I1, _I2 = _mpm.matrix(_A) ** -1, _ifem.band_inverse(_A)
+    _same_solve &= all(_x1[k] == _x2[k] for k in range(_n))
+    _same_inv &= all(_I1[i, j] == _I2[i, j] for i in range(_n) for j in range(_n))
+check('ifem bant LU: mpmath.lu_solve ile bit bit aynı (7 bant matris, kaydırılmış satırlar dahil)', _same_solve)
+check('ifem bant ters: mpmath A**-1 ile bit bit aynı', _same_inv)
+_singular = [[_mpm.mpf(1), _mpm.mpf(2)], [_mpm.mpf(2), _mpm.mpf(4)]]
+try:
+    _ifem.band_lu_solve(_singular, [1, 1]); check('ifem bant LU: tekil matris ZeroDivisionError', False)
+except ZeroDivisionError:
+    check('ifem bant LU: tekil matris ZeroDivisionError (mpmath ile aynı sözleşme)', True)
+
 # 6. Bağımsız doğrulama paketi (verification/): uygulama ↔ bağımsız mpmath FEM ↔ analitik çözüm, 16 benchmark.
 #    Beklenen değerler uygulamanın çıktısından değil analitik çözümden gelir; ayrıca temel kayıtla regresyon.
 for mode in ('--quick', '--compare'):

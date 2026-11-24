@@ -451,7 +451,8 @@ def solver_check(r):
         kappa = None
         if A.rows <= SOLVER_LIMIT:
             try:
-                kappa = float(mpmath.mnorm(A, mpmath.inf) * mpmath.mnorm(A ** -1, mpmath.inf))
+                # A**-1 ile aynı aritmetik, bant içinde (ifem.band_inverse): yoğun ters O(n³) CI'da süre sınırını aşıyordu
+                kappa = float(mpmath.mnorm(A, mpmath.inf) * mpmath.mnorm(ifem.band_inverse(A.tolist()), mpmath.inf))
             except ZeroDivisionError:
                 kappa = float('inf')
     status = ('başarısız' if not eta <= BACKWARD_TOL or (kappa is not None and kappa > COND_SINGULAR)

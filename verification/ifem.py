@@ -17,13 +17,101 @@ _GL = mp.calculus.quadrature.GaussLegendre(mp.mp)
 NODES = [(mp.mpf(t), mp.mpf(w)) for t, w in _GL.calc_nodes(4, mp.mp.prec)]   # 24 nokta, [-1, 1]
 
 
+# Bant LU. Neden: mpmath.lu_solve / A**-1 yoğun matriste O(n³) saf Python; 129–257 bilinmeyende doğrulama tek başına
+# 10–15 s, CI makinesinde paralel yük altında sunucunun 60 s sınırını aştı (korpus C48/C50, HTTP 504). Burada mpmath.LU_decomp,
+# L_solve, U_solve ve inverse'ün AYNI aritmetiği uygulanır (prec + 10, satır toplamıyla ölçekli kısmi pivot, aynı tekillik
+# eşiği ve aynı işlem sırası); yalnız tam sıfır olan bant dışı elemanlarla yapılan işlemler atlanır (bunlar değeri
+# değiştirmez). Uygulamanın fem_sheet.band_* fonksiyonları ÇAĞRILMAZ: doğrulama katmanı motordan bağımsız kalır.
+def _band_lu(A):
+    n = len(A)
+    kl = max([i - j for i, row in enumerate(A) for j, v in enumerate(row) if v != 0] + [0])
+    ku = max([j - i for i, row in enumerate(A) for j, v in enumerate(row) if v != 0] + [0])
+    reach = kl + ku                                   # kısmi pivot sonrası U'nun üst bant genişliği en çok kl + ku
+    A = [list(row) for row in A]
+    tol = mp.absmin(mp.mnorm(mp.matrix(A), 1) * mp.eps)
+    # j = 0 adımında mpmath bütün satırların |·| toplamını sınar; bandın altında kalan satırlara eleme dokunmadığı için
+    # toplamları sonraki adımlarda değişmez — bir kez sınamak mpmath'in bütün adımlardaki sınamasına denktir.
+    if any(mp.absmin(mp.fsum([mp.absmin(v) for v in row])) <= tol for row in A):
+        raise ZeroDivisionError('matrix is numerically singular')
+    p = [None] * (n - 1)
+    for j in range(n - 1):
+        biggest, last = 0, min(n - 1, j + kl)
+        for k in range(j, last + 1):
+            s = mp.fsum([mp.absmin(A[k][l]) for l in range(j, min(n, j + reach + kl + 1))])
+            if mp.absmin(s) <= tol:
+                raise ZeroDivisionError('matrix is numerically singular')
+            current = 1 / s * mp.absmin(A[k][j])
+            if current > biggest:
+                biggest, p[j] = current, k
+        A[j], A[p[j]] = A[p[j]], A[j]
+        if mp.absmin(A[j][j]) <= tol:
+            raise ZeroDivisionError('matrix is numerically singular')
+        for i in range(j + 1, last + 1):
+            A[i][j] /= A[j][j]
+            for k in range(j + 1, min(n, j + reach + 1)):
+                A[i][k] -= A[i][j] * A[j][k]
+    if mp.absmin(A[n - 1][n - 1]) <= tol:
+        raise ZeroDivisionError('matrix is numerically singular')
+    # Satır değişimleri eski L çarpanlarını da taşıdığından L'nin bandı önceden bilinmez: sıfır olmayanlar listelenir.
+    lower = [[(j, A[i][j]) for j in range(i) if A[i][j] != 0] for i in range(n)]
+    upper = [[(j, A[i][j]) for j in range(i + 1, n) if A[i][j] != 0] for i in range(n)]
+    return {'n': n, 'p': p, 'lower': lower, 'upper': upper, 'diag': [A[i][i] for i in range(n)]}
+
+
+# mpmath L_solve + U_solve (aynı işlem sırası); çağıran prec + 10'da tutar.
+def _band_substitute(lu, b):
+    b = list(b)
+    for k, pk in enumerate(lu['p']):
+        b[k], b[pk] = b[pk], b[k]
+    for i in range(1, lu['n']):
+        for j, v in lu['lower'][i]:
+            b[i] -= v * b[j]
+    x = list(b)
+    for i in range(lu['n'] - 1, -1, -1):
+        for j, v in lu['upper'][i]:
+            x[i] -= v * x[j]
+        x[i] /= lu['diag'][i]
+    return x
+
+
+# mpmath.lu_solve(A, b) ile aynı sonuç (kare A). A liste listesi, b liste; dönüş mp.matrix sütunu.
+def band_lu_solve(A, b):
+    with mp.workprec(mp.mp.prec + 10):
+        lu = _band_lu(A)
+        x = _band_substitute(lu, [mp.mpf(v) for v in b])
+    return mp.matrix(x)
+
+
+# mpmath.inverse(A) (= A**-1) ile aynı sonuç: aynı LU, birim vektörlerle bant çözümü. Dönüş mp.matrix.
+def band_inverse(A):
+    n = len(A)
+    with mp.workprec(mp.mp.prec + 10):
+        lu = _band_lu(A)
+        cols = [_band_substitute(lu, [mp.mpf(1) if k == i else mp.mpf(0) for k in range(n)]) for i in range(n)]
+        return mp.matrix([[cols[j][i] for j in range(n)] for i in range(n)])
+
+
 # Şekil fonksiyonları polinom katsayılarından: V c = â sisteminin tersi. Uygulamanın ürün formülünden bağımsız yol.
 def basis(p):
     ts = [mp.mpf(j) / p for j in range(p + 1)]
     V = mp.matrix([[t ** m for m in range(p + 1)] for t in ts])
     C = V ** -1
-    N = lambda t: [sum(C[m, k] * t ** m for m in range(p + 1)) for k in range(p + 1)]
-    dN = lambda t: [sum(C[m, k] * m * t ** (m - 1) for m in range(1, p + 1)) for k in range(p + 1)]
+    # Değerler elemandan bağımsızdır (yalnız t ve hassasiyete bağlı): her eleman ve her hata noktasında aynı t için yeniden
+    # hesaplamak yerine bir kez hesaplanıp saklanır. Aritmetik ve sonuç aynıdır; kopya döner (çağıran listeyi paylaşmaz).
+    # Neden: n = 64, p = 4'te 2.9 milyon t**m çağrısı doğrulama süresinin çoğuydu (korpus C50, CI süre sınırı).
+    memo_N, memo_dN = {}, {}
+
+    def N(t):
+        key = (t, mp.mp.prec)
+        if key not in memo_N:
+            memo_N[key] = [sum(C[m, k] * t ** m for m in range(p + 1)) for k in range(p + 1)]
+        return list(memo_N[key])
+
+    def dN(t):
+        key = (t, mp.mp.prec)
+        if key not in memo_dN:
+            memo_dN[key] = [sum(C[m, k] * m * t ** (m - 1) for m in range(1, p + 1)) for k in range(p + 1)]
+        return list(memo_dN[key])
     return ts, N, dN, C
 
 
@@ -63,9 +151,9 @@ def solve(prob, n, p):
     if not free:                       # tüm düğümler temel koşulla belirli: çözülecek sistem yok (boş matris kurulmaz)
         sol = []
     else:
-        A = mp.matrix([[K[i, j] for j in free] for i in rows])
-        bb = mp.matrix([F[i] - sum(K[i, j] * v for j, v in fixed.items()) for i in rows])
-        sol = mp.lu_solve(A, bb)
+        A = [[K[i, j] for j in free] for i in rows]
+        bb = [F[i] - sum(K[i, j] * v for j, v in fixed.items()) for i in rows]
+        sol = band_lu_solve(A, bb)              # mp.lu_solve ile aynı aritmetik, bant içinde (bkz. _band_lu)
     c = [None] * dofs
     for i, v in fixed.items():
         c[i] = v
