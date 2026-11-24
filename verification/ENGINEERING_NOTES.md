@@ -200,3 +200,22 @@ in 107.5 s and passed every comparison (browser ↔ SymPy 1.1·10⁻¹⁴, sciki
   verdict), but timing-dependent verdicts differ between runs (C32: "zaman aşımı" on 3.12 vs "not linear in constants" on
   3.9). Killing a SymPy computation needs a subprocess per check; not done here (architecture change).
 - p = 5 is not supported by design (equally spaced nodes; Gauss–Lobatto would be required, CLAUDE.md §7).
+
+## Phase 7 — CI failure of PR #7 (C48, C50 again) — verification-layer dense solves (2026-11-24)
+
+CI run 44036363179 (PR #7, branch `hata-grafik-yakinlastirma`, which already contains D5–D7): Python 3.9 FAIL C48 and C50,
+both **HTTP 504** after 120.2 s (symbolic 60 s + numeric 60 s); Python 3.12 passed with C48 at 108 s. In PR #6's own run
+C48 took 56 s. The same code therefore passes or fails depending on runner load: the cases sit at the limit. Failing layer:
+**backend execution (performance)** again, this time in the **verification layer** (Katman 4), which D5 did not touch.
+
+| # | Finding | Root cause | Fix | Evidence |
+|---|---|---|---|---|
+| D8 | C48 (127 free unknowns) | `fem_verify.solver_check` computed κ∞ with `A ** -1`: dense mpmath inverse, O(n³) pure Python, 7.4 s locally | `ifem.band_inverse`: the **same** arithmetic as `mpmath.inverse` (same LU, +10 bits, unit-vector solves), loops restricted to the band; κ∞ still exact. `SOLVER_LIMIT` unchanged (κ shown up to 129 unknowns, as before) | bit-for-bit equal to `A ** -1` (tests.py) |
+| D9 | C48, C50 | `ifem.solve` used dense `mp.lu_solve` (4 calls incl. the convergence study) | `ifem.band_lu_solve`: the same arithmetic as `mpmath.lu_solve` (scaled partial pivoting by row sums, singularity threshold ‖A‖₁ε, +10 bits, same operation order); only operations with exact zeros outside the band are skipped. Implemented in `ifem.py` itself: the verification layer still does not call the engine's `fem_sheet.band_*` | bit-for-bit equal to `mp.lu_solve`, singular → same `ZeroDivisionError` (tests.py, 7 band matrices incl. shifted IVP rows) |
+| D10 | C50 (p = 4) | `ifem.basis` re-evaluated N(t), N′(t) (Vandermonde polynomials at 30 digits) for every element and every error sample: 2.9 million `t**m` | values memoised per (t, precision); a copy is returned | — |
+
+Result (local, same machine, `fem_sheet.py` output compared byte for byte with `main` 04c895b): identical for C12, C32,
+C35, C40, C46, C48, C49, C50, C54, C62, C63. Numeric path (the one that must finish after a symbolic timeout): C48
+10.9 s → 2.8 s, C50 12.0 s → 5.2 s; symbolic path C48 18.3 → 10.5 s, C50 12.5 → 5.4 s, C49 7.0 → 2.4 s.
+`tests.py` 228 → 231 (three new checks above). The documented limitations of Phase 6 (C35, C63 near the symbolic limit,
+abandoned SymPy threads) are unchanged.

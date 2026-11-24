@@ -217,7 +217,7 @@ The same definitions and thresholds are used in the browser's diagnostics box.
 | Command | What it checks |
 |---|---|
 | `node tests.js` | the browser kernel (167 checks): quadrature, shape functions, solutions against analytical results, rates, diagnostics categories, scaling, flux conditions, stability indicators |
-| `python3 tests.py` | the server pipeline (228 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
+| `python3 tests.py` | the server pipeline (231 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
 | `python3 verification/run_verification.py --full` | the browser kernel against the independent solver and analytical solutions for benchmarks T1–T16 and edge cases E1–E4b, $n = 4 \dots 32$ |
 | `python3 verification/run_corpus.py` | the 80-case input-only corpus (§7a); needs `pip install -r verification/requirements-verify.txt` (scikit-fem) |
 

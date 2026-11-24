@@ -142,7 +142,7 @@ check("α(x₀)=0 ucunda u' koşulu reddedilir", throws(() => problem('x', '0', 
 // Kaba ağdaki IVP tekilliği "çözüm tek değil" diye değil, ağ uyarısıyla bildirilir (p = 2, ω²h² = 10 ayrık rezonansı yakını)
 { let message = '';
   try { solve(problem('1', '0', '1', '0', B(0, 1), NONE, 0, 64 * 8), 64, 1); } catch (err) { message = err.message; }
-  check('IVP kaba ağ: doğru mesaj (tekil değil, ağ kaba)', message.includes('ağ bu çözüm için fazla kaba') && !message.includes('En az bir uçta'), message.slice(0, 60)); }
+  check('IVP kaba ağ: doğru mesaj (tekil değil, ağ kaba)', message.includes('the mesh is too coarse for this solution') && !message.includes('At least one end'), message.slice(0, 60)); }
 // u'(x₀) koşulu zayıf (doğal) biçimde girer: u_h'(x₀) ≠ s₀ ama ağ inceldikçe yaklaşır
 { const pr = ivpCases[0][1], g = [8, 32].map((n) => { const s = solve(pr, n, 2); return Math.abs(derivativeAt(s, 0) - 1); });
   check("IVP: |u_h'(x₀) − u'(x₀)| ağla küçülür (zayıf koşul)", g[0] > 1e-4 && g[1] < g[0] / 8, g.map((v) => v.toExponential(1)).join(' → ')); }
@@ -197,7 +197,7 @@ check("α(x₀)=0 ucunda u' koşulu reddedilir", throws(() => problem('x', '0', 
   const good = api.parseExact(payload('x-1', '1', (x) => x - 1, () => 1), problem('x', '0', '0', '1', NONE, D(0)));
   check('parseExact: dejenere serbest uçta akı sınanmaz, aday kabul', good && !good.rejected && typeof good.u === 'function');
   const nat = api.parseExact(payload('x', '1', (x) => x, () => 1), problem('1', '0', '0', '0', NONE, D(1)));
-  check('parseExact: doğal koşul α u′(0) = 1 ≠ 0 reddedilir', nat && nat.rejected && nat.rejected.includes('doğal'));
+  check('parseExact: doğal koşul α u′(0) = 1 ≠ 0 reddedilir', nat && nat.rejected && nat.rejected.includes('natural'));
   const ivp = api.parseExact(payload('2*sin(x)', '2*cos(x)', (x) => 2 * Math.sin(x), (x) => 2 * Math.cos(x)), problem('1', '0', '1', '0', B(0, 1), NONE));
   check('parseExact: IVP eğimi u′(0) = 2 ≠ 1 reddedilir', ivp && ivp.rejected && ivp.rejected.startsWith('u′(0)')); }
 
@@ -269,15 +269,15 @@ check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equat
 { const message = (fn) => { try { fn(); return ''; } catch (e) { return e.message; } };
   const withU = message(() => solve(problem('x-0.5', '0', '0', '1', D(0), D(0)), 4, 1));
   const pureNeumann = message(() => solve(problem('1', '0', '0', '1', NONE, NONE), 4, 1));
-  check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('AYRIK') && !withU.includes('saf Neumann'), withU.slice(0, 70));
-  check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('AYRIK') && pureNeumann.includes('saf Neumann')); }
+  check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('DISCRETE') && !withU.includes('pure Neumann'), withU.slice(0, 70));
+  check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('DISCRETE') && pureNeumann.includes('pure Neumann')); }
 // 11. Ağ girdisi çekirdekte denetlenir (C76/C77): sahte çözüm yok, TypeError yok, Türkçe mesaj; iç referans (n = 128) çalışır
 { const pr = problem('1', '0', '0', '1', D(0), D(0));
   const outcome = (fn) => { try { const r = fn(); return { ok: true, r }; } catch (e) { return { ok: false, type: e.constructor.name, msg: e.message }; } };
   const bad = [[0, 1], [-1, 1], [65, 1], [2.5, 1], [NaN, 1], [undefined, 1], ['4', 1], [4, 0], [4, 5], [4, 2.5], [4, undefined], [4, null]];
   const results = bad.map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
   check('geçersiz n/p (0, −1, 65, 2.5, NaN, eksik, metin; p 0, 5, 2.5, eksik) hep temiz ret',
-    results.every((o) => !o.ok && o.type === 'Error' && /n ve p tam sayı olmalı|aralığında olmalı/.test(o.msg)), JSON.stringify(results.map((o) => o.ok ? 'KABUL' : o.type)));
+    results.every((o) => !o.ok && o.type === 'Error' && /n and p must be integers|must be in 1–/.test(o.msg)), JSON.stringify(results.map((o) => o.ok ? 'KABUL' : o.type)));
   const good = [[1, 1], [64, 1], [1, 4], [64, 4]].map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
   check('sınır değerler n = 1, 64 ve p = 1, 4 kabul edilir', good.every((o) => o.ok));
   check('iç ince ağ referansı (n = 128) makeMesh ile hâlâ kurulur', outcome(() => api.makeMesh(0, 1, 128, 4)).ok && !outcome(() => api.userMesh(0, 1, 128, 4)).ok);
@@ -321,7 +321,7 @@ check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equat
   check('parseAxisRange: bilimsel gösterim ve virgül', ok.range && ok.range[0] === -2e-15 && ok.range[1] === 3.5e-15);
   check('parseAxisRange: ters, boş, sayı olmayan, log ≤ 0, çok dar → Türkçe hata',
     ['1|0', '|1', 'a|1'].every((t) => ax.parseAxisRange(...t.split('|'), false).error) && ax.parseAxisRange('0', '1', true).error
-    && ax.parseAxisRange('1', '1.000000000001', false).error.includes('dar'));
+    && ax.parseAxisRange('1', '1.000000000001', false).error.includes('narrow'));
   check('parseAxisRange log: gerçek değer → log10 penceresi', JSON.stringify(ax.parseAxisRange('1e-15', '1e-3', true).range) === JSON.stringify([-15, -3]));
   // Doğrulama durumları (çekirdek değişmeden): A: y' = 2x → hata yuvarlama düzeyinde; B: y' = e^x → gerçek hata.
   const xsAB = Array.from({ length: 401 }, (_, i) => 2 * i / 400);

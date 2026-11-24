@@ -1,35 +1,53 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FEM Lab</title>
+<title>FEM LAB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<!-- Three.js sürüm-sabit (0.160.0). Yalnız "3D" seçilince yüklenir (fem_sim3d.js); çözücü ve 2B görünüm buna bağlı değildir. -->
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0b0b'/%3E%3Cpath d='M10 23 L16 9 L22 23' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M4 23 H28' stroke='%23fff' stroke-width='1.4'/%3E%3Ccircle cx='4.5' cy='23' r='1.9' fill='%23fff'/%3E%3Ccircle cx='10' cy='23' r='1.9' fill='%23fff'/%3E%3Ccircle cx='16' cy='23' r='1.9' fill='%23fff'/%3E%3Ccircle cx='22' cy='23' r='1.9' fill='%23fff'/%3E%3Ccircle cx='27.5' cy='23' r='1.9' fill='%23fff'/%3E%3C/svg%3E">
 <style>
-/* Yerleşim fikri: solda sabit kontrol rayı, sağda özet → grafikler → çözüm akışı.
-   Tüm renkler aşağıdaki tokenlardan gelir; açık/koyu tema yalnızca bu blokları değiştirir. */
+/* FEM LAB görsel kimliği: arayüz siyah-beyaz; GRAFİKLER veri türüne göre renklidir (--c-*): analitik/referans mavi,
+   FEM yaklaşımı kırmızı-turuncu, taban fonksiyonu yeşil, türev mor, hata amber, ağ/sınır arduvaz. Neden: siyah-gri çizgiler
+   üst üste binince ayırt edilemiyordu. Renk tek ipucu değildir: dereceler ÇİZGİ DESENİ (P1 düz, P2 kesikli, P3 noktalı,
+   P4 kesik-noktalı) ve İŞARET ŞEKLİYLE ayrılır (DEGREE_STYLE); referans uzun kesikli. Açık temada her renk beyaz zemine
+   karşı ≥ 3:1 (grafik nesnesi eşiği; amber bu yüzden #B7791F), koyu temada açık tonlar. Mavi/turuncu çifti renk körlüğünde
+   de ayrılır. Yerleşim: solda sabit kontrol rayı, sağda özet → grafikler → çözüm akışı.
+   Ortak dil (logo, grafikler, kâğıt): ● eleman uç düğümü, ○ eleman içi düğüm, ince dikey çizgi eleman sınırı. */
 :root {
-  --page: #f9f9f7;  --surface: #fcfcfb;  --ink: #0b0b0b;  --ink-2: #52514e;  --muted: #898781;
-  --grid: #e1e0d9;  --axis: #c3c2b7;  --border: rgba(11,11,11,0.10);  --critical: #d03b3b;  --warning: #fab219;
-  /* Seri renkleri dereceye bağlıdır (1=lineer … 4=kuartik); filtre değişse de renk değişmez. */
-  --series-1: #2a78d6;  --series-2: #eb6834;  --series-3: #1baf7a;  --series-4: #eda100;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --page: #ffffff;  --surface: #ffffff;  --ink: #0b0b0b;  --ink-2: #3d3d3d;  --muted: #707070;
+  --grid: #ededed;  --axis: #c7c7c7;  --border: rgba(11,11,11,0.12);  --critical: #0b0b0b;  --warning: #707070;
+  /* Derece tonları (1=lineer … 4=kuartik): siyahtan griye; asıl ayrım desen ve işarettir, ton yalnız ikinci ipucu. */
+  --series-1: #0b0b0b;  --series-2: #2f2f2f;  --series-3: #535353;  --series-4: #7a7a7a;
+  /* Grafik renkleri (yalnız grafikler): doygun, parlak; ana eğriler ayrıca .glow ile hafif ışıltılı. */
+  --c-input: #E8318A;   /* girdi fonksiyonları α, β, γ, f */
+  --c-ref: #1D6BFF;  --c-fem: #FF3B30;  --c-basis: #00B386;  --c-basis-soft: #9BE3CC;  --c-deriv: #9B5CFF;  --c-err: #FFA600;  --c-mesh: #64748B;
+  --ui-accent: #E4572E;   /* arayüz vurgusu (sürgü, odak): grafik renklerinden ayrı, değişmedi */
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #0d0d0d;  --surface: #1a1a19;  --ink: #f0efec;  --ink-2: #c3c2b7;  --muted: #898781;
-    --grid: #2c2c2a;  --axis: #383835;  --border: rgba(255,255,255,0.10);  --critical: #e66767;
-    --series-1: #3987e5;  --series-2: #d95926;  --series-3: #199e70;  --series-4: #c98500;
+    --page: #0b0b0b;  --surface: #111111;  --ink: #f2f2f2;  --ink-2: #c9c9c9;  --muted: #8f8f8f;
+    --grid: #232323;  --axis: #3c3c3c;  --border: rgba(255,255,255,0.14);  --critical: #f2f2f2;  --warning: #8f8f8f;
+    --series-1: #f2f2f2;  --series-2: #d0d0d0;  --series-3: #acacac;  --series-4: #878787;
+    --c-input: #FF5FAE;
+    --c-ref: #4D9BFF;  --c-fem: #FF5A47;  --c-basis: #19E3A6;  --c-basis-soft: #1E6B55;  --c-deriv: #B58CFF;  --c-err: #FFC21A;  --c-mesh: #94A3B8;
+    --ui-accent: #F47B55;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d;  --surface: #1a1a19;  --ink: #f0efec;  --ink-2: #c3c2b7;  --muted: #898781;
-  --grid: #2c2c2a;  --axis: #383835;  --border: rgba(255,255,255,0.10);  --critical: #e66767;
-  --series-1: #3987e5;  --series-2: #d95926;  --series-3: #199e70;  --series-4: #c98500;
+  --page: #0b0b0b;  --surface: #111111;  --ink: #f2f2f2;  --ink-2: #c9c9c9;  --muted: #8f8f8f;
+  --grid: #232323;  --axis: #3c3c3c;  --border: rgba(255,255,255,0.14);  --critical: #f2f2f2;  --warning: #8f8f8f;
+  --series-1: #f2f2f2;  --series-2: #d0d0d0;  --series-3: #acacac;  --series-4: #878787;
+  --c-input: #FF5FAE;
+  --c-ref: #4D9BFF;  --c-fem: #FF5A47;  --c-basis: #19E3A6;  --c-basis-soft: #1E6B55;  --c-deriv: #B58CFF;  --c-err: #FFC21A;  --c-mesh: #94A3B8;
+  --ui-accent: #F47B55;
 }
 
 * { box-sizing: border-box; }
@@ -40,9 +58,28 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; font-weight: 600; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
-.top { padding: 28px 24px 20px; max-width: 1280px; margin: 0 auto; }
+.top { padding: 24px 24px 18px; max-width: 1280px; margin: 0 auto; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+/* Görünüm seçici (Auto / Light / Dark): logoyla aynı çizgi dili, yalnız siyah-beyaz; seçili düğme ters renk. Auto sistemi izler. */
+.theme { display: inline-flex; flex: none; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+.theme button { width: 30px; height: 30px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.theme button:hover { color: var(--ink); }
+.theme button[aria-checked="true"] { background: var(--ink); color: var(--page); }
+.theme button:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .top h1 { font-size: 26px; letter-spacing: -0.01em; }
-.top p { margin: 6px 0 0; color: var(--ink-2); max-width: 65ch; }
+.top p { margin: 6px 0 0; color: var(--ink-2); max-width: 70ch; }
+/* Marka: logo (1B ağ + şapka şekil fonksiyonu) ve sözcük işareti. Logo grafiklerle aynı simgeleri kullanır. */
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand svg { width: 44px; height: 44px; flex: none; color: var(--ink); }
+.brand h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.14em; }
+.brand .tag { display: block; font: 12px var(--font-mono); letter-spacing: 0.06em; color: var(--muted); margin-top: 2px; }
+/* Kart başlıklarında küçük ağ işareti (düğüm–eleman–düğüm): ürünün dilini bölümlere taşır. */
+.card-head h3::before, .solution-head h2::before, #basis-card h3::before, #diag-panel h3::before, #sim-panel h3::before, #sol-panel h3::before {
+  content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 8px; vertical-align: middle;
+  background: linear-gradient(var(--ink), var(--ink)) center / 100% 1.4px no-repeat,
+              radial-gradient(circle, var(--ink) 2.2px, transparent 2.6px) left center / 6px 6px no-repeat,
+              radial-gradient(circle, var(--ink) 2.2px, transparent 2.6px) right center / 6px 6px no-repeat; }
 
 .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; max-width: 1280px; margin: 0 auto; padding: 0 24px 48px; align-items: start; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -67,9 +104,80 @@ button { font: 500 14px var(--font-body); cursor: pointer; border-radius: 6px; }
 .hint { font-size: 12.5px; color: var(--muted); margin: 0; }
 
 main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-/* 8 kutu: geniş ekranda 4+4, dar ekranda 2'şerli (yarım satır kalmasın). */
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Özet şeridi: küçük kartlar yalnız başlık + sonuç gösterir; tıklanan kartın formülü ve açıklaması altta, soluk yazıyla açılır.
+   Neden: tüm nitelemeler her zaman görünürken kartlar sıkışıyordu; bilgi kaybolmadan tek tıkla erişilir. */
+.tiles { display: flex; flex-direction: column; gap: 8px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); grid-auto-flow: dense; gap: 8px; }
+.card.wide { grid-column: span 2; }   /* ağ özeti uzun: iki sütun, satır kırılmasın */
+.card { all: unset; box-sizing: border-box; cursor: pointer; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.card:hover { border-color: var(--axis); }
+.card:focus-visible { outline: 2px solid var(--active-color, var(--ink)); outline-offset: 2px; }
+.card[aria-expanded="true"] { border-color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--ink-2); }
+.card .cap { display: block; font: 11px var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.card .name { display: block; font-size: 12px; color: var(--ink-2); margin-top: 1px; }
+.card .val { display: block; font: 500 15px var(--font-mono); margin-top: 2px; overflow-wrap: anywhere; }
+.card.warn .val::after { content: " ⚠"; color: var(--warning); }
+.card-detail { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface); }
+.card-detail .detail-title { font-size: 13px; font-weight: 600; }
+.card-detail .formula { font-family: var(--font-mono); font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+.card-detail p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 12px; }
+@media (max-width: 640px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 12px; }
+@media (max-width: 640px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.metric { min-width: 0; }
+.metric .label { text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--ink-2); }   /* matematik simgesi büyük harfe çevrilmesin (E_max ≠ E_MAX) */
+.metric .value { font: 500 15px var(--font-mono); overflow-wrap: anywhere; }
+.metric .sub { font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+.metric.warn { border-left: 3px solid var(--warning); padding-left: 6px; }
+#diag-flag { margin: -6px 0 0; }
+/* FEM Simulation paneli: aşama çipleri, başlık + tek cümle, SVG kare, oynatma çubuğu. Renkler Stage B tokenları. */
+.sim-stages { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.sim-stages button { padding: 3px 9px; border: 1px solid var(--axis); background: transparent; color: var(--muted); font: 12px var(--font-mono); border-radius: 999px; }
+.sim-stages button.done { color: var(--ink-2); border-color: var(--ink-2); }
+.sim-stages button[aria-current="step"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.sim-caption h4 { font-size: 15px; margin-top: 2px; }
+.sim-caption p { margin: 2px 0 0; }
+.sim-text { color: var(--ink-2); font-size: 13.5px; }
+.sim-formulas { overflow-x: auto; margin-top: 6px; padding: 2px 0; border-top: 1px solid var(--grid); }
+.sim-formulas:empty { display: none; }
+.sim-formula-src { margin: 8px 0 0; }
+.sim-formula-src:empty { display: none; }
+.sim-formulas mjx-container[display="true"] { margin: 0.45em 0 !important; font-size: 96%; }
+.sim-chart .sim-cell { fill: var(--ink); font: 500 10.5px var(--font-mono); }
+.sim-chart .sim-op { fill: var(--ink-2); font: 500 16px var(--font-body); }
+.sim-chart .glow { filter: drop-shadow(0 0 2.5px currentColor); }
+.sim-chart { margin-top: 6px; }
+.sim-chart .hit { cursor: pointer; }
+.sim-chart .sim-node { fill: var(--ink-2); font-size: 10.5px; }
+.sim-chart .sim-sel { fill: var(--c-fem); font-weight: 600; font-size: 11px; }
+.sim-chart .sim-el { fill: var(--c-mesh); font-size: 10.5px; }
+.sim-chart .sim-bc { fill: var(--ink); font: 500 12px var(--font-mono); }
+.sim-chart .axis-title { fill: var(--ink-2); font: 11px var(--font-mono); }
+.sim-chart .sim-fn { fill: var(--ink); font: 500 12px var(--font-mono); }
+/* Akış: her adımda YENİ gelen öğeler soldan sağa çizilir (sweep) ya da belirir (enter); süre oynatma hızına bağlı
+   (--sim-dur). Hareket azaltma tercihinde animasyon yok. Aynı kare yeniden yerleştirilmez, animasyon tekrar etmez. */
+.sim-chart .sweep { animation: sim-sweep var(--sim-dur, 650ms) cubic-bezier(.3, .7, .4, 1) both; }
+.sim-chart .enter { animation: sim-enter var(--sim-dur, 650ms) ease-out both; }
+@keyframes sim-sweep { from { clip-path: inset(-20px 100% -20px -20px); } to { clip-path: inset(-20px -20px -20px -20px); } }
+@keyframes sim-enter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sim-chart .sweep, .sim-chart .enter { animation: none; } }
+.sim-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+.sim-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sim-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.sim-controls .primary { padding: 6px 14px; min-width: 72px; }
+.sim-controls input[type="range"] { flex: 1 1 160px; min-width: 120px; width: auto; }
+.sim-controls select { width: auto; padding: 3px 6px; font-size: 12px; }
+.sim-controls label { display: inline-flex; align-items: center; gap: 4px; }
+.sim-probe { margin-top: 6px; font-family: var(--font-mono); }
+.sim-3d { margin-top: 6px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; min-height: 60px; touch-action: none; }
+.sim-3d canvas { display: block; }
+.sim-view { margin-left: auto; }
+.desc { margin: 2px 0 8px; color: var(--ink-2); font-size: 13px; }
+#diag-panel .metric-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 10px; }
+#diag-panel #diagnostics { margin-top: 8px; }
+.basis-sub { margin-top: 12px; }
+.basis-sub h4 { font-size: 13px; }
 #sheet-check { font-size: 12.5px; color: var(--muted); margin: 4px 0; }
 .tile { min-width: 0; }
 .tile .value { overflow-wrap: anywhere; }
@@ -111,19 +219,31 @@ main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 /* Filtre çipleri aynı zamanda grafiklerin lejantıdır: renkli çizgi + ad. */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--axis); border-radius: 999px; background: transparent; color: var(--muted); }
-.chip::before { content: ""; width: 16px; height: 3px; border-radius: 2px; background: var(--chip-color); opacity: 0.35; }
+.chip .chip-line { width: 24px; height: 8px; flex: none; opacity: 0.45; }
 .chip[aria-pressed="true"] { color: var(--ink); background: var(--surface); border-color: var(--ink-2); }
-.chip[aria-pressed="true"]::before { opacity: 1; }
-.chip.active { border-color: var(--chip-color); box-shadow: inset 0 0 0 1px var(--chip-color); }
+.chip[aria-pressed="true"] .chip-line { opacity: 1; }
+.chip.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .chart-card h3 { font-size: 14px; }
+/* Basis functions kartı: kapalıyken yalnız N_j grafiği, açıkken türev, u_h kuruluşu ve türetme. */
+#basis-card h3 { font-size: 14px; }
+#basis-card .basis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 8px; }
+/* Düğüm sürgüsü: 1'den N'ye kaydırarak her N_j'yi sırayla görmek için (ok tuşlarıyla da). */
+.basis-slider { display: flex; align-items: center; gap: 10px; margin: 8px 0 2px; flex-wrap: wrap; }
+.basis-slider input { flex: 1 1 160px; }
+#basis-node-val { font-size: 12.5px; color: var(--ink-2); }
+#basis-derivation .step-text { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+#basis-derivation { margin-top: 10px; overflow-x: auto; }
+#basis-derivation .label { display: block; margin-top: 10px; }
 .chart-card .hint { margin: 2px 0 8px; }
 .chart { position: relative; }
 .chart svg { display: block; width: 100%; touch-action: pan-y; }
 .chart .grid { stroke: var(--grid); stroke-width: 1; }
 .chart .axis { stroke: var(--axis); stroke-width: 1; }
-.chart .vline { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 2 3; }
+/* Ana eğrilerin ışıltısı: çizginin kendi rengiyle hafif hale (yalnız grafiklerde, az sayıda yolda). */
+.chart path.glow { filter: drop-shadow(0 0 2.5px currentColor); }
+.chart .vline { stroke: var(--c-mesh); stroke-width: 1.1; stroke-dasharray: 3 3; opacity: 0.45; }   /* ağ: ince, belirgin değil */
 .chart .cross { stroke: var(--muted); stroke-width: 1; }
 .chart text { fill: var(--muted); font: 11px var(--font-mono); }
 .chart .ring { stroke: var(--surface); stroke-width: 2; }
@@ -182,7 +302,8 @@ input:disabled { opacity: 0.45; }
 @media print {
   @page { size: A4; margin: 14mm; }
   body { background: #fff; }
-  .top, .controls, .tiles, .chart-card, .chart-grid, .no-print { display: none !important; }
+  :root, :root[data-theme] { --ink: #000; --ink-2: #333; --muted: #666; --surface: #fff; --page: #fff; --border: rgba(0,0,0,0.14); --grid: #ddd; --axis: #999; color-scheme: light; }
+  .top, .controls, .tiles, .chart-card, .chart-grid, .no-print, #diag-panel, #diag-flag, #sim-panel, #sol-panel { display: none !important; }
   .layout { display: block; padding: 0; max-width: none; }
   main { display: block; }
   .solution { border: 0; padding: 0; background: none; }
@@ -197,6 +318,9 @@ input:disabled { opacity: 0.45; }
 }
 </style>
 
+<!-- Kayıtlı görünüm tercihi ilk boyamadan ÖNCE uygulanır (açılışta açık/koyu titremesi olmasın). Kayıt yoksa sistem izlenir. -->
+<script>try { var t = localStorage.getItem('fem-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+
 <!-- MathJax (SVG çıktısı): LaTeX'i yazı tipi dosyası indirmeden çizer. -->
 <script>
 window.MathJax = {
@@ -210,14 +334,31 @@ window.MathJax = {
 <body>
 
 <header class="top">
-  <h1>FEM Lab</h1>
-  <p>Diferansiyel denklemi ve uç koşullarını gir. Eleman sayısını ve polinom derecesini sürükle; çözüm, hata ve yakınsama anında güncellenir.</p>
+  <div class="top-row">
+  <div class="brand">
+    <svg viewBox="0 0 64 64" role="img" aria-label="FEM LAB logo: a 1D linear finite element mesh with the global basis function N3 and its neighbours">
+      <path d="M8 46 L20 18 L32 46" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2.4 2.4" opacity="0.75"/>
+      <path d="M32 46 L44 18 L56 46" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2.4 2.4" opacity="0.75"/>
+      <path d="M20 46 L32 18 L44 46" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
+      <line x1="3" y1="46" x2="61" y2="46" stroke="currentColor" stroke-width="1.6"/>
+      <circle cx="8" cy="46" r="3.2" fill="currentColor"/><circle cx="20" cy="46" r="3.2" fill="currentColor"/><circle cx="32" cy="46" r="3.2" fill="currentColor"/>
+      <circle cx="44" cy="46" r="3.2" fill="currentColor"/><circle cx="56" cy="46" r="3.2" fill="currentColor"/>
+    </svg>
+    <div><h1>FEM LAB</h1><span class="tag">GALERKIN FINITE ELEMENTS · 1D</span></div>
+  </div>
+    <div class="theme" role="radiogroup" aria-label="Appearance">
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" aria-label="Auto (follow the system)" title="Auto (follow the system)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4 a8 8 0 0 1 0 16 z" fill="currentColor"/></svg></button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="light" aria-label="Light" title="Light"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg></button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" aria-label="Dark" title="Dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+    </div>
+  </div>
+  <p>Enter the differential equation and the boundary conditions. Drag the number of elements and the polynomial degree; the solution, the error and the convergence update instantly.</p>
 </header>
 
 <div class="layout">
   <aside class="panel controls">
     <div class="field">
-      <span class="label">Denklem</span>
+      <span class="label">Equation</span>
       <div class="mono form-hint">(α u′)′ + β u′ + γ u = f</div>
       <div class="coef-grid">
         <label for="in-alpha">α(x)</label><input type="text" id="in-alpha" placeholder="0" spellcheck="false" autocomplete="off">
@@ -225,111 +366,202 @@ window.MathJax = {
         <label for="in-gamma">γ(x)</label><input type="text" id="in-gamma" placeholder="0" spellcheck="false" autocomplete="off">
         <label for="in-f">f(x)</label><input type="text" id="in-f" placeholder="0" spellcheck="false" autocomplete="off">
       </div>
-      <p class="hint">Boş kutu 0 sayılır. Yazılabilenler: x, pi, e, + − * / ^, sin cos tan asin acos atan sinh cosh tanh exp ln sqrt abs; 2x gibi örtük çarpım. α = 0 ise denklem birinci mertebedir.</p>
+      <p class="hint">An empty box counts as 0. Allowed: x, pi, e, + − * / ^, sin cos tan asin acos atan sinh cosh tanh exp ln sqrt abs; implicit multiplication such as 2x. If α = 0 the equation is first order.</p>
       <div id="eq-preview" class="math-text"></div>
       <div id="bc-preview" class="math-text"></div>
       <div id="fn-error" class="error" role="alert"></div>
     </div>
     <div class="field">
-      <span class="label">Aralık [x₀, x₁]</span>
+      <span class="label">Interval [x₀, x₁]</span>
       <div class="field-row">
         <input type="number" id="range-a" step="any" placeholder="x₀" aria-label="x₀">
         <input type="number" id="range-b" step="any" placeholder="x₁" aria-label="x₁">
       </div>
     </div>
     <div class="field">
-      <span class="label">Uç koşulları</span>
-      <div class="bc-row"><span>x₀</span><select id="bc-left-type" aria-label="x₀ koşul türü"></select><input type="text" id="bc-left-value" placeholder="değer" aria-label="x₀ koşul değeri" spellcheck="false" autocomplete="off"></div>
-      <div class="bc-row slope-row" id="bc-left-slope-row" hidden><span></span><label class="slope-label" for="bc-left-slope">u′(x₀) =</label><input type="text" id="bc-left-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
-      <div class="bc-row"><span>x₁</span><select id="bc-right-type" aria-label="x₁ koşul türü"></select><input type="text" id="bc-right-value" placeholder="değer" aria-label="x₁ koşul değeri" spellcheck="false" autocomplete="off"></div>
-      <div class="bc-row slope-row" id="bc-right-slope-row" hidden><span></span><label class="slope-label" for="bc-right-slope">u′(x₁) =</label><input type="text" id="bc-right-slope" placeholder="u′ değeri" spellcheck="false" autocomplete="off"></div>
-      <p class="hint">Her uç için tür ve değer seç. <b>Sınır değer problemi:</b> iki koşulu farklı uçlara ver; koşul verilmeyen uçta doğal koşul α u′ = 0 uygulanır. “u′ =” türev koşuludur; fiziksel akı vermek için “α u′ =” seç. <b>Başlangıç değer problemi:</b> bir uçta “u ve u′” seç (ör. konum ve hız), diğerini “verilmedi” bırak. Birinci mertebede yalnızca bir uçta u değeri verilir.</p>
+      <span class="label">Boundary conditions</span>
+      <div class="bc-row"><span>x₀</span><select id="bc-left-type" aria-label="condition type at x₀"></select><input type="text" id="bc-left-value" placeholder="value" aria-label="condition value at x₀" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row slope-row" id="bc-left-slope-row" hidden><span></span><label class="slope-label" for="bc-left-slope">u′(x₀) =</label><input type="text" id="bc-left-slope" placeholder="u′ value" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row"><span>x₁</span><select id="bc-right-type" aria-label="condition type at x₁"></select><input type="text" id="bc-right-value" placeholder="value" aria-label="condition value at x₁" spellcheck="false" autocomplete="off"></div>
+      <div class="bc-row slope-row" id="bc-right-slope-row" hidden><span></span><label class="slope-label" for="bc-right-slope">u′(x₁) =</label><input type="text" id="bc-right-slope" placeholder="u′ value" spellcheck="false" autocomplete="off"></div>
+      <p class="hint">Choose a type and a value for each end. <b>Boundary value problem:</b> give the two conditions at different ends; at an end without a condition the natural condition α u′ = 0 applies. “u′ =” is a derivative condition; to give a physical flux choose “α u′ =”. <b>Initial value problem:</b> choose “u and u′” at one end (e.g. position and velocity) and leave the other “not given”. A first-order equation takes a value of u at one end only.</p>
     </div>
     <div class="field">
-      <label class="label" for="method">Yöntem</label>
+      <label class="label" for="method">Method</label>
       <select id="method"></select>
     </div>
     <div class="field">
-      <div class="field-head"><label class="label" for="n-slider">Eleman sayısı n</label><output id="n-value" class="mono"></output></div>
+      <div class="field-head"><label class="label" for="n-slider">Number of elements n</label><output id="n-value" class="mono"></output></div>
       <input type="range" id="n-slider" min="1" step="1" list="n-ticks">
       <datalist id="n-ticks"></datalist>
       <div class="ticks mono" id="n-tick-labels" aria-hidden="true"></div>
     </div>
     <div class="field">
-      <div class="field-head"><label class="label" for="p-slider">Polinom derecesi p</label><output id="p-value" class="mono"></output></div>
+      <div class="field-head"><label class="label" for="p-slider">Polynomial degree p</label><output id="p-value" class="mono"></output></div>
       <input type="range" id="p-slider" min="1" max="4" step="1">
     </div>
-    <button class="primary" id="solve-btn" type="button" aria-controls="sheet-body" aria-expanded="false">Çözüm kâğıdını aç</button>
+    <button class="primary" id="solve-btn" type="button" aria-controls="sheet-body" aria-expanded="false">Open solution sheet</button>
   </aside>
 
   <main>
     <section class="panel empty-state" id="empty-state">
-      <h3>Denklemi yaz</h3>
-      <p class="hint">Soldaki kutulara α, β, γ, f katsayılarını, aralığı ve uç koşullarını gir. Girdi geçerli olduğu anda çözüm, hata ve yakınsama grafikleri burada çizilir.</p>
+      <h3>Enter an equation</h3>
+      <p class="hint">Enter the coefficients α, β, γ, f, the interval and the boundary conditions on the left. As soon as the input is valid, the solution, error and convergence charts are drawn here.</p>
       <p class="hint" id="empty-reason"></p>
     </section>
 
-    <section class="tiles" id="tiles" aria-label="Özet"></section>
-    <div class="stale" id="diagnostics" role="status" hidden></div>
+    <!-- FEM Simulation: çözücünün verisinden yapım animasyonu (fem_sim.js). Fiziksel zaman DEĞİL; yapım adımı. -->
+    <section class="panel sim-panel" id="sim-panel" hidden>
+      <div class="card-head"><h3>FEM simulation · Approximation</h3>
+        <div class="seg-row"><span class="hint">construction steps · not physical time</span>
+          <div class="seg" role="group" aria-label="View"><button type="button" data-sim-view="2d" data-panel="sim">2D</button><button type="button" data-sim-view="3d" data-panel="sim">3D</button></div>
+          <button class="ghost" id="sim-camera" type="button" hidden>Reset camera</button></div></div>
+      <p class="desc">How FEM approximates the unknown: the mesh, the shape functions and the global basis. These steps do not depend on your equation.</p>
+      <div class="sim-stages" id="sim-stages" role="group" aria-label="FEM simulation · Approximation stages"></div>
+      <div class="sim-caption" aria-live="polite"><span class="label" id="sim-count"></span><h4 id="sim-title"></h4><p class="sim-text" id="sim-text"></p></div>
+      <div class="chart sim-chart" id="sim-chart"></div>
+      <div class="sim-3d" id="sim-3d" hidden></div>
+      <p class="hint" id="sim-3d-msg" role="status"></p>
+      <p class="hint" id="sim-note"></p>
+      <div class="hint sim-legend" id="sim-legend"></div>
+      <p class="hint sim-formula-src" id="sim-formula-src"></p>
+      <div class="math-text sim-formulas" id="sim-formulas" aria-label="Formulas of this step"></div>
+      <div class="sim-controls">
+        <button class="ghost" id="sim-prev" type="button" aria-label="Previous stage">◀ Stage</button>
+        <button class="primary" id="sim-play" type="button" aria-pressed="false">Play</button>
+        <button class="ghost" id="sim-next" type="button" aria-label="Next stage">Stage ▶</button>
+        <button class="ghost" id="sim-restart" type="button">Restart</button>
+        <input type="range" id="sim-timeline" min="0" max="0" step="1" value="0" aria-label="Construction step (not physical time)">
+        <label class="hint">speed <select id="sim-speed" aria-label="Animation speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+        <label class="hint"><input type="checkbox" id="sim-mesh" checked> mesh</label>
+        <label class="hint"><input type="checkbox" id="sim-labels" checked> labels</label>
+      </div>
+      <p class="hint sim-probe" id="sim-probe" role="status"></p>
+    </section>
+
+    <section class="panel sim-panel" id="sol-panel" hidden>
+      <div class="card-head"><h3>FEM simulation · Solution</h3>
+        <div class="seg-row"><span class="hint">construction steps · not physical time</span>
+          <div class="seg" role="group" aria-label="View"><button type="button" data-sim-view="2d" data-panel="sol">2D</button><button type="button" data-sim-view="3d" data-panel="sol">3D</button></div>
+          <button class="ghost" id="sol-camera" type="button" hidden>Reset camera</button></div></div>
+      <p class="desc">How the coefficients are found for your equation: residual, Galerkin weak form, element matrices, assembly, boundary conditions, solving, and the result against the reference.</p>
+      <div class="sim-stages" id="sol-stages" role="group" aria-label="FEM simulation · Solution stages"></div>
+      <div class="sim-caption" aria-live="polite"><span class="label" id="sol-count"></span><h4 id="sol-title"></h4><p class="sim-text" id="sol-text"></p></div>
+      <div class="chart sim-chart" id="sol-chart"></div>
+      <div class="sim-3d" id="sol-3d" hidden></div>
+      <p class="hint" id="sol-3d-msg" role="status"></p>
+      <p class="hint" id="sol-note"></p>
+      <div class="hint sim-legend" id="sol-legend"></div>
+      <p class="hint sim-formula-src" id="sol-formula-src"></p>
+      <div class="math-text sim-formulas" id="sol-formulas" aria-label="Formulas of this step"></div>
+      <div class="sim-controls">
+        <button class="ghost" id="sol-prev" type="button" aria-label="Previous stage">◀ Stage</button>
+        <button class="primary" id="sol-play" type="button" aria-pressed="false">Play</button>
+        <button class="ghost" id="sol-next" type="button" aria-label="Next stage">Stage ▶</button>
+        <button class="ghost" id="sol-restart" type="button">Restart</button>
+        <input type="range" id="sol-timeline" min="0" max="0" step="1" value="0" aria-label="Construction step (not physical time)">
+        <label class="hint">speed <select id="sol-speed" aria-label="Animation speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+        <label class="hint"><input type="checkbox" id="sol-mesh" checked> mesh</label>
+        <label class="hint"><input type="checkbox" id="sol-labels" checked> labels</label>
+      </div>
+      <p class="hint sim-probe" id="sol-probe" role="status"></p>
+    </section>
+
+    <section class="tiles" id="tiles" aria-label="Summary"></section>
+    <p class="hint" id="diag-flag" role="status" hidden></p>
+
+    <!-- Basis functions: global N_j (yerel şekil fonksiyonlarından); varsayılan yalnız grafik; basis_core.js yoksa gizli. -->
+    <section class="panel" id="basis-card" hidden>
+      <div class="card-head"><h3 id="basis-title">Basis functions</h3>
+        <button class="ghost" id="basis-toggle" type="button" aria-expanded="false" aria-controls="basis-details">Show details</button></div>
+      <div class="basis-slider"><label class="hint" for="basis-node">node j</label>
+        <input type="range" id="basis-node" min="1" max="1" step="1" value="1" aria-label="selected global node j">
+        <output class="mono" id="basis-node-val" for="basis-node"></output></div>
+      <p class="desc">Global basis functions: see how local shape functions form the global approximation.</p>
+      <div class="chart" id="basis-chart"></div>
+      <p class="hint" id="basis-hint"></p>
+      <div id="basis-details" hidden>
+        <div class="basis-grid">
+          <div class="basis-sub"><h4>Derivative of the selected basis function</h4><p class="desc">Inspect the derivative within each element and across element boundaries.</p><div class="chart" id="basis-dchart"></div></div>
+          <div class="basis-sub"><h4>Approximation from basis functions</h4><p class="desc">u<sub>h</sub> = Σ a<sub>j</sub> N<sub>j</sub>, built from the computed coefficients a<sub>j</sub>.</p><div class="chart" id="basis-uh"></div></div>
+        </div>
+        <p class="hint" id="basis-props"></p>
+        <div class="math-text" id="basis-derivation"></div>
+      </div>
+    </section>
+
 
     <section class="panel chart-card" id="main-chart">
-      <div class="chips" id="chips" role="group" aria-label="Grafikte gösterilecek eğriler"></div>
+      <div class="card-head"><h3 id="approx-title">Analytical vs FEM solution</h3></div>
+      <p class="desc" id="approx-desc"></p>
+      <div class="chips" id="chips" role="group" aria-label="Curves shown on the chart"></div>
       <div class="chart" id="chart-approx" style="margin-top:12px"></div>
       <p class="hint" id="node-legend"></p>
     </section>
 
     <section class="chart-grid" id="chart-grid">
       <div class="panel chart-card">
-        <div class="card-head"><h3 id="error-title">İşaretli noktasal hata</h3>
-          <div class="seg" role="group" aria-label="Hata görünümü"><button type="button" data-error-view="signed">işaretli</button><button type="button" data-error-view="abs">mutlak (log)</button></div></div>
+        <div class="card-head"><h3 id="error-title">Signed pointwise error</h3>
+          <div class="seg" role="group" aria-label="Error view"><button type="button" data-error-view="signed">signed</button><button type="button" data-error-view="abs">absolute (log)</button></div></div>
+        <p class="desc" id="error-desc"></p>
         <p class="hint" id="error-hint"></p>
         <div class="chart zoomable" id="chart-error"></div>
         <div class="chart-tools" data-zoom="error">
-          <div class="seg" role="group" aria-label="Yakınlaştırma"><button type="button" data-zoom-act="out" aria-label="Uzaklaştır" title="Uzaklaştır">−</button><button type="button" data-zoom-act="in" aria-label="Yakınlaştır" title="Yakınlaştır">+</button></div>
-          <div class="seg"><button type="button" data-zoom-act="fit" title="y eksenini görünür x aralığındaki değerlere sığdır">y: veriye sığdır</button></div>
-          <div class="seg"><button type="button" data-zoom-act="reset" title="Otomatik ölçeğe dön">sıfırla</button></div>
-          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="y alt sınırı"></label>
-          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="y üst sınırı"></label>
+          <div class="seg" role="group" aria-label="Zoom"><button type="button" data-zoom-act="out" aria-label="Zoom out" title="Zoom out">−</button><button type="button" data-zoom-act="in" aria-label="Zoom in" title="Zoom in">+</button></div>
+          <div class="seg"><button type="button" data-zoom-act="fit" title="Fit the y axis to the values in the visible x range">y: fit to data</button></div>
+          <div class="seg"><button type="button" data-zoom-act="reset" title="Return to the automatic scale">reset</button></div>
+          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="lower y limit"></label>
+          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="upper y limit"></label>
           <span data-zoom-status></span>
         </div>
         <p class="error" data-zoom-msg="error" role="status"></p>
-        <p class="hint zoom-help">Ctrl/⌘ + tekerlek ya da iki parmak sıkıştırma: imleç çevresinde yakınlaştır (Shift: yalnız y) · sürükle: kaydır · çift tık: otomatik ölçek · y kutuları: Enter ile uygula</p>
+        <p class="hint zoom-help">Ctrl/⌘ + wheel or pinch: zoom around the cursor (Shift: y only) · drag: pan · double-click: automatic scale · y boxes: press Enter to apply</p>
       </div>
       <div class="panel chart-card">
-        <div class="card-head"><h3 id="conv-title">Yakınsama</h3>
-          <div class="seg-row"><div class="seg" role="group" aria-label="İnceltme türü"><button type="button" data-conv-mode="h">h</button><button type="button" data-conv-mode="p">p</button></div>
+        <div class="card-head"><h3 id="conv-title">Convergence</h3>
+          <div class="seg-row"><div class="seg" role="group" aria-label="Refinement type"><button type="button" data-conv-mode="h">h</button><button type="button" data-conv-mode="p">p</button></div>
           <div class="seg" role="group" aria-label="Norm"><button type="button" data-conv-norm="l2">L²</button><button type="button" data-conv-norm="h1">H¹</button></div></div></div>
+        <p class="desc" id="conv-desc"></p>
         <p class="hint" id="conv-hint"></p>
         <div class="chart zoomable" id="chart-conv"></div>
         <div class="chart-tools" data-zoom="conv">
-          <div class="seg" role="group" aria-label="Yakınlaştırma"><button type="button" data-zoom-act="out" aria-label="Uzaklaştır" title="Uzaklaştır">−</button><button type="button" data-zoom-act="in" aria-label="Yakınlaştır" title="Yakınlaştır">+</button></div>
-          <div class="seg"><button type="button" data-zoom-act="fit" title="y eksenini görünür x aralığındaki değerlere sığdır">y: veriye sığdır</button></div>
-          <div class="seg"><button type="button" data-zoom-act="reset" title="Otomatik ölçeğe dön">sıfırla</button></div>
-          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="y alt sınırı"></label>
-          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="y üst sınırı"></label>
+          <div class="seg" role="group" aria-label="Zoom"><button type="button" data-zoom-act="out" aria-label="Zoom out" title="Zoom out">−</button><button type="button" data-zoom-act="in" aria-label="Zoom in" title="Zoom in">+</button></div>
+          <div class="seg"><button type="button" data-zoom-act="fit" title="Fit the y axis to the values in the visible x range">y: fit to data</button></div>
+          <div class="seg"><button type="button" data-zoom-act="reset" title="Return to the automatic scale">reset</button></div>
+          <label>y <input type="text" inputmode="decimal" data-zoom-y="lo" aria-label="lower y limit"></label>
+          <label>… <input type="text" inputmode="decimal" data-zoom-y="hi" aria-label="upper y limit"></label>
           <span data-zoom-status></span>
         </div>
         <p class="error" data-zoom-msg="conv" role="status"></p>
-        <p class="hint zoom-help">Ctrl/⌘ + tekerlek ya da iki parmak sıkıştırma: imleç çevresinde yakınlaştır (Shift: yalnız y) · sürükle: kaydır · çift tık: otomatik ölçek · y kutuları: Enter ile uygula</p>
+        <p class="hint zoom-help">Ctrl/⌘ + wheel or pinch: zoom around the cursor (Shift: y only) · drag: pan · double-click: automatic scale · y boxes: press Enter to apply</p>
       </div>
+    </section>
+
+    <!-- Numerical diagnostics: koşul tahmini, kuadratür, çözücü uyarıları. Uyarı satırları her zaman görünür; ölçü kartları açılır. -->
+    <section class="panel" id="diag-panel" hidden>
+      <div class="card-head"><h3>Numerical diagnostics</h3>
+        <button class="ghost" id="diag-toggle" type="button" aria-expanded="false" aria-controls="diag-metrics">Show details</button></div>
+      <p class="hint" id="diag-summary"></p>
+      <div class="stale" id="diagnostics" role="status" hidden></div>
+      <div class="metric-grid" id="diag-metrics" hidden></div>
     </section>
 
     <section class="panel solution">
       <div class="solution-head no-print">
-        <h2><button type="button" class="sheet-toggle" id="sheet-toggle" aria-expanded="false" aria-controls="sheet-body">Çözüm kâğıdı</button></h2>
+        <h2><button type="button" class="sheet-toggle" id="sheet-toggle" aria-expanded="false" aria-controls="sheet-body">Solution sheet</button></h2>
         <div class="actions" id="sheet-actions" hidden>
-          <button class="ghost" id="pdf-btn" type="button">PDF indir</button>
-          <button class="ghost" id="tex-btn" type="button">.tex indir</button>
-          <button class="ghost" id="copy-btn" type="button">LaTeX kaynağını kopyala</button>
+          <button class="ghost" id="pdf-btn" type="button">Download PDF</button>
+          <button class="ghost" id="tex-btn" type="button">Download .tex</button>
+          <button class="ghost" id="copy-btn" type="button">Copy LaTeX source</button>
         </div>
       </div>
-      <p class="hint no-print" id="sheet-closed">Kâğıt kapalı. Açmak için başlığa ya da “Çözüm kâğıdını aç”a tıkla; açıkken problem her değiştiğinde kendiliğinden yenilenir.</p>
+      <p class="hint no-print" id="sheet-closed">The sheet is closed. Click the heading or “Open solution sheet” to open it; while open it refreshes whenever the problem changes.</p>
       <div id="sheet-body" hidden>
-        <div class="stale no-print" id="stale" hidden>Problem değişti — kâğıt güncelleniyor…</div>
+        <div class="stale no-print" id="stale" hidden>The problem changed — updating the sheet…</div>
         <p class="hint no-print" id="sheet-hint"></p>
         <div class="hint no-print" id="sheet-check"></div>
         <article class="sheet" id="sheet" hidden>
-          <h3 class="sheet-title">Sonlu Eleman Çözüm Kâğıdı</h3>
+          <h3 class="sheet-title">Finite Element Solution Sheet</h3>
           <div id="derivation" class="math-text"></div>
         </article>
       </div>
@@ -337,6 +569,10 @@ window.MathJax = {
   </main>
 </div>
 
+<!-- Taban fonksiyonu çekirdeği (Basis functions kartı). Yüklenemezse çözücü aynen çalışır, yalnız kart gizli kalır. -->
+<script src="basis_core.js"></script>
+<!-- FEM Simulation katmanı. Yüklenemezse çözücü aynen çalışır, yalnız panel gizli kalır. -->
+<script src="fem_sim.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -357,7 +593,7 @@ window.MathJax = {
 /*CORE-START*/
 
 /* ---------- 1. AYARLAR ---------- */
-const DEGREE_NAMES = { 1: 'Lineer', 2: 'Kuadratik', 3: 'Kübik', 4: 'Kuartik' };
+const DEGREE_NAMES = { 1: 'Linear', 2: 'Quadratic', 3: 'Cubic', 4: 'Quartic' };
 const MAX_ELEMENTS = 64;
 const GAUSS_POINTS = 12;                       // tek kural derece 23'e kadar polinomu tam integre eder
 const PANELS = 8;                              // eleman integralleri için alt aralık sayısı (düzgün olmayan katsayılarda tek kural yetmez)
@@ -368,8 +604,8 @@ const LOG_FLOOR = 1e-17;                       // log eksende sıfır hata çizi
 /* Teşhis kategorileri. Tek bir genel "tekil" mesajı yerine NEDEN ve DÜZEY (sürekli problem / ayrık sistem) söylenir:
    ayrık sistemin tekilliği, diferansiyel problemin çözümsüz olduğu anlamına gelmez ve böyle sunulmaz. */
 const CATEGORY = {
-  K1: 'Çözüm yok (uyumsuz sistem)', K2: 'Tek olmayan çözüm (boş uzay ≠ {0})', K3: 'Neredeyse tekil / kötü koşullu',
-  K4: 'Dejenere katsayı', K5: 'Sayısal çözücü hatası'
+  K1: 'No solution (inconsistent system)', K2: 'Non-unique solution (null space ≠ {0})', K3: 'Nearly singular / ill-conditioned',
+  K4: 'Degenerate coefficient', K5: 'Numerical solver failure'
 };
 class Diagnosis extends Error {
   constructor(category, level, detail) { super(`${CATEGORY[category]} — ${level}: ${detail}`); this.category = category; this.level = level; }
@@ -380,7 +616,7 @@ class Diagnosis extends Error {
    COND_WARN / COND_SINGULAR: κ₁ tahmini bunu aşarsa uyarı / sayısal tekil (göreli hata ~κ·ε ≈ 1e-6 / 1e-2). */
 const RANK_TOL = 1e-12, COMPAT_TOL = 1e-10, COND_WARN = 1e10, COND_SINGULAR = 1e14;
 /* Başlangıç değer probleminde sürekli problem (α ≠ 0 iken) tek çözümlüdür; ayrık tekillik ağdan gelir. */
-const IVP_COARSE_DETAIL = "sürekli problem tek çözümlü (lineer başlangıç değer problemi), ama ayrık sistem tekil ya da çok kötü koşullu: ağ bu çözüm için fazla kaba (salınımlı çözümde ωh küçük olmalı; p = 1 için ωh < 2√3). n ya da p'yi artır.";
+const IVP_COARSE_DETAIL = "the continuous problem has a unique solution (linear initial value problem), but the discrete system is singular or very badly conditioned: the mesh is too coarse for this solution (for an oscillatory solution ωh must be small; ωh < 2√3 for p = 1). Increase n or p.";
 class PivotBreakdown extends Error {}
 
 /* ---------- 2. AYRIŞTIRICI ----------
@@ -398,7 +634,7 @@ const CONSTANTS = { pi: [Math.PI, '\\pi'], e: [Math.E, 'e'] };
 
 function parseExpression(text) {
   /* "1e-8" bilimsel gösterim DEĞİL, 1·e − 8 olarak okunurdu (e = Euler sayısı): sessizce yanlış katsayı. Reddedilir. */
-  if (/\d\.?e[+-]?\d/i.test(text)) throw new Error('Bilimsel gösterim (ör. 1e-8) desteklenmiyor: "e" Euler sayısı olarak okunur. 10^-8 biçiminde yaz.');
+  if (/\d\.?e[+-]?\d/i.test(text)) throw new Error('Scientific notation (e.g. 1e-8) is not supported: "e" is read as Euler\'s number. Write 10^-8 instead.');
   const tokens = text.toLowerCase().match(/\d+\.?\d*|\.\d+|[a-z]+|\S/g) || [];
   let pos = 0;
   const peek = () => tokens[pos];
@@ -448,7 +684,7 @@ function parseExpression(text) {
   }
   function atom() {                               // sayı, x, sabit, fonksiyon çağrısı, parantez
     const t = next();
-    if (t === undefined) throw new Error('İfade yarım kalmış');
+    if (t === undefined) throw new Error('Incomplete expression');
     if (/^[\d.]/.test(t)) { const v = parseFloat(t); return { f: () => v, tex: t, prec: 4, isNumber: true }; }
     if (t === '(') { const inner = sum(); expect(')'); return { f: inner.f, tex: `\\left(${inner.tex}\\right)`, bare: inner.tex, prec: 4 }; }
     if (t === 'x') return { f: (x) => x, tex: 'x', prec: 4 };
@@ -463,7 +699,7 @@ function parseExpression(text) {
                 : `\\${FUNCTION_TEX[t] || t}\\left(${arg.tex}\\right)`;
       return { f: (x) => fn(arg.f(x)), tex, prec: 4 };
     }
-    throw new Error(`Tanınmayan simge: "${t}"`);
+    throw new Error(`Unknown symbol: "${t}"`);
   }
 
   const root = sum();
@@ -646,19 +882,19 @@ function analyzeSystem(A, b) {
 /* Pivot çöküşü ya da κ̂ > COND_SINGULAR durumunda ayrık sistemin NEDENİNİ söyler (düzey: ayrık sistem). */
 function classifyDiscrete(A, b, ivp, hasDirichlet) {
   const a = analyzeSystem(A, b);
-  if (!a.finite) return new Diagnosis('K5', 'ayrık sistem', 'matriste ya da sağ tarafta sonlu olmayan değer (NaN/∞) var.');
-  if (ivp) return new Diagnosis('K3', 'ayrık sistem', IVP_COARSE_DETAIL);
+  if (!a.finite) return new Diagnosis('K5', 'discrete system', 'the matrix or the right-hand side contains a non-finite value (NaN/∞).');
+  if (ivp) return new Diagnosis('K3', 'discrete system', IVP_COARSE_DETAIL);
   if (a.rank < a.size) {
     const sample = a.nullVectors[0], max = Math.max(...sample.map(Math.abs)), constant = sample.every((v) => Math.abs(Math.abs(v) - max) <= 1e-8 * max);
-    const shape = constant ? 'sabit vektör (u + c de çözüm)' : 'sabit olmayan bir vektör';
+    const shape = constant ? 'constant vector (u + c is also a solution)' : 'a non-constant vector';
     return a.compatible
-      ? new Diagnosis('K2', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf uyumlu (η = ${a.eta.toExponential(1)}), boş uzay boyutu ${a.size - a.rank}, örnek: ${shape}.`
-          + (hasDirichlet ? '' : " Bir uçta u değeri vermek ya da γ'yı değiştirmek boş uzayı kaldırabilir."))   // öneri yalnız u hiç verilmemişse anlamlı
-      : new Diagnosis('K1', 'ayrık sistem', `rank ${a.rank} < ${a.size}; sağ taraf değer uzayında değil (η = ${a.eta.toExponential(1)} > ${COMPAT_TOL}). `
-          + 'Bu AYRIK sistemin hükmüdür; sürekli problem hakkında ayrıca bkz. sınıflandırma.'
-          + (hasDirichlet ? '' : " Örn. saf Neumann'da ∫f ≠ akı farkı."));   // örnek yalnız u hiç verilmemişse ilgili (fem_sheet ile aynı)
+      ? new Diagnosis('K2', 'discrete system', `rank ${a.rank} < ${a.size}; the right-hand side is consistent (η = ${a.eta.toExponential(1)}), null-space dimension ${a.size - a.rank}, example: ${shape}.`
+          + (hasDirichlet ? '' : " Prescribing u at one end or changing γ may remove the null space."))   // öneri yalnız u hiç verilmemişse anlamlı
+      : new Diagnosis('K1', 'discrete system', `rank ${a.rank} < ${a.size}; the right-hand side is not in the range (η = ${a.eta.toExponential(1)} > ${COMPAT_TOL}). `
+          + 'This is a verdict on the DISCRETE system; for the continuous problem see the classification.'
+          + (hasDirichlet ? '' : " E.g. pure Neumann with ∫f ≠ flux difference."));   // örnek yalnız u hiç verilmemişse ilgili (fem_sheet ile aynı)
   }
-  return new Diagnosis('K3', 'ayrık sistem', `sayısal olarak tekil: tam rank ama κ ≈ ${a.cond.toExponential(1)} (σ_min/σ_max = ${(1 / a.cond).toExponential(1)}); sonuç güvenilmez.`);
+  return new Diagnosis('K3', 'discrete system', `numerically singular: full rank but κ ≈ ${a.cond.toExponential(1)} (σ_min/σ_max = ${(1 / a.cond).toExponential(1)}); the result is unreliable.`);
 }
 
 /* Ağ: [a,b] = [x₀,x₁] aralığı n eşit elemana bölünür; p polinom derecesidir. Eleman e'nin yerel düğümü k, global e·p + k numarasını alır;
@@ -667,16 +903,16 @@ function classifyDiscrete(A, b, ivp, hasDirichlet) {
    ([0]), p = 5 TypeError üretiyordu. Burada üst n sınırı YOK: iç ince ağ referansı n = 128 kullanır. Kullanıcının verdiği
    ağ için ayrıca userMesh (1 ≤ n ≤ MAX_ELEMENTS). Mesajlar sunucudakiyle (fem_sheet.validate_problem) aynıdır. */
 function makeMesh(a, b, n, p) {
-  if (!Number.isInteger(n) || !Number.isInteger(p)) throw new Error('n ve p tam sayı olmalı.');
-  if (n < 1 || p < 1 || p > 4) throw new Error(`n 1–${MAX_ELEMENTS}, p 1–4 aralığında olmalı.`);
-  if (!(Number.isFinite(a) && Number.isFinite(b) && a < b)) throw new Error('Aralıkta x₀, x₁\'den küçük olmalı.');
+  if (!Number.isInteger(n) || !Number.isInteger(p)) throw new Error('n and p must be integers.');
+  if (n < 1 || p < 1 || p > 4) throw new Error(`n must be in 1–${MAX_ELEMENTS} and p in 1–4.`);
+  if (!(Number.isFinite(a) && Number.isFinite(b) && a < b)) throw new Error('The interval requires x₀ < x₁.');
   const h = (b - a) / n;
   return { a, b, n, p, h, dofs: n * p + 1, nodeX: (i) => a + i * h / p };
 }
 
 /* Kullanıcının seçtiği ağ (arayüz, çapraz kontrol, tests.js --solve): desteklenen aralık n = 1…MAX_ELEMENTS, p = 1…4. */
 function userMesh(a, b, n, p) {
-  if (Number.isInteger(n) && n > MAX_ELEMENTS) throw new Error(`n 1–${MAX_ELEMENTS}, p 1–4 aralığında olmalı.`);
+  if (Number.isInteger(n) && n > MAX_ELEMENTS) throw new Error(`n must be in 1–${MAX_ELEMENTS} and p in 1–4.`);
   return makeMesh(a, b, n, p);
 }
 
@@ -691,14 +927,14 @@ function userMesh(a, b, n, p) {
    'both' başlangıç (ya da son) değer problemidir: u değeri value'da, u' değeri slope'ta gelir. */
 function readNumber(text, label) {
   let parsed;
-  try { parsed = parseExpression((text ?? '').trim() === '' ? '0' : text); } catch (err) { throw new Error(`${label} koşulu: ${err.message}`); }
+  try { parsed = parseExpression((text ?? '').trim() === '' ? '0' : text); } catch (err) { throw new Error(`${label} condition: ${err.message}`); }
   const value = parsed.f(0);
-  if (!isFinite(value) || parsed.f(1) !== value) throw new Error(`${label} koşulu: değer sabit bir sayı olmalı.`);
+  if (!isFinite(value) || parsed.f(1) !== value) throw new Error(`${label} condition: the value must be a constant number.`);
   return value;
 }
 function readCondition(raw, label) {
   if (raw.type === 'none') return { type: 'none', value: 0 };
-  if (!['dirichlet', 'neumann', 'flux', 'both'].includes(raw.type)) throw new Error(`${label} koşulu: bilinmeyen tür.`);
+  if (!['dirichlet', 'neumann', 'flux', 'both'].includes(raw.type)) throw new Error(`${label} condition: unknown type.`);
   const condition = { type: raw.type, value: readNumber(raw.value, label) };
   if (raw.type === 'both') condition.slope = readNumber(raw.slope, `${label} u′`);
   return condition;
@@ -722,19 +958,19 @@ function stabilityIndicators(problem, h, p) {
       if (g / a > 0) k2 = Math.max(k2, g / a);
     }
     if (pe > 0) out.push({ kind: 'peclet', value: pe, warn: pe / p > PECLET_WARN,
-      text: `Péclet Pe = max|β|h/(2|α|) = ${fmtNum(pe)}, Pe/p = ${fmtNum(pe / p)}${pe / p > PECLET_WARN ? ' > 1: taşınım baskın, ağ kaba — standart Galerkin salınım üretebilir' : ''}` });
-    if (vanish) out.push({ kind: 'peclet', value: Infinity, warn: true, text: 'α aralıkta sıfırlanıyor: Pe orada tanımsız (taşınım baskın bölge)' });
+      text: `Péclet Pe = max|β|h/(2|α|) = ${fmtNum(pe)}, Pe/p = ${fmtNum(pe / p)}${pe / p > PECLET_WARN ? ' > 1: convection-dominated, coarse mesh — standard Galerkin may oscillate' : ''}` });
+    if (vanish) out.push({ kind: 'peclet', value: Infinity, warn: true, text: 'α vanishes in the interval: Pe is undefined there (convection-dominated region)' });
     if (k2 > 0) {
       const k = Math.sqrt(k2), ppw = 2 * Math.PI / (k * h / p);
       out.push({ kind: 'wave', value: k * h, warn: ppw < PPW_WARN,
-        text: `dalga sayısı k = ${fmtNum(k)}, kh = ${fmtNum(k * h)}, dalga boyu başına ${fmtNum(ppw)} aralık`
-          + (ppw < PPW_SEVERE ? ' < 4: ağ dalgayı çözemiyor, sonuç fiziksel olarak güvenilmez' : ppw < PPW_WARN ? ' < 10: faz (kirlilik) hatası beklenir' : '') });
+        text: `wave number k = ${fmtNum(k)}, kh = ${fmtNum(k * h)}, ${fmtNum(ppw)} intervals per wavelength`
+          + (ppw < PPW_SEVERE ? ' < 4: the mesh cannot resolve the wave; the result is physically unreliable' : ppw < PPW_WARN ? ' < 10: phase (pollution) error expected' : '') });
     }
   } else {
     let lam = 0;
     for (const x of xs) { const b = beta.f(x); if (b !== 0) lam = Math.max(lam, Math.abs(gamma.f(x) / b)); }
     if (lam > 0) out.push({ kind: 'step', value: lam * h / p, warn: lam * h / p > 1,
-      text: `λ = max|γ/β| = ${fmtNum(lam)}, λh/p = ${fmtNum(lam * h / p)}${lam * h / p > 1 ? ' > 1: büyük adım; standart Galerkin bu sınıfta kararlılık garantisi vermez' : ''}` });
+      text: `λ = max|γ/β| = ${fmtNum(lam)}, λh/p = ${fmtNum(lam * h / p)}${lam * h / p > 1 ? ' > 1: large step; standard Galerkin gives no stability guarantee for this class' : ''}` });
   }
   return out;
 }
@@ -769,31 +1005,31 @@ function leadingDegeneracy(fn, x0, x1) {
 /* Girdiyi doğrular ve hesaplanabilir bir problem nesnesine çevirir; hata varsa anlaşılır mesajla fırlatır. */
 function buildProblem({ alpha, beta, gamma, f, x0, x1, left, right }) {
   const texts = { alpha, beta, gamma, f }, names = { alpha: 'α(x)', beta: 'β(x)', gamma: 'γ(x)', f: 'f(x)' };
-  if (!(x0 < x1)) throw new Error('Aralıkta x₀, x₁\'den küçük olmalı.');
+  if (!(x0 < x1)) throw new Error('The interval requires x₀ < x₁.');
   const probe = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200);
   const coef = {}, constant = {};                            // constant[k]: katsayı sabitse değeri, değilse null
   for (const key in texts) {
     try { coef[key] = parseExpression(texts[key].trim() === '' ? '0' : texts[key]); } catch (err) { throw new Error(`${names[key]}: ${err.message}`); }
     const values = probe.map(coef[key].f);
-    if (!values.every(isFinite)) throw new Error(`${names[key]} aralığın bir noktasında tanımsız veya sonsuz.`);
+    if (!values.every(isFinite)) throw new Error(`${names[key]} is undefined or infinite at some point of the interval.`);
     constant[key] = values.every((v) => Math.abs(v - values[0]) < 1e-14) ? values[0] : null;
   }
   const order = constant.alpha !== 0 ? 2 : constant.beta !== 0 ? 1 : 0;
-  if (order === 0) throw new Error('α ve β birlikte sıfır olamaz: bu bir diferansiyel denklem değil.');
+  if (order === 0) throw new Error('α and β cannot both be zero: this is not a differential equation.');
   const bc = { left: readCondition(left, 'x₀'), right: readCondition(right, 'x₁') };
   const kinds = [bc.left.type, bc.right.type];
   if (order === 1 && (['neumann', 'flux', 'both'].some((k) => kinds.includes(k)) || kinds.filter((k) => k === 'dirichlet').length !== 1))
-    throw new Error('Birinci mertebe denklem tam olarak bir koşul alır: uçlardan birinde u değeri ver, diğerini boş bırak.');
+    throw new Error('A first-order equation takes exactly one condition: give a value of u at one end and leave the other end empty.');
   /* Başlangıç değer problemi: iki koşul aynı uçta; öbür uca koşul eklenirse 2. mertebe denklem 3 koşulla aşırı belirlenir. */
   const ivp = kinds.includes('both');
   if (ivp && [...kinds].sort().join() !== 'both,none')
-    throw new Error("Bir uçta hem u hem u' verildiyse (başlangıç değer problemi) diğer uca koşul verilmez.");
+    throw new Error("If both u and u' are given at one end (initial value problem), no condition may be given at the other end.");
   /* u' koşulu zayıf forma yalnızca akı Q = α u' ile girer; α(uç) = 0 ise verilen u' değeri sessizce kaybolurdu. */
   for (const [side, x] of [['left', x0], ['right', x1]])
-    if (['neumann', 'both'].includes(bc[side].type) && coef.alpha.f(x) === 0) throw new Error("α bu uçta sıfır: u' koşulu denkleme girmez (α u' akısı sıfır olur).");
+    if (['neumann', 'both'].includes(bc[side].type) && coef.alpha.f(x) === 0) throw new Error("α is zero at this end: a u' condition does not enter the equation (the flux α u' vanishes).");
   for (const [side, x] of [['left', x0], ['right', x1]])
     if (bc[side].type === 'flux' && coef.alpha.f(x) === 0)
-      throw new Error("α bu uçta sıfır: akı koşulu α u' = q ancak q = 0 iken anlamlıdır ve o zaman doğal koşulun kendisidir; bu uçta koşulu 'verilmedi' bırak ya da α'yı kontrol et.");
+      throw new Error("α is zero at this end: a flux condition α u' = q is meaningful only for q = 0, and then it is the natural condition itself; leave this end as 'not given' or check α.");
   const degeneracy = leadingDegeneracy(order === 2 ? coef.alpha.f : coef.beta.f, x0, x1);
   return { coef, constant, x0, x1, order, bc, ivp, degeneracy };
 }
@@ -877,7 +1113,7 @@ const METHODS = {
       /* Ayrık güvenilirlik: κ₁ tahmini; sayısal tekil eşiğini aşarsa SVD ile sınıflandırılır (çözüm sunulmaz). */
       const condition = conditionEstimate(reducedK, lu);
       if (!(condition <= COND_SINGULAR)) throw classifyDiscrete(reducedK, reducedF, ivpUnique, fixed.size > 0);
-      if (!solved.every(isFinite)) throw new Diagnosis('K5', 'ayrık sistem', 'çözümde sonlu olmayan değer (NaN/∞).');
+      if (!solved.every(isFinite)) throw new Diagnosis('K5', 'discrete system', 'the solution contains a non-finite value (NaN/∞).');
       const c = new Array(dofs);
       fixed.forEach((value, i) => { c[i] = value; });
       free.forEach((i, k) => { c[i] = solved[k]; });
@@ -1036,9 +1272,9 @@ function exactConditionFailure(u, du, problem, scale, dscale) {
     const target = type === 'neumann' ? value : type === 'both' ? slope : null;
     if (target !== null && !tol(du(xb) - target, dscale)) return `u′(${fmtNum(xb)}) = ${fmtNum(du(xb))} ≠ ${fmtNum(target)}`;
     const a = problem.coef.alpha.f(xb);
-    if (type === 'flux' && !tol(a * du(xb) - value, Math.abs(a) * dscale)) return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ ${fmtNum(value)} (akı koşulu)`;
+    if (type === 'flux' && !tol(a * du(xb) - value, Math.abs(a) * dscale)) return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ ${fmtNum(value)} (flux condition)`;
     if (type === 'none' && problem.order === 2 && !problem.ivp && a !== 0 && !tol(a * du(xb), Math.abs(a) * dscale))
-      return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ 0 (doğal koşul)`;
+      return `α u′(${fmtNum(xb)}) = ${fmtNum(a * du(xb))} ≠ 0 (natural condition)`;
   }
   return '';
 }
@@ -1058,7 +1294,7 @@ function observedRate(points, floor = () => 0) {
 /* ---------- 6. LATEX ---------- */
 
 function texNum(v) {
-  if (!isFinite(v)) return '\\text{tanımsız}';
+  if (!isFinite(v)) return '\\text{undefined}';
   if (Math.abs(v) < 1e-14) return '0';
   const [mantissa, exponent] = v.toExponential(4).split('e');
   const exp = Number(exponent);
@@ -1177,12 +1413,12 @@ function fitRange(points, xRange, fx, fy, log) {
 function parseAxisRange(loText, hiText, log) {
   const read = (t) => { const s = String(t).trim().replace(',', '.'); return s === '' ? NaN : Number(s); };
   const lo = read(loText), hi = read(hiText);
-  if (!isFinite(lo) || !isFinite(hi)) return { error: 'y sınırları sayı olmalı (ör. -2e-15 ya da 0.001).' };
-  if (!(hi > lo)) return { error: 'y üst sınırı alt sınırdan büyük olmalı.' };
-  if (log && !(lo > 0)) return { error: 'Log eksende y sınırları pozitif olmalı.' };
+  if (!isFinite(lo) || !isFinite(hi)) return { error: 'y limits must be numbers (e.g. -2e-15 or 0.001).' };
+  if (!(hi > lo)) return { error: 'The upper y limit must exceed the lower one.' };
+  if (log && !(lo > 0)) return { error: 'On a log axis the y limits must be positive.' };
   const range = log ? [Math.log10(lo), Math.log10(hi)] : [lo, hi];
-  if (range[1] - range[0] < minSpan(range, log)) return { error: 'y aralığı çok dar: eksen etiketleri ayırt edilemez (genişlik, sınırların büyüklüğünün en az 1e-8 katı olmalı).' };
-  if (range[1] - range[0] > (log ? AXIS_LIMITS.maxLogSpan : AXIS_LIMITS.maxSpan)) return { error: 'y aralığı çok geniş.' };
+  if (range[1] - range[0] < minSpan(range, log)) return { error: 'y range too narrow: axis labels cannot be distinguished (the width must be at least 1e-8 times the size of the limits).' };
+  if (range[1] - range[0] > (log ? AXIS_LIMITS.maxLogSpan : AXIS_LIMITS.maxSpan)) return { error: 'y range too wide.' };
   return { range };
 }
 
@@ -1212,6 +1448,15 @@ const powerLabel = (k) => `10<tspan dy="-5" font-size="8.5">${k < 0 ? '−' + -k
 /* cfg.zoom verilirse pencere odur (yakınlaştırma/kaydırma), yoksa otomatik ölçek. Dönüş: pencere bilgisi (otomatik ve gerçek
    pencere, dönüşümler, geometri, çizilen noktalar); yakınlaştırma araçları bundan hesaplar. Veri değerleri hiçbir yerde
    değiştirilmez: pencere dışı kırpma yolu (clipPath) ile gizlenir, imleç kutusu her zaman gerçek değeri yazar. */
+/* İşaret çizimi: şekil dereceyi (DEGREE_STYLE), dolu/boş düğüm türünü gösterir. Alan, aynı r için şekiller arasında yakın tutulur. */
+function markerSvg(cx, cy, r, shape, hollow, color) {
+  const paint = hollow ? `fill:var(--surface);stroke:${color}" stroke-width="1.6` : `fill:${color}`;
+  const cls = hollow ? '' : ' class="ring"';
+  if (shape === 'square') return `<rect${cls} x="${cx - r * 0.9}" y="${cy - r * 0.9}" width="${r * 1.8}" height="${r * 1.8}" style="${paint}"/>`;
+  if (shape === 'triangle') return `<polygon${cls} points="${cx},${cy - r * 1.15} ${cx + r * 1.05},${cy + r * 0.75} ${cx - r * 1.05},${cy + r * 0.75}" style="${paint}"/>`;
+  if (shape === 'diamond') return `<polygon${cls} points="${cx},${cy - r * 1.2} ${cx + r * 1.2},${cy} ${cx},${cy + r * 1.2} ${cx - r * 1.2},${cy}" style="${paint}"/>`;
+  return `<circle${cls} cx="${cx}" cy="${cy}" r="${r}" style="${paint}"/>`;
+}
 function drawChart(host, cfg) {
   const labelled = cfg.series.some((s) => s.endLabel);
   const W = Math.max(host.clientWidth, 260), H = cfg.height;
@@ -1245,7 +1490,10 @@ function drawChart(host, cfg) {
   const inPlot = (px, py) => px >= pad.l - 0.5 && px <= W - pad.r + 0.5 && py >= pad.t - 0.5 && py <= bottom + 0.5;
 
   const xCount = Math.max(3, Math.floor(plotW / 90));
-  let xTicks = cfg.xTicks ? cfg.xTicks.filter(inX) : niceTicks(x0, x1, xCount);
+  /* Radyan ekseni (cfg.xAngular): trigonometrik girdide x işaretleri π katları; yeterli işaret çıkmazsa onluk işaretlere dönülür. */
+  const angular = cfg.xAngular && !cfg.xLog && !cfg.xTicks && typeof angularTicks === 'function' ? angularTicks(x0, x1, xCount) : null;
+  const angularLabels = angular ? new Map(angular.map((t) => [t.value, t.label])) : null;
+  let xTicks = cfg.xTicks ? cfg.xTicks.filter(inX) : angular ? angular.map((t) => t.value) : niceTicks(x0, x1, xCount);
   if (cfg.xTicks && xTicks.length < 2)                 // sabit çizgiler (n = 1…64, p = 1…4) yakınlaştırınca pencereden çıkar
     xTicks = cfg.xLog ? niceTicks(x0, x1, xCount).map((t) => parseFloat(Math.pow(2, t).toPrecision(4))) : niceTicks(x0, x1, xCount);
   const yTicks = cfg.yLog ? logTicks(y0, y1) : niceTicks(y0, y1, 5).map((value) => ({ value, power: null }));
@@ -1265,7 +1513,7 @@ function drawChart(host, cfg) {
     if (low > top) plot += `<rect class="band" x="${pad.l}" y="${top}" width="${plotW}" height="${low - top}"/>`;
   }
   for (const t of yTicks) svg += `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(t.value)}" y2="${sy(t.value)}"/><text x="${pad.l - 8}" y="${sy(t.value) + 4}" text-anchor="end">${yLabel(t)}</text>`;
-  for (const v of xTicks) svg += `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${tickLabel(v)}</text>`;
+  for (const v of xTicks) svg += `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${angularLabels?.get(v) ?? tickLabel(v)}</text>`;
   if (cfg.xTitle) svg += `<text class="axis-title" x="${pad.l - 20}" y="${H - 8}" text-anchor="end">${cfg.xTitle} →</text>`;
   if (cfg.yTitle) svg += `<text class="axis-title" x="${pad.l}" y="12" text-anchor="start">↑ ${cfg.yTitle}</text>`;
   for (const v of (cfg.vlines || []).filter(inX)) plot += `<line class="vline" x1="${sx(v)}" x2="${sx(v)}" y1="${pad.t}" y2="${bottom}"/>`;
@@ -1280,14 +1528,12 @@ function drawChart(host, cfg) {
       if (!isFinite(y)) { pen = 'M'; continue; }            // tanımsız noktada çizgiyi kır
       d += `${pen}${sx(x).toFixed(1)},${sy(y).toFixed(1)}`; pen = 'L';
     }
-    plot += `<path d="${d}" fill="none" style="stroke:${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
+    plot += `<path d="${d}" fill="none"${s.glow ? ' class="glow"' : ''} style="stroke:${s.color};color:${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" stroke-linecap="round" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
     /* İşaret: [x, y, {r, hollow}]. Boş halka = farklı anlam (eleman içi düğüm ya da ölçüm tabanındaki nokta). İşaretler kırpılmaz
        (kenardaki yarım daire okunmaz), pencere dışındakiler hiç çizilmez. */
     for (const [x, y, style = {}] of s.markers || []) {
       if (!isFinite(y) || !inPlot(sx(x), sy(y))) continue;
-      marks += style.hollow
-        ? `<circle cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:var(--surface);stroke:${s.color}" stroke-width="1.6"/>`
-        : `<circle class="ring" cx="${sx(x)}" cy="${sy(y)}" r="${style.r || 4}" style="fill:${s.color}"/>`;
+      marks += markerSvg(sx(x), sy(y), style.r || 4, style.shape || 'circle', style.hollow, s.color);
     }
     if (s.highlight && isFinite(s.highlight[1]) && inPlot(sx(s.highlight[0]), sy(s.highlight[1])))
       marks += `<circle class="ring" cx="${sx(s.highlight[0])}" cy="${sy(s.highlight[1])}" r="6" style="fill:${s.color}"/>`;
@@ -1329,7 +1575,7 @@ function drawChart(host, cfg) {
 /* ---------- 8. SUNUCU ----------
    Çözüm kâğıdı ve PDF, server.py üzerinden fem_sheet.py (SymPy) ile üretilir. Sayfa dosyadan açıldıysa
    ya da sunucu çalışmıyorsa grafikler çalışmaya devam eder; yalnızca kâğıt üretilemez ve bunu söyleriz. */
-const SERVER_HINT = 'Çözüm kâğıdı için sunucu gerekli: proje klasöründe "python3 server.py" çalıştır ve http://localhost:8000 adresini aç.';
+const SERVER_HINT = 'The solution sheet needs the server: run "python3 server.py" in the project folder and open http://localhost:8000.';
 async function postJSON(path, payload) {
   let response;
   try { response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); }
@@ -1339,19 +1585,26 @@ async function postJSON(path, payload) {
 async function requestSheet(payload) {
   const response = await postJSON('api/sheet', payload);
   const data = await response.json().catch(() => ({ error: SERVER_HINT }));
-  if (!response.ok) throw new Error(data.error || 'Çözüm kâğıdı üretilemedi.');
+  if (!response.ok) throw new Error(data.error || 'The solution sheet could not be generated.');
   return data;                                               // { text, tex, nodal, exact }
 }
 async function requestPdf(payload) {
   const response = await postJSON('api/pdf', payload);
-  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'PDF üretilemedi.');
+  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'The PDF could not be generated.');
   return response.blob();
 }
 
 /* ---------- 9. ARAYÜZ ---------- */
 const $ = (id) => document.getElementById(id);
-const seriesColor = (p) => `var(--series-${p})`;
-const CONDITION_TYPES = { none: 'verilmedi', dirichlet: 'u =', neumann: 'u′ =', flux: 'α u′ =', both: 'u ve u′' };   // flux: akı; both: başlangıç değer problemi
+/* Veri türüne göre renk (Stage B): FEM yaklaşımı her derecede aynı renktir, derece desen + işaretle ayrılır. */
+const seriesColor = () => 'var(--c-fem)';
+const ERROR_COLOR = 'var(--c-err)', REFERENCE_COLOR = 'var(--c-ref)', REFERENCE_DASH = '10 6';
+/* FEM LAB ortak dili: dereceler siyah-beyazda ÇİZGİ DESENİ ve İŞARET ŞEKLİYLE ayrılır (renk yalnız ikinci ipucu). Aynı tablo
+   çözüm, hata, yakınsama grafikleri, çipler ve şekil fonksiyonu kartında kullanılır. Dolu işaret = eleman uç düğümü,
+   boş işaret = eleman içi düğüm (ya da ölçüm tabanındaki nokta): bu anlam şekilden bağımsız korunur. */
+const DEGREE_STYLE = { 1: { dash: '', shape: 'circle' }, 2: { dash: '7 4', shape: 'square' }, 3: { dash: '1.5 3.5', shape: 'triangle' }, 4: { dash: '10 3 2 3', shape: 'diamond' } };
+const degreeDash = (p) => DEGREE_STYLE[p].dash;
+const CONDITION_TYPES = { none: 'not given', dirichlet: 'u =', neumann: 'u′ =', flux: 'α u′ =', both: 'u and u′' };   // flux: akı; both: başlangıç değer problemi
 const N_TICKS = [1, 2, 4, 8, 16, 32, 64];      // yakınsama grafiğindeki n değerleriyle aynı: sürgüde bu noktalara kolay gelinsin
 const N_TICK_LABELS = new Set([1, 8, 16, 32, 64]);
 
@@ -1359,6 +1612,7 @@ const N_TICK_LABELS = new Set([1, 8, 16, 32, 64]);
    Denklem, aralık ve koşullar bilinçli olarak BOŞ başlar: hazır örnek yok, problemi kullanıcı kendisi yazar.
    Yalnız ağ parametreleri (n, p) bir başlangıç değeri taşır; sürgünün bir konumu olmak zorunda. */
 const state = {
+  theme: (() => { try { const t = localStorage.getItem('fem-theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch { return 'auto'; } })(),   // 'auto' | 'light' | 'dark'
   alpha: '', beta: '', gamma: '', f: '', x0: NaN, x1: NaN,
   left: { type: 'none', value: '', slope: '' }, right: { type: 'none', value: '', slope: '' },
   n: 4, degree: 2, method: 'galerkin',
@@ -1373,13 +1627,26 @@ const state = {
   /* Hata ve yakınsama grafiğinin elle seçilen penceresi {key, x, y} (dönüştürülmüş uzayda). null ya da key bugünkü görünüme
      (problem + görünüm türü) uymuyorsa otomatik ölçek: başka eksenli bir görünüme eski pencere taşınmasın. */
   chartZoom: { error: null, conv: null },
-  zoomNote: { error: '', conv: '' }   // y kutusuna girilen geçersiz aralığın Türkçe açıklaması
+  zoomNote: { error: '', conv: '' },
+  basisNode: null,           // Basis functions kartında seçili global düğüm j (null: ağın ortasındaki uç düğüm)
+  basisOpen: false,          // kart ayrıntıları (türev, u_h kuruluşu, türetme) yalnız istenince
+  openMetric: null,          // özet şeridinde ayrıntısı açık kart (null: hiçbiri)
+  diagOpen: false,           // Numerical diagnostics ölçü kartları yalnız istenince (uyarı satırları her zaman görünür)
+  /* FEM Simulation: step = yapım adımı (fiziksel zaman değil); element = seçili eleman (null: ortadaki); probe = tıklanan x
+     (null: yok). Seçili global düğüm Basis functions kartıyla ortaktır (basisNode): biri seçince ikisi de gösterir. */
+  sim: {
+    panels: { sim: { step: 0, playing: false, speed: 1, view: '2d' }, sol: { step: 0, playing: false, speed: 1, view: '2d' } },   // her panelin kendi zaman çubuğu
+    element: null, probe: null, cell: null, showMesh: true, showLabels: true   // seçimler iki panelde ortak
+  }   // y kutusuna girilen geçersiz aralığın Türkçe açıklaması
 };
 let view = null;              // son başarılı hesabın sonucu
 const chartInfo = {};         // son çizilen hata/yakınsama grafiğinin pencere bilgisi (drawChart dönüşü + key); durum değil, çizimin türevi
 let cache = { key: '', reference: null, study: null };      // n ve p'ye bağlı olmayan pahalı hesaplar
 
 /* Kâğıdı (ve referans çözümü) belirleyen girdiler; anahtar değişmediyse yeniden hesap gerekmez. */
+/* Trigonometrik girdi: x eksenleri radyan (π katları) yazılır; yalnız işaretlerin yazılışı, veri aynı. */
+const radianAxis = () => typeof usesTrigonometry === 'function' && usesTrigonometry([state.alpha, state.beta, state.gamma, state.f]);
+const xAxisTitle = () => (radianAxis() ? 'rad' : 'x');   // kısa: sol boşluğa sığsın ("rad →"); x zaten radyan
 const problemInputs = () => ({ alpha: state.alpha, beta: state.beta, gamma: state.gamma, f: state.f, x0: state.x0, x1: state.x1, left: state.left, right: state.right });
 const sheetPayload = () => ({ ...problemInputs(), n: state.n, degree: state.degree, method: state.method });
 
@@ -1407,8 +1674,8 @@ function showError(message) {
 /* Henüz yazılmamış girdi bir "hata" değildir: kırmızı mesaj yerine boş durum gösterilir.
    Çekirdek boş kutuyu 0 sayar; α ve β ikisi de boşsa ya da aralık girilmemişse problem henüz tanımlanmamıştır. */
 function missingInput() {
-  if (!state.alpha.trim() && !state.beta.trim()) return 'Eksik: α ya da β kutularından en az biri dolu olmalı.';
-  if (!isFinite(state.x0) || !isFinite(state.x1)) return 'Eksik: aralığın uçları x₀ ve x₁.';
+  if (!state.alpha.trim() && !state.beta.trim()) return 'Missing: at least one of α or β must be filled in.';
+  if (!isFinite(state.x0) || !isFinite(state.x1)) return 'Missing: the interval ends x₀ and x₁.';
   return '';
 }
 
@@ -1429,8 +1696,8 @@ function requestExact(key, inputs) {
       data = response.ok ? await response.json() : {};
       parsed = data.exact_js ? parseExact(data.exact_js, buildProblem(inputs)) : null;
       status = parsed?.rejected ? 'rejected' : parsed ? 'ok' : data.exact_status === 'rejected' ? 'rejected' : 'none';
-      if (status === 'rejected') parsed = { rejectReason: parsed?.rejected ? `tarayıcı kontrolü: ${parsed.rejected}` : `sunucu kontrolü: ${data.exact_reason}`, candidate: data.exact_candidate };
-      else if (parsed) parsed.level = data.exact_status === 'verified_symbolic' ? 'sembolik doğrulandı' : 'sayısal doğrulandı (kanıt değil)';
+      if (status === 'rejected') parsed = { rejectReason: parsed?.rejected ? `browser check: ${parsed.rejected}` : `server check: ${data.exact_reason}`, candidate: data.exact_candidate };
+      else if (parsed) parsed.level = data.exact_status === 'verified_symbolic' ? 'verified symbolically' : 'verified numerically (not a proof)';
     } catch { status = 'offline'; }
     if (exact.key !== key) return;
     /* Sunucunun SÜREKLİ problem sınıflandırması (SymPy): kanıtlanmış ret (continuous_error) ve sınıf bilgisi. */
@@ -1476,7 +1743,7 @@ function compute() {
         /* Referans ince ağın (n = 128, p = 4) kendi ayrık sistemi tekilse bu, kullanıcının ağıyla ilgili değildir
            (ör. işaret değiştiren α'nın sıfırı referans ağda düğüme denk gelir): mesaj hangi sistem olduğunu söyler. */
         try { u = referenceSolution(problem, state.method); }
-        catch (err) { throw Object.assign(new Error(`İnce ağ referansı (n = ${REFERENCE_MESH.n}, p = ${REFERENCE_MESH.p}) çözülemedi — ${err.message} Analitik çözüm olmadan hata ölçülemiyor.`), { category: err.category }); }
+        catch (err) { throw Object.assign(new Error(`The fine-mesh reference (n = ${REFERENCE_MESH.n}, p = ${REFERENCE_MESH.p}) could not be solved — ${err.message} Without an analytical solution the error cannot be measured.`), { category: err.category }); }
         du = u.derivative;
       }
       const study = convergenceStudy(problem, u, state.method, du);
@@ -1510,80 +1777,121 @@ function compute() {
    Analitik referansta u − u_h gerçek HATAdır (E); ince ağ referansında u_ref − u_h yalnızca bir FARKtır (D) — gerçek hata
    değildir ve referansın kendi hatası kadar belirsizdir. Etiketler bu ayrımı her yerde taşır. */
 const refName = () => (view.analytic ? 'u' : 'u_ref');
-const errWord = () => (view.analytic ? 'hata' : 'fark');
+const errWord = () => (view.analytic ? 'error' : 'difference');
 const errSym = () => (view.analytic ? 'E' : 'D');
 /* İnce ağ referansının kendi L² hatası için asimptotik tahmin: E(n = 64, p = 4) / (2⁵ − 1). Kanıt değil, tahmin. */
 const referenceErrorEstimate = () => { const last = view.study[4][view.study[4].length - 1]; return last.l2 / 31; };
 const rateOf = (p, norm) => observedRate(view.study[p].map((o) => ({ h: o.h, E: o[norm] })), view.floors[norm]);
 function theoryText(problem, p) {
-  if (problem.order === 1) return 'kuramsal: 1. mertebe Galerkin için optimal hız garantisi yok';
-  if (problem.ivp) return `beklenen: p + 1 = ${p + 1} · p = ${p} (Petrov–Galerkin; kanıt değil, testlerde gözlendi)`;
-  return `kuramsal (düzgün çözüm): L² p + 1 = ${p + 1} · H¹ p = ${p}`;
+  if (problem.order === 1) return 'theory: no optimal-rate guarantee for first-order Galerkin';
+  if (problem.ivp) return `expected: p + 1 = ${p + 1} · p = ${p} (Petrov–Galerkin; not a proof, observed in tests)`;
+  return `theory (smooth solution): L² p + 1 = ${p + 1} · H¹ p = ${p}`;
 }
+/* Özet şeridi: yedi küçük kart (başlık + sonuç). Değerler önceki kutularla aynı kaynaktan (view, exact). Ayrıntı (formül,
+   açıklama, bütün nitelemeler) yalnız tıklanan kart için açılır (state.openMetric); hiçbir niteleme silinmedi, yalnız
+   ikinci katmana taşındı. Ağ: eleman sayısı n_e ve düğüm sayısı n_n ayrı adla (N iki anlamda kullanılmasın). */
 function renderTiles() {
-  const { mesh, norms, result } = view.results[state.degree];
-  const U = refName(), risky = result.quadratureError > QUADRATURE_WARNING;
+  const { mesh, norms } = view.results[state.degree];
+  const U = refName();
   const l2 = rateOf(state.degree, 'l2'), h1 = rateOf(state.degree, 'h1');
   const rateText = (r) => (r === null ? '—' : r.rate.toFixed(2));
   const S = errSym(), W = errWord(), refErr = view.analytic ? 0 : referenceErrorEstimate();
   const tooClose = !view.analytic && norms.l2 < 10 * refErr;   // fark, referansın kendi hatasından ayırt edilemez
-  const status = exact.status === 'pending' ? 'analitik çözüm aranıyor…' : exact.status === 'offline' ? 'analitik için sunucu gerekli'
-    : exact.status === 'rejected' ? `analitik aday (${exact.candidate}) REDDEDİLDİ — ${exact.rejectReason}` : 'analitik bulunamadı';
-  const referenceTile = view.analytic ? ['Referans u', 'analitik', `${exact.level}: denklem ve koşullar sınandı; tarayıcıda koşullar yeniden sınandı → gösterilen değerler gerçek hata`]
-    : ['Referans u_ref', 'ince ağ', `n = 128, p = 4, aynı yöntem · ${status} · gösterilenler gerçek hata DEĞİL, ince ağa göre fark; `
-       + `referansın tahmini kendi L² hatası ≈ ${refErr.toExponential(1)} (sıfır değil)`];
+  const status = exact.status === 'pending' ? 'searching for an analytical solution…' : exact.status === 'offline' ? 'the analytical solution needs the server'
+    : exact.status === 'rejected' ? `analytical candidate (${exact.candidate}) REJECTED — ${exact.rejectReason}` : 'no analytical solution found';
   const maxError = view.results[state.degree].maxError;
-  const tiles = [
-    ['Ağ', `N = ${mesh.dofs}`, `n = ${state.n}, p = ${state.degree}, h = ${formatValue(mesh.h)}; N = np + 1 düğüm; κ₁(K) ≈ ${result.diagnostics.condition.toExponential(1)} (tahmin)`],
-    referenceTile,
-    [`${S}_L² (${W})`, norms.l2.toExponential(2), `(∫ (${U} − u_h)² dx)^½` + (tooClose ? ' · ⚠ referansın kendi hatası düzeyinde: güvenilmez' : ''), tooClose],
-    [`${S}_H¹ (${W}, yarı-norm)`, norms.h1.toExponential(2), `(∫ (${U}′ − u_h′)² dx)^½`],
-    [`${S}_max (${W}, sayısal arama)`, maxError.value.toExponential(2), `max |${U} − u_h| ≈ x = ${formatValue(maxError.x)}; 32 nokta/eleman + yerel altın oran araması (alt tahmin, kesin maksimum değil)`],
-    [`${S}_düğüm (${W})`, norms.nodal.toExponential(2), `max_i |${U}(x_i) − a_i|`],
-    ['Ölçülen hız L² · H¹ (h-inceltme)', `${rateText(l2)} · ${rateText(h1)}`,
-      (l2 === null || h1 === null ? `${W} ölçüm tabanında: hız tanımsız · ` : '') + theoryText(view.problem, state.degree)],
-    ['Kuadratür hatası', result.quadratureError.toExponential(1), risky ? '⚠ katsayılar düzgün değil; integraller yaklaşık' : '✓ integraller güvenilir', risky]
+  const count = (k, word) => `${k} ${word}${k === 1 ? '' : 's'}`;
+  const cards = [
+    { id: 'mesh', cap: 'Mesh', name: 'Discretization', value: `${count(state.n, 'element')} · ${count(mesh.dofs, 'node')} · P${state.degree}`,
+      formula: `h = ${formatValue(mesh.h)} · n_e = ${state.n} · n_n = n_e·p + 1 = ${mesh.dofs}`,
+      text: 'n_e is the number of elements and n_n the number of nodes (element end nodes and interior nodes); every node carries one coefficient a_j.' },
+    view.analytic
+      ? { id: 'reference', cap: 'Reference', name: 'Reference solution', value: 'Analytical',
+        formula: `u(x): ${exact.level}`, text: 'The equation and the conditions are checked by the server and the conditions again in the browser, so the errors shown are true errors.' }
+      : { id: 'reference', cap: 'Reference', name: 'Reference solution', value: 'Fine mesh',
+        formula: `u_ref: n = 128, p = 4, same method · ${status}`,
+        text: `No analytical solution is used. The values shown are NOT true errors but differences from the fine mesh; the estimated own L² error of the reference is ${refErr.toExponential(1)} (not zero).` },
+    { id: 'conv', cap: 'Convergence', name: 'Observed order L² · H¹', value: `${rateText(l2)} · ${rateText(h1)}`,
+      formula: `r = log(E_coarse/E_fine) / log(h_coarse/h_fine) · ${theoryText(view.problem, state.degree)}`,
+      text: 'Measured error reduction under h-refinement, with the true h. Observed rates are not a theoretical guarantee.'
+        + (l2 === null || h1 === null ? ` The ${W} is at the measurement floor, so the rate is undefined.` : '') },
+    { id: 'l2', cap: `${W} · global`, name: `${S}_L²`, value: norms.l2.toExponential(2), warn: tooClose,
+      formula: `${S}_L² = (∫ (${U} − u_h)² dx)^½`,
+      text: `Global ${W} between the reference and FEM solutions.` + (tooClose ? ' ⚠ It is at the level of the reference\'s own error: unreliable.' : '') },
+    { id: 'h1', cap: `${W} · derivative`, name: `${S}_H¹ (seminorm)`, value: norms.h1.toExponential(2),
+      formula: `|${U} − u_h|_H¹ = (∫ (${U}′ − u_h′)² dx)^½`,
+      text: `${W[0].toUpperCase() + W.slice(1)} of the spatial derivatives. This is the H¹ seminorm, not the full H¹ norm.` },
+    { id: 'max', cap: `${W} · pointwise`, name: `${S}_max (estimate)`, value: maxError.value.toExponential(2),
+      formula: `max |${U} − u_h| at x ≈ ${formatValue(maxError.x)}`,
+      text: `Largest pointwise ${W} found by the numerical search (32 points/element + local golden-section search): a lower estimate, not the exact maximum.` },
+    { id: 'node', cap: `${W} · nodes`, name: `${S}_node`, value: norms.nodal.toExponential(2),
+      formula: `${S}_node = max_i |${U}(x_i) − a_i|`,
+      text: `${W[0].toUpperCase() + W.slice(1)} at the mesh nodes only; it does not measure the ${W} inside elements.` }
   ];
-  $('tiles').innerHTML = tiles.map(([label, value, sub, warn]) =>
-    `<div class="tile${warn ? ' warn' : ''}"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`).join('');
+  const open = cards.find((c) => c.id === state.openMetric) || null;
+  $('tiles').innerHTML = '<div class="cards">' + cards.map((c) =>
+    `<button type="button" class="card${c.warn ? ' warn' : ''}${c.id === 'mesh' ? ' wide' : ''}" data-metric="${c.id}" aria-expanded="${c === open}" aria-controls="card-detail">`
+    + `<span class="cap">${c.cap}</span><span class="name">${c.name}</span><span class="val">${c.value}</span></button>`).join('') + '</div>'
+    + (open ? `<div class="card-detail" id="card-detail" role="region" aria-label="${open.name}"><div class="detail-title">${open.name} = ${open.value}</div>`
+      + `<div class="formula">${open.formula}</div><p>${open.text}</p></div>` : '');
 }
 
 /* Teşhis kutusu: sürekli problem (sunucu, SymPy; kanıt düzeyiyle) ve ayrık sistem (tarayıcı) bilgisi ayrı satırlarda.
    Ret gerektirmeyen durumlar burada uyarı olarak görünür; kanıtlanmış K1/K2 ise kırmızı hata yolundan gelir. */
 function renderDiagnostics() {
   const lines = [], c = exact.key === JSON.stringify(problemInputs()) ? exact.classification : null;
+  let warnings = 0;                               // uyarı satırı sayısı: özet şeridinde işaret olarak gösterilir
   const lead = view.problem.order === 2 ? 'α' : 'β';
-  if (exact.status === 'pending') lines.push('Sürekli problem: sınıflandırılıyor…');
-  else if (exact.status === 'offline') lines.push('Sürekli problem sınıflandırılamadı: sunucu yok (yalnız ayrık sistem teşhisi yapılıyor).');
+  if (exact.status === 'pending') lines.push('Continuous problem: classifying…');
+  else if (exact.status === 'offline') lines.push('Continuous problem not classified: no server (only the discrete system is diagnosed).');
   else if (c) {
-    const extra = c.assumptions?.length ? ` · varsayım: ${c.assumptions.join('; ')}` : '';
-    if (c.kind === 'unique') lines.push(`Sürekli problem: tek çözüm (${c.method}; ${c.evidence})${extra}.`);
+    const extra = c.assumptions?.length ? ` · assumption: ${c.assumptions.join('; ')}` : '';
+    // makine değeri (sunucu: symbolic / numeric_50) → ekranda görünen
+    const method = { symbolic: 'symbolic', numeric_50: 'numerical (50 digits)' }[c.method] || c.method;
+    if (c.kind === 'unique') lines.push(`Continuous problem: unique solution (${method}; ${c.evidence})${extra}.`);
     else if (c.kind === 'no_solution' || c.kind === 'non_unique')
-      lines.push(`Sürekli problem: ${c.kind === 'no_solution' ? 'çözüm yok' : 'tek değil'} — yalnız ${c.method} kanıt (matematiksel kanıt değil; ${c.evidence}).`);
-    else lines.push(`Sürekli problem sınıflandırılamadı: ${c.reason}.`);
+      lines.push(`Continuous problem: ${c.kind === 'no_solution' ? 'no solution' : 'not unique'} — only ${method} evidence (not a mathematical proof; ${c.evidence}).`);
+    else lines.push(`Continuous problem not classified: ${c.reason}.`);
   }
   const g = view.problem.degeneracy;
-  if (g.kind !== 'uniform')
-    lines.push(`${CATEGORY.K4} (uyarı): ${lead}(x*) = 0, x* ≈ ${g.points.map((q) => formatValue(q.x)).join(', ')}`
-      + ` (${g.kind === 'sign_changing' ? 'işaret değiştiriyor' : 'işaret değiştirmiyor'}; tarayıcıda sayısal tespit). Düzgün eliptiklik yok: standart yakınsama kuramı garanti değil; bu tek başına çözümsüzlük anlamına gelmez.`);
+  if (g.kind !== 'uniform' && ++warnings)
+    lines.push(`${CATEGORY.K4} (warning): ${lead}(x*) = 0, x* ≈ ${g.points.map((q) => formatValue(q.x)).join(', ')}`
+      + ` (${g.kind === 'sign_changing' ? 'changes sign' : 'does not change sign'}; detected numerically in the browser). No uniform ellipticity: standard convergence theory is not guaranteed; this alone does not mean there is no solution.`);
   const fo = view.results[state.degree].result.diagnostics.firstOrder;
-  if (fo) lines.push(`1. mertebe: test uzayı v = 0 u verilen düğümde (ders kitabı); atılan denklem i = ${fo.row}, kalıntı r = ${fo.residual.toExponential(2)}; `
-    + `sol sıfır uzayı |yᵀb|/(‖y‖‖b‖) = ${fo.scaled.toExponential(1)} → tam sistem ${fo.compatible ? 'uyumlu (satır seçimi sonucu değiştirmez)' : 'uyumsuz: başka bir satırın atılması (başka test uzayı) başka bir çözüm verir'}.`);
+  if (fo) lines.push(`First order: test space v = 0 at the node where u is given (textbook); dropped equation i = ${fo.row}, residual r = ${fo.residual.toExponential(2)}; `
+    + `left null space |yᵀb|/(‖y‖‖b‖) = ${fo.scaled.toExponential(1)} → the full system is ${fo.compatible ? 'consistent (the row choice does not change the result)' : 'inconsistent: dropping another row (another test space) gives another solution'}.`);
   for (const s of stabilityIndicators(view.problem, (view.problem.x1 - view.problem.x0) / state.n, state.degree))
-    if (s.warn) lines.push(`Kararlılık (uyarı): ${s.text}.`);
+    if (s.warn && ++warnings) lines.push(`Stability (warning): ${s.text}.`);
   const condition = view.results[state.degree].result.diagnostics.condition;
-  if (condition > COND_WARN)
-    lines.push(`${CATEGORY.K3} (uyarı, ayrık sistem): κ₁ ≈ ${condition.toExponential(1)} — sonuçta yaklaşık κ·ε ≈ ${(condition * 2.2e-16).toExponential(0)} göreli hata olabilir.`);
+  if (condition > COND_WARN && ++warnings)
+    lines.push(`${CATEGORY.K3} (warning, discrete system): κ₁ ≈ ${condition.toExponential(1)} — the result may carry a relative error of about κ·ε ≈ ${(condition * 2.2e-16).toExponential(0)}.`);
   $('diagnostics').hidden = !lines.length;
   $('diagnostics').innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
+  /* Tanı paneli: ölçü kartları yalnız açıkken görünür; özet satırı ve uyarı satırları her zaman. */
+  const result = view.results[state.degree].result, risky = result.quadratureError > QUADRATURE_WARNING;
+  if (risky) warnings++;
+  $('diag-summary').textContent = `κ₁(K) ≈ ${condition.toExponential(1)} (estimate) · quadrature error ${result.quadratureError.toExponential(1)}`
+    + (warnings ? ` · ⚠ ${warnings} warning${warnings === 1 ? '' : 's'}` : ' · no warnings');
+  $('diag-flag').hidden = !warnings;
+  $('diag-flag').textContent = `⚠ ${warnings} numerical warning${warnings === 1 ? '' : 's'}: see Numerical diagnostics below.`;
+  $('diag-toggle').setAttribute('aria-expanded', String(state.diagOpen));
+  $('diag-toggle').textContent = state.diagOpen ? 'Hide details' : 'Show details';
+  $('diag-metrics').hidden = !state.diagOpen;
+  const metric = (name, value, sub, warn) => `<div class="metric${warn ? ' warn' : ''}"><div class="label">${name}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+  $('diag-metrics').innerHTML = [
+    metric('Condition estimate κ₁(K)', condition.toExponential(1), 'κ₁ = ‖K‖₁‖K⁻¹‖₁ of the assembled stiffness matrix after the boundary conditions (Hager–Higham estimate, a lower bound) · estimates the sensitivity of the assembled matrix to numerical perturbations', condition > COND_WARN),
+    metric('Quadrature error', result.quadratureError.toExponential(1), (risky ? '⚠ coefficients not smooth; integrals approximate' : '✓ integrals reliable') + ' · estimates the consistency of numerical integration; it is not the FEM solution error', risky)
+  ].join('');
 }
 
 function renderChips() {
-  const chip = (id, text, color, pressed, active) =>
-    `<button type="button" class="chip${active ? ' active' : ''}" id="chip-${id}" data-chip="${id}" aria-pressed="${pressed}" style="--chip-color:${color}">${text}</button>`;
-  const referenceText = view?.analytic ? 'analitik u(x)' : 'referans u_ref (ince ağ)';
-  $('chips').innerHTML = chip('reference', referenceText, 'var(--ink)', state.showReference, false) +
-    [1, 2, 3, 4].map((p) => chip(p, `${DEGREE_NAMES[p]} (p=${p})${p === state.degree ? ' · aktif' : ''}`, seriesColor(p), p === state.degree || state.compare.has(p), p === state.degree)).join('');
+  /* Çip, grafikteki çizginin örneğini taşır (desen + ton): lejant ayrıca gerekmez. */
+  const sample = (color, dash, width) => `<svg class="chip-line" viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="23" y2="4" stroke="${color}" stroke-width="${width}" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/></svg>`;
+  const chip = (id, text, color, pressed, active, dash = '', width = 2.2) =>
+    `<button type="button" class="chip${active ? ' active' : ''}" id="chip-${id}" data-chip="${id}" aria-pressed="${pressed}" style="--chip-color:${color}">${sample(color, dash, width)}${text}</button>`;
+  const referenceText = view?.analytic ? 'analytical u(x)' : 'reference u_ref (fine mesh)';
+  $('chips').innerHTML = chip('reference', referenceText, REFERENCE_COLOR, state.showReference, false, REFERENCE_DASH, 2.8) +
+    [1, 2, 3, 4].map((p) => chip(p, `${DEGREE_NAMES[p]} (p=${p})${p === state.degree ? ' · active' : ''}`, seriesColor(p), p === state.degree || state.compare.has(p), p === state.degree, degreeDash(p))).join('');
 }
 
 /* Düğüm işaretleri: her derece kendi düğümlerini taşır (P2/P3'ün iç düğümleri farklı x'tedir).
@@ -1592,7 +1900,7 @@ const MARKER_LIMIT = { active: 129, other: 65 };
 function nodeMarkers(entry, active) {
   const { mesh, result } = entry;
   if (mesh.dofs > (active ? MARKER_LIMIT.active : MARKER_LIMIT.other)) return [];
-  return result.c.map((value, i) => [mesh.nodeX(i), value, { hollow: i % mesh.p !== 0, r: active ? 4 : 2.6 }]);
+  return result.c.map((value, i) => [mesh.nodeX(i), value, { hollow: i % mesh.p !== 0, r: active ? 4 : 2.6, shape: DEGREE_STYLE[mesh.p].shape }]);
 }
 
 function renderCharts() {
@@ -1611,15 +1919,19 @@ function renderCharts() {
   const boundaries = state.n <= 32 ? Array.from({ length: state.n + 1 }, (_, e) => state.x0 + e * active.mesh.h) : [];
 
   const series = degrees.map((p) => ({
-    name: `${DEGREE_NAMES[p]} u_h`, color: seriesColor(p), points: curve(p), width: p === state.degree ? 2.5 : 1.75,
+    name: `${DEGREE_NAMES[p]} u_h`, color: seriesColor(p), dash: degreeDash(p), points: curve(p), width: p === state.degree ? 3.2 : 1.75, glow: p === state.degree,
     markers: nodeMarkers(results[p], p === state.degree)
   }));
-  if (state.showReference) series.unshift({ name: view.analytic ? 'analitik u' : 'u_ref', color: 'var(--ink)', points: xs.map((x) => [x, u(x)]), width: 1.25, dash: '5 4', onTop: true });
-  drawChart($('chart-approx'), { height: 340, series, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: 'u', label: 'Referans çözüm ve seçili sonlu eleman çözümleri' });
+  /* Referans üstte, uzun kesikli mavi: FEM eğrisiyle çakıştığı yerde mavi-turuncu dönüşümlü görünür, ayrıldığı yerde ikisi de seçilir. */
+  if (state.showReference) series.push({ name: view.analytic ? 'analytical u' : 'u_ref', color: REFERENCE_COLOR, dash: REFERENCE_DASH, points: xs.map((x) => [x, u(x)]), width: 2.8, onTop: true, glow: true });
+  $('approx-title').textContent = view.analytic ? 'Analytical vs FEM solution' : 'Reference vs FEM solution';
+  $('approx-desc').textContent = view.analytic ? 'Compare the analytical solution with its finite element approximation.'
+    : 'Compare the fine-mesh reference (n = 128, p = 4) with the finite element approximation; no analytical solution is available.';
+  drawChart($('chart-approx'), { height: 340, series, vlines: boundaries, xName: 'x', xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: 'u', label: 'Reference solution and selected finite element solutions' });
   const hidden = degrees.filter((p) => results[p].mesh.dofs > MARKER_LIMIT[p === state.degree ? 'active' : 'other']);
-  $('node-legend').textContent = '● eleman uç düğümü · ○ eleman içi düğüm (p ≥ 2) · kesikli dikey çizgi: eleman sınırı'
-    + (hidden.length ? ` · ${hidden.map((p) => `p=${p}`).join(', ')}: düğüm çok sık, işaret gösterilmiyor` : '')
-    + (boundaries.length ? '' : ' (n > 32: sınır çizgileri gizli)');
+  $('node-legend').textContent = 'Line and marker per degree: P1 solid ●, P2 dashed ■, P3 dotted ▲, P4 dash-dot ◆ · filled: element end node, hollow: interior node (p ≥ 2) · thin dashed vertical line: element boundary · vermilion: FEM u_h · blue long-dash: reference'
+    + (hidden.length ? ` · ${hidden.map((p) => `p=${p}`).join(', ')}: nodes too dense, markers hidden` : '')
+    + (boundaries.length ? '' : ' (n > 32: boundary lines hidden)');
 
   /* Noktasal hata: işaretli (u − u_h) doğrusal eksende ya da mutlak |u − u_h| log eksende. Değerler olduğu gibi çizilir.
      İşaretli görünümde otomatik ölçek ±ölçüm tabanını (floors.point, mutlak görünüm ve yakınsamadaki tabanın aynısı) her zaman
@@ -1628,73 +1940,77 @@ function renderCharts() {
      davranış); daha küçük değerler (0 dahil) alt kenarda gösterilir, gerçek değer imleç kutusundadır. */
   const absolute = state.errorView === 'abs';
   const W = errWord();
-  $('error-title').textContent = absolute ? `Mutlak noktasal ${W}` : `İşaretli noktasal ${W}`;
+  $('error-title').textContent = absolute ? `Absolute pointwise ${W}` : `Signed pointwise ${W}`;
+  $('error-desc').textContent = absolute ? `See where the ${W} is largest (log scale).`
+    : `See where the FEM approximation overestimates or underestimates the ${view.analytic ? 'analytical' : 'reference'} solution.`;
   $('error-hint').innerHTML = (absolute
-    ? `|${U}(x) − u<sub>h</sub>(x)|, log eksen; noktalar: düğümde |${U}(x<sub>i</sub>) − a<sub>i</sub>|; taralı: ölçüm tabanı (altındakiler alt kenarda)`
-    : `${U}(x) − u<sub>h</sub>(x), seçili n için (pozitif: u<sub>h</sub> altta); taralı: ±ölçüm tabanı ${formatValue(floors.point)}, içindeki dalgalanma yuvarlama düzeyinde`)
-    + (view.analytic ? '' : ' · ince ağa göre fark, gerçek hata değil');
+    ? `|${U}(x) − u<sub>h</sub>(x)|, log axis; dots: at the nodes |${U}(x<sub>i</sub>) − a<sub>i</sub>|; shaded: measurement floor (values below sit on the bottom edge)`
+    : `${U}(x) − u<sub>h</sub>(x) for the selected n (positive: u<sub>h</sub> below); shaded: ±measurement floor ${formatValue(floors.point)}, fluctuations inside it are at round-off level`)
+    + (view.analytic ? '' : ' · difference from the fine mesh, not the true error');
   const floorPoint = floors.point;
   drawZoomable('error', absolute ? {
-    height: 240, yLog: true, band: floorPoint, yAutoMin: floorPoint / 10, pinBelow: true, vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `|${U} − u_h|`, label: 'Mutlak noktasal hata',
+    height: 240, yLog: true, band: floorPoint, yAutoMin: floorPoint / 10, pinBelow: true, vlines: boundaries, xName: 'x', xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: `|${U} − u_h|`, label: 'Absolute pointwise error',
     series: degrees.map((p) => ({
-      name: DEGREE_NAMES[p], color: seriesColor(p), width: p === state.degree ? 2 : 1.5,
+      name: DEGREE_NAMES[p], color: ERROR_COLOR, dash: degreeDash(p), width: p === state.degree ? 2.4 : 1.5, glow: p === state.degree,
       points: curve(p).map(([x, v]) => [x, Math.abs(u(x) - v)]),
       markers: p === state.degree && results[p].mesh.dofs <= MARKER_LIMIT.active
-        ? results[p].result.c.map((a, i) => { const x = results[p].mesh.nodeX(i); return [x, Math.abs(u(x) - a), { r: 3 }]; }) : []
+        ? results[p].result.c.map((a, i) => { const x = results[p].mesh.nodeX(i); return [x, Math.abs(u(x) - a), { r: 3, shape: DEGREE_STYLE[p].shape }]; }) : []
     }))
   } : {
-    height: 240, zeroLine: true, bandAbs: floorPoint, yInclude: [-floorPoint, floorPoint], vlines: boundaries, xName: 'x', xTitle: 'x', yTitle: `${U} − u_h`, label: 'İşaretli noktasal hata',
-    series: degrees.map((p) => ({ name: DEGREE_NAMES[p], color: seriesColor(p), points: curve(p).map(([x, v]) => [x, u(x) - v]), width: p === state.degree ? 2 : 1.5 }))
+    height: 240, zeroLine: true, bandAbs: floorPoint, yInclude: [-floorPoint, floorPoint], vlines: boundaries, xName: 'x', xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: `${U} − u_h`, label: 'Signed pointwise error',
+    series: degrees.map((p) => ({ name: DEGREE_NAMES[p], color: ERROR_COLOR, dash: degreeDash(p), points: curve(p).map(([x, v]) => [x, u(x) - v]), width: p === state.degree ? 2.4 : 1.5, glow: p === state.degree }))
   });
 
   /* Yakınsama: seçili norm (L² ya da H¹ yarı-normu). Dolu nokta hıza katılır; boş nokta ölçüm tabanındadır, katılmaz.
      Satır sonu: gözlenen hız (gerçek h ile) ya da tanımsızsa "—". Kesikli gri: kuramsal eğim (yalnız kuramın geçerli
      olduğu 2. mertebe sınır değer probleminde), son geçerli ölçüme sabitlenir. */
   const norm = state.convNorm, k = (p) => (norm === 'l2' ? p + 1 : p);
-  const of = W === 'hata' ? 'hatası' : 'farkı';                     // Türkçe iyelik: "L² hatası" / "L² farkı"
-  const normName = norm === 'l2' ? `L² ${of}` : `H¹ yarı-norm ${of}`;
+  const of = W === 'error' ? 'error' : 'difference';                     // Türkçe iyelik: "L² hatası" / "L² farkı"
+  const normName = norm === 'l2' ? `L² ${of}` : `H¹ seminorm ${of}`;
   const yTitle = norm === 'l2' ? `‖${U} − u_h‖_L²` : `|${U} − u_h|_H¹`;
   if (state.convMode === 'p') {
     /* p-inceltme: ağ sabit (n, h değişmez), yalnız derece artar. h-hızı HESAPLANMAZ (h değişmiyor); yalnız ölçülen değerler.
        Noktalar derecenin rengiyle; ○ ölçüm tabanında. N = np + 1 her noktada farklıdır (ipucunda yazılı). */
-    $('conv-title').textContent = `p-inceltme: ${normName}`;
-    $('conv-hint').innerHTML = `Ağ sabit: n = ${state.n}, h = ${formatValue(active.mesh.h)}; derece p = 1 → 4 (bilinmeyen sayısı N = `
-      + view.pStudy.map((o) => o.dofs).join(' → ') + `). Yalnız ölçülen ${W}lar; p-inceltmede h-hızı tanımsızdır. `
-      + 'h-inceltme n\'yi (h\'yi), p-inceltme dereceyi, hp-inceltme ikisini birden değiştirir (burada gösterilmez). ○ ölçüm tabanında; taralı bölge bu taban.';
+    $('conv-title').textContent = `p-refinement: ${normName}`;
+    $('conv-desc').textContent = `Observe how the ${W} changes as the degree increases on a fixed mesh.`;
+    $('conv-hint').innerHTML = `Fixed mesh: n = ${state.n}, h = ${formatValue(active.mesh.h)}; degree p = 1 → 4 (number of unknowns N = `
+      + view.pStudy.map((o) => o.dofs).join(' → ') + `). Measured ${W}s only; the h-rate is undefined under p-refinement. `
+      + 'h-refinement changes n (h), p-refinement the degree, hp-refinement both (not shown here). ○ at the measurement floor; the shaded region is this floor.';
     const floor = floors[norm], h = active.mesh.h;
     drawZoomable('conv', {
-      height: 240, yLog: true, xTicks: [1, 2, 3, 4], xName: 'p', xTitle: 'p', yTitle, band: floor(h), label: 'Sabit ağda derece artışıyla hata',
+      height: 240, yLog: true, xTicks: [1, 2, 3, 4], xName: 'p', xTitle: 'p', yTitle, band: floor(h), label: 'Error as the degree increases on a fixed mesh',
       series: [{ name: `n = ${state.n}`, color: 'var(--ink-2)', width: 1.25, points: view.pStudy.map((o) => [o.p, o[norm]]) },
-        ...view.pStudy.map((o) => ({ name: `p=${o.p}`, color: seriesColor(o.p), width: 0, points: [[o.p, o[norm]]],
-          markers: [[o.p, o[norm], { hollow: !(o[norm] > floor(h)), r: o.p === state.degree ? 6 : 4.5 }]] }))]
+        ...view.pStudy.map((o) => ({ name: `p=${o.p}`, color: ERROR_COLOR, width: 0, points: [[o.p, o[norm]]],
+          markers: [[o.p, o[norm], { hollow: !(o[norm] > floor(h)), r: o.p === state.degree ? 6 : 4.5, shape: DEGREE_STYLE[o.p].shape }]] }))]
     });
     return;
   }
-  $('conv-title').textContent = `h-inceltme: ${normName}`;
-  $('conv-hint').textContent = 'Derece sabit, n (h = (x₁ − x₀)/n) değişir; iki eksen log. Satır sonu: gerçek h ile ölçülen hız '
-    + 'r = log(E_kaba/E_ince)/log(h_kaba/h_ince). ● hıza katılan ölçüm · ○ ölçüm tabanında (yuvarlama ya da referansın kendi hatası), '
-    + 'katılmaz; taralı bölge bu taban. Kesikli gri: kuramsal eğim.';
+  $('conv-title').textContent = `Spatial convergence (h-refinement): ${normName}`;
+  $('conv-desc').textContent = `Observe how the ${W} changes as the mesh is refined.`;
+  $('conv-hint').textContent = 'Fixed degree, n (h = (x₁ − x₀)/n) varies; both axes log. End of line: rate measured with the true h '
+    + 'r = log(E_coarse/E_fine)/log(h_coarse/h_fine). ● measurement used for the rate · ○ at the measurement floor (round-off or the reference\'s own error), '
+    + 'not used; the shaded region is this floor. Dashed grey: theoretical slope.';
   const hMin = (problem.x1 - problem.x0) / CONVERGENCE_NS[CONVERGENCE_NS.length - 1];
   const convSeries = degrees.map((p) => {
     const floor = floors[norm], rate = rateOf(p, norm);
     return {
-      name: DEGREE_NAMES[p], color: seriesColor(p), width: p === state.degree ? 2 : 1.5,
+      name: DEGREE_NAMES[p], color: ERROR_COLOR, dash: degreeDash(p), width: p === state.degree ? 2.4 : 1.5,
       points: study[p].map((o) => [o.n, o[norm]]),
-      markers: study[p].map((o) => [o.n, o[norm], { hollow: !(o[norm] > floor(o.h)) }]),
+      markers: study[p].map((o) => [o.n, o[norm], { hollow: !(o[norm] > floor(o.h)), shape: DEGREE_STYLE[p].shape }]),
       highlight: [state.n, results[p].norms[norm]],
-      endLabel: rate === null ? 'hız —' : `hız ${rate.rate.toFixed(2)}`
+      endLabel: rate === null ? 'rate —' : `rate ${rate.rate.toFixed(2)}`
     };
   });
   const activeRate = rateOf(state.degree, norm);
   if (problem.order === 2 && !problem.ivp && activeRate) {
     const anchor = activeRate.to, slope = k(state.degree);
     const ns = CONVERGENCE_NS.filter((n) => n <= anchor.h ** -1 * (problem.x1 - problem.x0) * 1.0001);
-    convSeries.push({ name: `kuramsal h^${slope}`, color: 'var(--ink-2)', width: 1, dash: '2 4',
-      points: ns.map((n) => [n, anchor.E * ((problem.x1 - problem.x0) / n / anchor.h) ** slope]), endLabel: `kuramsal h^${slope}` });
+    convSeries.push({ name: `theory h^${slope}`, color: 'var(--ink-2)', width: 1, dash: '2 4',
+      points: ns.map((n) => [n, anchor.E * ((problem.x1 - problem.x0) / n / anchor.h) ** slope]), endLabel: `theory h^${slope}` });
   }
   drawZoomable('conv', {
     height: 240, xLog: true, yLog: true, xTicks: CONVERGENCE_NS, xName: 'n', xTitle: 'n', yTitle,
-    band: floors[norm](hMin), label: 'Hatanın eleman sayısıyla değişimi', series: convSeries
+    band: floors[norm](hMin), label: 'Error versus number of elements', series: convSeries
   });
 }
 
@@ -1706,7 +2022,7 @@ function renderZoomTools(id) {
   const zoomed = !!info && state.chartZoom[id]?.key === info.key;
   $(`chart-${id}`).classList.toggle('zoomed', zoomed);
   tools.querySelector('[data-zoom-act="reset"]').disabled = !zoomed;
-  tools.querySelector('[data-zoom-status]').textContent = zoomed ? 'ölçek: elle' : 'ölçek: otomatik';
+  tools.querySelector('[data-zoom-status]').textContent = zoomed ? 'scale: manual' : 'scale: automatic';
   document.querySelector(`[data-zoom-msg="${id}"]`).textContent = state.zoomNote[id];
   if (!info) return;
   [['lo', 0], ['hi', 1]].forEach(([which, i]) => {
@@ -1733,7 +2049,7 @@ function zoomAction(id, act) {
   if (act === 'reset') { state.chartZoom[id] = null; state.zoomNote[id] = ''; return render(); }
   if (act === 'fit') {
     const fitted = fitRange(info.points, x, info.fx, info.fy, info.yLog);
-    if (!fitted) { state.zoomNote[id] = 'Görünür x aralığında eksene yerleştirilebilir değer yok.'; return render(); }
+    if (!fitted) { state.zoomNote[id] = 'No value in the visible x range can be placed on the axis.'; return render(); }
     return setZoom(id, x, fitted);
   }
   const factor = act === 'in' ? 1 / ZOOM_STEP : ZOOM_STEP;
@@ -1806,17 +2122,270 @@ function renderPreview() {
   } catch { $('eq-preview').textContent = ''; $('bc-preview').textContent = ''; }
 }
 
+/* ---------- Basis functions kartı ----------
+   Neden burada: hangi problem çözülürse çözülsün (her n, her p) o ağın global taban fonksiyonları N_j ve u_h = Σ a_j N_j
+   kuruluşu görünsün. Hesap yapılmaz: N_j basis_core.js üzerinden ÇÖZÜCÜNÜN shapeFunctions/shapeDerivatives'inden, a_j
+   çözümün c vektöründen gelir. Kapalıyken yalnız N_j grafiği çizilir (gereksiz grafik/türetme yok). basis_core.js
+   yüklenemediyse BASIS null'dır ve kart gizli kalır. */
+const BASIS = typeof femExtension === 'function' ? femExtension({ shapeFunctions, shapeDerivatives, gaussLegendre, solveLinear, luSolve }) : null;
+const subDigits = (k) => String(k).split('').map((c) => '₀₁₂₃₄₅₆₇₈₉'[+c]).join('');
+function renderBasis(computed) {
+  const card = $('basis-card');
+  card.hidden = !BASIS || !view;
+  if (card.hidden) return;
+  card.classList.toggle('outdated', !computed);
+  $('basis-toggle').setAttribute('aria-expanded', String(state.basisOpen));
+  $('basis-toggle').textContent = state.basisOpen ? 'Hide details' : 'Show details';
+  $('basis-details').hidden = !state.basisOpen;
+  if (!computed) return;
+  const p = state.degree, { mesh, result } = view.results[p], grid = BASIS.makeGrid(mesh.b - mesh.a, mesh.n, p, mesh.a);
+  const count = grid.count, a = result.c, shape = DEGREE_STYLE[p].shape;
+  if (!(state.basisNode >= 1 && state.basisNode <= count)) state.basisNode = mesh.n >= 2 ? Math.floor(mesh.n / 2) * p + 1 : 1;
+  const j = state.basisNode, ink = 'var(--c-basis)', soft = 'var(--c-basis-soft)', bounds = Array.from({ length: mesh.n + 1 }, (_, e) => mesh.a + e * mesh.h);
+  const slider = $('basis-node');
+  slider.max = String(count);
+  slider.value = String(j);
+  const supEls = grid.connectivity.map((nodes, e) => (nodes.includes(j) ? e + 1 : 0)).filter(Boolean);
+  $('basis-node-val').textContent = `j = ${j} of ${count} · x = ${fmtNum(grid.x[j - 1])} · element${supEls.length === 1 ? '' : 's'} ${supEls.join(', ')}`;
+  $('basis-title').textContent = `Mesh and basis functions — ${DEGREE_NAMES[p]} (P${p}) · ${mesh.n} element${mesh.n === 1 ? '' : 's'} · ${count} nodes`;
+  const many = count > 65, sel = BASIS.globalBasis(grid, j, 41), series = [];   // çok düğümde yalnız seçilen ve komşuları
+  for (let I = 1; I <= count; I++) {
+    if (I === j || (many && Math.abs(I - j) > p)) continue;
+    for (const sg of BASIS.globalBasis(grid, I, 21).segs) if (sg.local !== null) series.push({ points: sg.x.map((x, k) => [x, sg.N[k]]), color: soft, width: 1.2, dash: degreeDash(p) });
+  }
+  for (const sg of sel.segs) if (sg.local !== null) series.push({ points: sg.x.map((x, k) => [x, sg.N[k]]), color: ink, width: 2.8, dash: degreeDash(p), onTop: true, glow: true });
+  series.push({ points: [], color: ink, markers: grid.x.map((x, k) => [x, k + 1 === j ? 1 : 0, { r: k + 1 === j ? 4.5 : 2.5, hollow: k % p !== 0, shape }]), onTop: true });
+  drawChart($('basis-chart'), { height: 230, series, vlines: mesh.n <= 32 ? bounds : [], zeroLine: true, yInclude: [0, 1], xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: `N_j(x); bold: N${subDigits(j)}` });
+  $('basis-hint').textContent = 'Global basis functions N_j, assembled from the local shape functions N_k^(e) the solver uses. Light green: other N_j · filled: element end node, hollow: interior node · dashed vertical line: element boundary'
+    + (many ? ` · ${count} nodes: only the selected node and its neighbours are drawn` : '');
+  if (!state.basisOpen) return;
+  drawChart($('basis-dchart'), { height: 230, series: sel.segs.filter((sg) => sg.local !== null).map((sg) => ({ points: sg.x.map((x, k) => [x, sg.dN[k]]), color: 'var(--c-deriv)', width: 2.4, dash: degreeDash(p) })),
+    vlines: mesh.n <= 32 ? bounds : [], zeroLine: true, xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: `dN${subDigits(j)}/dx` });   // süreksizlik notu kart açıklamasında (dar grafikte başlık kesilmesin)
+  /* u_h = Σ a_j N_j: her katkı ince kesikli, seçilenin katkısı koyu, toplam kalın. Değerler çözümün kendi a_j'leridir. */
+  const segs = BASIS.interpolate(grid, a, 41), uh = [];
+  for (const sg of segs) for (const part of sg.parts) {
+    if (many && Math.abs(part.I - j) > p) continue;
+    uh.push({ points: sg.x.map((x, k) => [x, part.values[k]]), color: part.I === j ? ink : soft, width: part.I === j ? 2 : 1, dash: '5 4' });
+  }
+  for (const sg of segs) uh.push({ points: sg.x.map((x, k) => [x, sg.T[k]]), color: 'var(--c-fem)', width: 3.2, onTop: true });
+  drawChart($('basis-uh'), { height: 230, series: uh, vlines: mesh.n <= 32 ? bounds : [], zeroLine: true, xTitle: xAxisTitle(), xAngular: radianAxis(), yTitle: `u_h · a_j N_j (j = ${j} dark)` });
+  const pr = BASIS.basisProperties(grid, 12);
+  $('basis-props').textContent = `Measured on this mesh: max|N_i(x_j) − δ_ij| = ${pr.delta.toExponential(1)} · max|Σ_j N_j − 1| = ${pr.unity.toExponential(1)} · max|Σ_j dN_j/dx|·h = ${pr.slope.toExponential(1)}`;
+  renderBasisDerivation(grid, mesh, a, j, sel);
+}
+
+/* Türetme, yaklaşık çözümden başlayarak: N_j, u_h'nin a_j'ye göre türevidir (a_j = 1, diğerleri 0 iken u_h). Buradan
+   N_j(x_i) = δ_ij şartı, tek elemanda bu şartı sağlayan tek polinom (Lagrange; P1–P3 kitabın ifadesi, P4 çözücünün tanımı),
+   x'e dönüşüm ve parçaların birleştirilmesi gelir; son adım bu çözümün sayılarıyla kontrol. Ağır notasyon (türev listeleri,
+   u_h′) çıkarıldı: türev grafiği ayrıca çiziliyor. Sürgü sürüklenirken MathJax her adımda çalışmasın diye dizgi gecikmeli. */
+let basisDerivationTimer = null;
+function renderBasisDerivation(grid, mesh, a, j, sel) {
+  const p = mesh.p, book = BASIS.BOOK[p], src = book || BASIS.SOLVER_P4, e = sel.support[0], h = mesh.h;
+  const xe = mesh.a + (e - 1) * h, nodes = grid.connectivity[e - 1], num = (v) => fmtNum(Math.abs(v) < 1e-300 ? 0 : v);
+  const xiNodes = BASIS.localNodes(p).map((t) => fmtNum(t)).join(',\\ ');
+  const srcNote = book ? (book.naturalSource === 'book' ? `\\text{(Heinrich–Pepper ${book.naturalEq})}` : '\\text{(from (3.25) with } x = h(1+\\xi)/2 \\text{; the } \\xi \\text{ form is not in the book)}')
+    : '\\text{(no P4 in the book: the solver’s equally spaced Lagrange definition)}';
+  const pieces = sel.segs.filter((sg) => sg.local !== null);
+  const blocks = [
+    ['1 · Start from the approximation', `N_${j} is what u_h becomes when a_${j} = 1 and every other coefficient is 0.`,
+      `u_h(x) = \\sum_{i=1}^{${grid.count}} a_i\\,N_i(x)\\qquad\\Longrightarrow\\qquad N_{${j}}(x) = \\frac{\\partial u_h}{\\partial a_{${j}}} = u_h(x)\\Big|_{a_{${j}} = 1,\\ a_{i \\ne ${j}} = 0}`],
+    ['2 · What it must satisfy', `Each coefficient must be the value of u_h at its own node, so N_${j} is 1 at node ${j} and 0 at every other node.`,
+      `u_h(x_i) = a_i\\ \\text{for every node } i\\qquad\\Longrightarrow\\qquad N_{${j}}(x_i) = \\delta_{${j}i} = \\begin{cases} 1, & i = ${j} \\\\ 0, & i \\ne ${j} \\end{cases}`],
+    ['3 · On one element: the only polynomial that does this', `Inside an element u_h is a polynomial of degree p = ${p}; it is fixed by its ${p + 1} nodal values, which gives the Lagrange form on the reference element ξ ∈ [−1, 1].`,
+      `\\xi_k = ${xiNodes},\\qquad N_k(\\xi) = \\prod_{m \\ne k} \\frac{\\xi - \\xi_m}{\\xi_k - \\xi_m}\\qquad\\Longrightarrow\\qquad `
+      + src.natural.map((f, k) => `N_{${k + 1}} = ${f}`).join(',\\ \\ ') + `\\quad ${srcNote}`],
+    [`4 · Map to element Ω${subDigits(e)} = [${num(xe)}, ${num(xe + h)}]`, 'The same shapes are stretched onto each physical element.',
+      `x = ${num(xe)} + \\frac{h}{2}(1 + \\xi),\\qquad h = ${num(h)},\\qquad J = \\frac{dx}{d\\xi} = \\frac{h}{2} = ${num(h / 2)}\\quad \\text{(3.65)}`],
+    [`5 · Glue the pieces: global N${subDigits(j)}`, `Node ${j} belongs to element${pieces.length === 1 ? '' : 's'} ${pieces.map((sg) => sg.element).join(' and ')}; N_${j} is their local shape function there and 0 everywhere else.`,
+      pieces.map((sg) => `N_{${j}}\\big|_{\\Omega_{${sg.element}}} = N_{${sg.local}}(\\xi)`).join(',\\qquad ') + `,\\qquad N_{${j}} = 0 \\text{ elsewhere}`],
+    [`6 · Check with the computed solution on Ω${subDigits(e)}`, 'Putting the solver’s coefficients back in gives the FEM solution on this element.',
+      `u_h\\big|_{\\Omega_{${e}}} = ` + nodes.map((I, k) => `a_{${I}}\\,N_{${k + 1}}(\\xi)`).join(' + ')
+      + ' = ' + nodes.map((I, k) => `${num(a[I - 1])}\\,N_{${k + 1}}(\\xi)`).join(' + ').replace(/\+ -/g, '- ')]
+  ];
+  const el = $('basis-derivation');
+  clearTimeout(basisDerivationTimer);
+  basisDerivationTimer = setTimeout(() => {
+    el.innerHTML = blocks.map(([title, text, tex]) => `<span class="label">${title}</span><p class="step-text">${text}</p>$$${tex}$$`).join('');
+    typeset(el);
+  }, 180);
+}
+
+/* ---------- FEM Simulation panelleri ----------
+   Neden iki panel: "Approximation" (nasıl yaklaşıyoruz: ağ ve taban; denklemden bağımsız) ve "Solution" (katsayılar nasıl bulunuyor:
+   Galerkin cebiri, denkleme özgü; sonra sonuç ve hata) farklı sorulara cevap verir; her birinin kendi zaman çubuğu var.
+   Neden burada: fem_sim.js veriyi ve kareyi üretir; düğmeler, zamanlayıcı ve durum burada (tek durum nesnesi). Veri çözücünün
+   sonucundan kurulur ve problem/ağ değişmedikçe yeniden kurulmaz (simCache durum değil, türevdir).
+   Oynatma: her tik yalnız o panelin adımını ilerletir ve yalnız o paneli yeniden çizer. Kontroller kurala uyar: state değişir → render(). */
+const SIM = BASIS && typeof femSimulation === 'function' ? femSimulation({ basis: BASIS, evaluate, elementSystem }) : null;
+const SIM_STEP_MS = 900;                          // 1× hızda bir yapım adımının ekranda kalma süresi
+const SIM_PANELS = [{ pk: 'sim', panel: 'approx' }, { pk: 'sol', panel: 'solution' }];
+const SIM_3D_STAGES = new Set(['domain', 'mesh', 'element', 'local', 'global', 'approx', 'reference', 'error']);   // matris aşamaları yalnız 2B
+let simCache = { key: '', data: null, stages: null, by: null };
+const simTimers = { sim: null, sol: null }, sim3ds = { sim: null, sol: null }, sim3dLoading = { sim: false, sol: false }, simFormulaKey = { sim: '', sol: '' };
+/* Solution paneli kâğıdın adım adım gezintisidir: kâğıt sunucudan (SymPy) gelir. Neden ayrı istek: kâğıt paneli kapalıyken hiç
+   hesaplanmaz; bu panel ekrana girince (IntersectionObserver) istenir ve sonra problem/ağ değiştikçe gecikmeli yenilenir. ESKİ bir
+   kâğıt asla gösterilmez: anahtar (problem + n + p + yöntem) tutmuyorsa yerleşik formüle düşülür. Sunucu yoksa grafikler çalışır. */
+let simSheet = { key: '', status: 'idle', sections: null }, simSheetTimer = null, simSheetWanted = false;
+const SIM_SHEET_DEBOUNCE = 900;
+function ensureSimSheet() {
+  if (!SIM || !view || !simSheetWanted) return;
+  const key = JSON.stringify(sheetPayload());
+  if (simSheet.key === key && simSheet.status !== 'idle') return;
+  clearTimeout(simSheetTimer);
+  if (state.sheet && state.sheetKey === key) { simSheet = { key, status: 'ok', sections: SIM.parseSheet(state.sheet.text) }; return; }   // açık kâğıt aynıysa yeniden istenmez
+  simSheet = { key, status: 'pending', sections: null };
+  simSheetTimer = setTimeout(async () => {
+    try {
+      const data = await requestSheet(sheetPayload());
+      if (simSheet.key === key) simSheet = { key, status: 'ok', sections: SIM.parseSheet(data.text) };
+    } catch { if (simSheet.key === key) simSheet = { key, status: 'error', sections: null }; }
+    simFormulaKey.sim = simFormulaKey.sol = '';
+    renderSimulation();
+  }, SIM_SHEET_DEBOUNCE);
+}
+const currentSimSheet = () => (simSheet.status === 'ok' && simSheet.key === JSON.stringify(sheetPayload()) ? simSheet.sections : null);
+function simData() {
+  const p = state.degree, { mesh, result } = view.results[p];
+  const key = JSON.stringify([problemInputs(), state.method, state.n, p, view.analytic, view.analytic ? exact.level : null]);
+  if (simCache.key !== key) {
+    const data = SIM.buildSimulationData({
+      angular: radianAxis(),
+      problem: view.problem, mesh, c: result.c, xs: sampleXs(mesh), maxError: view.results[p].maxError,
+      solved: { K: result.K, F: result.F, condition: result.diagnostics.condition },
+      tex: { equation: equationTex(view.problem), conditions: conditionsTex(view.problem) },
+      reference: view.u ? { u: view.u, type: view.analytic ? 'analytical' : 'fine_mesh', level: view.analytic ? exact.level : 'n = 128, p = 4' } : null
+    });
+    const stages = SIM.buildStages(data);
+    simCache = { key, data, stages, by: { approx: SIM.stagesFor(stages, 'approx'), solution: SIM.stagesFor(stages, 'solution') } };
+    simFormulaKey.sim = simFormulaKey.sol = '';
+  }
+  return simCache;
+}
+function renderSimulation(computed = true) {
+  const visible = !!SIM && !!view;
+  for (const { pk } of SIM_PANELS) $(`${pk}-panel`).hidden = !visible;
+  if (!visible || !computed) {
+    for (const { pk } of SIM_PANELS) { stopSimulation(pk); $(`${pk}-panel`).classList.toggle('outdated', visible && !computed); }
+    return;
+  }
+  simData();
+  ensureSimSheet();
+  for (const { pk, panel } of SIM_PANELS) { $(`${pk}-panel`).classList.remove('outdated'); renderSimPanel(pk, panel); }
+}
+function renderSimPanel(pk, panel) {
+  const { data } = simCache, stages = simCache.by[panel], ps = state.sim.panels[pk];
+  const where = SIM.locateStep(stages, ps.step);
+  ps.step = where.step;                           // ağ küçülünce adım sayısı azalabilir: geçerli kareye kırp
+  const host = $(`${pk}-chart`), inst = sim3ds[pk];
+  const threeD = ps.view === '3d' && !!inst && SIM_3D_STAGES.has(where.stage.id);
+  const opts = { node: state.basisNode, element: state.sim.element, cell: state.sim.cell, showMesh: state.sim.showMesh, showLabels: state.sim.showLabels };
+  /* 2B kare her zaman üretilir: not, lejant, formül ve sorgu 2B ile 3B'de AYNI metindir. 3B'de SVG yerleştirilmez. */
+  const frame = SIM.renderFrame(data, stages, where.step, { ...opts, sheet: currentSimSheet(), width: host.clientWidth || 640, height: 300, probe: threeD ? null : state.sim.probe });
+  host.hidden = threeD;
+  $(`${pk}-3d`).hidden = !threeD;
+  $(`${pk}-camera`).hidden = !threeD;
+  for (const b of document.querySelectorAll(`[data-sim-view][data-panel="${pk}"]`)) b.setAttribute('aria-pressed', String(b.dataset.simView === (ps.view === '3d' && inst ? '3d' : '2d')));
+  const dur = Math.round(Math.min(650, SIM_STEP_MS * 0.75 / ps.speed));
+  host.style.setProperty('--sim-dur', `${dur}ms`);
+  const svgKey = frame.svg.length + '|' + simCache.key + '|' + where.step + '|' + JSON.stringify(opts) + '|' + state.sim.probe + '|' + host.clientWidth;
+  if (threeD) inst.update(data, stages, where.step, { ...opts, dataKey: simCache.key, durationMs: dur });
+  else if (host.dataset.svgKey !== svgKey) { host.dataset.svgKey = svgKey; host.innerHTML = frame.svg; }
+  if (ps.view === '3d' && inst && !threeD) $(`${pk}-3d-msg`).textContent = 'Matrix stages are shown in 2D (a matrix has no meaningful third dimension).';
+  else if (inst && threeD) $(`${pk}-3d-msg`).textContent = '3D: drag to rotate · wheel or pinch to zoom · right-drag or two fingers to pan · click a node or element to select it. Depth axis = basis index j, not a physical dimension.';
+  $(`${pk}-stages`).innerHTML = stages.map((st, i) =>
+    `<button type="button" data-sim-stage="${i}" data-panel="${pk}"${i === where.index ? ' aria-current="step"' : ''}${i < where.index ? ' class="done"' : ''}>${i + 1} ${st.title}</button>`).join('');
+  $(`${pk}-count`).textContent = `Stage ${where.index + 1} of ${stages.length} · step ${where.local + 1} of ${where.stage.steps}`;
+  $(`${pk}-title`).textContent = where.stage.title;
+  $(`${pk}-text`).textContent = where.stage.text;
+  $(`${pk}-note`).textContent = frame.note;
+  $(`${pk}-legend`).innerHTML = frame.legend.map((l) => `<span><svg width="24" height="8" aria-hidden="true"${l.faint ? ' opacity="0.35"' : ''}><line x1="1" y1="4" x2="23" y2="4" stroke="${l.color}" stroke-width="${l.width}"${l.dash ? ` stroke-dasharray="${l.dash}"` : ''} stroke-linecap="round"/></svg>${l.label}</span>`).join('');
+  /* Formüller: o adımın denklemi, kendi α, β, γ, f'ine göre. MathJax yalnız formül değişince çalışır (oynatırken her karede değil). */
+  const fKey = frame.formulas.join('\u0001') + '\u0002' + (frame.formulaSource || '');
+  if (simFormulaKey[pk] !== fKey) {
+    simFormulaKey[pk] = fKey;
+    const el = $(`${pk}-formulas`);
+    el.textContent = frame.formulas.map((t) => `$$${t}$$`).join(' ');
+    if (frame.formulas.length) typeset(el);
+  }
+  $(`${pk}-formula-src`).textContent = frame.formulaSource ? `Solution sheet · ${frame.formulaSource}`
+    : simSheet.status === 'pending' ? 'Loading the solution sheet… (built-in formulas meanwhile)'
+      : simSheet.status === 'error' ? 'Solution sheet unavailable (the server is not running); built-in formulas shown'
+        : simSheet.status === 'ok' ? 'This step is not in the solution sheet; built-in formula shown' : '';
+  const timeline = $(`${pk}-timeline`);
+  timeline.max = String(where.total - 1);
+  timeline.value = String(where.step);
+  $(`${pk}-play`).textContent = ps.playing ? 'Pause' : 'Play';
+  $(`${pk}-play`).setAttribute('aria-pressed', String(ps.playing));
+  $(`${pk}-prev`).disabled = where.index === 0 && where.local === 0;
+  $(`${pk}-next`).disabled = where.index === stages.length - 1;
+  const pr = frame.probe, sym = data.metadata.errorKind === 'exact' ? 'e' : 'd', ref = data.metadata.referenceType === 'analytical' ? 'u' : 'u_ref';
+  $(`${pk}-probe`).textContent = !pr ? '' : where.stage.id === 'domain'
+    ? `x = ${SIM.fmt(pr.x)} (nearest sample): ` + pr.inputs.map((q) => `${q.name} = ${SIM.fmt(q.value)}`).join(' · ')
+    : `x = ${SIM.fmt(pr.x)} (nearest sample): u_h = ${SIM.fmt(pr.fem)}`
+      + (pr.reference !== null ? ` · ${ref} = ${SIM.fmt(pr.reference)}` : '') + (pr.error !== null ? ` · ${sym} = ${SIM.fmt(pr.error)}` : '');
+}
+/* 3B görünüm: fem_sim3d.js ve Three.js yalnız ilk 3B isteğinde yüklenir (her panelin kendi sahnesi). Yüklenemez ya da WebGL yoksa
+   2B'de kalınır ve neden yazılır. 2B'ye dönünce GPU kaynakları bırakılır (dispose). */
+async function setSimulationView(pk, viewName) {
+  const ps = state.sim.panels[pk];
+  if (viewName === '2d') { sim3ds[pk]?.dispose(); sim3ds[pk] = null; ps.view = '2d'; $(`${pk}-3d-msg`).textContent = ''; render(); return; }
+  if (sim3ds[pk] || sim3dLoading[pk]) return;
+  sim3dLoading[pk] = true;
+  $(`${pk}-3d-msg`).textContent = 'Loading the 3D view…';
+  try {
+    const { createSim3D } = await import('./fem_sim3d.js');
+    $(`${pk}-3d`).hidden = false;                 // genişlik ölçülebilsin
+    sim3ds[pk] = createSim3D($(`${pk}-3d`), {
+      sim: SIM,
+      onPick: ({ node, element }) => { if (node) state.basisNode = node; if (element) state.sim.element = element; render(); }
+    });
+    ps.view = '3d';
+  } catch (err) {
+    sim3ds[pk] = null; ps.view = '2d';
+    $(`${pk}-3d-msg`).textContent = `3D view unavailable (${err.message}); showing the 2D view.`;
+  }
+  sim3dLoading[pk] = false;
+  render();
+}
+function stopSimulation(pk) { clearTimeout(simTimers[pk]); simTimers[pk] = null; state.sim.panels[pk].playing = false; }
+/* Zamanlayıcı: bir adım ilerletir; sonda durur. Hız yalnız bekleme süresini değiştirir, kareleri değil. */
+function scheduleSimulation(pk, panel) {
+  clearTimeout(simTimers[pk]);
+  const ps = state.sim.panels[pk];
+  if (!ps.playing) return;
+  simTimers[pk] = setTimeout(() => {
+    const total = simCache.by ? SIM.locateStep(simCache.by[panel], Infinity).total : 0;
+    if (ps.step >= total - 1) ps.playing = false; else ps.step++;
+    renderSimulation();
+    scheduleSimulation(pk, panel);
+  }, SIM_STEP_MS / ps.speed);
+}
+function simJumpStage(pk, panel, delta) {
+  const stages = simCache.by[panel], ps = state.sim.panels[pk], where = SIM.locateStep(stages, ps.step);
+  const target = delta < 0 && where.local > 0 ? where.index : Math.max(0, Math.min(stages.length - 1, where.index + delta));
+  ps.step = stages[target].offset;
+  render();
+}
+
 function renderTicks() {
   for (const el of $('n-tick-labels').children) el.classList.toggle('on', Number(el.dataset.n) === state.n);
 }
 
+/* Görünüm: yalnızca state.theme okunur. 'auto' özniteliği kaldırır (CSS prefers-color-scheme devreye girer); açık/koyu onu sabitler.
+   3B görünüm ve grafikler renkleri CSS belirteçlerinden okuduğu için ayrıca bir şey gerekmez; render() onları yeniler. */
+function applyTheme() {
+  const root = document.documentElement;
+  if (state.theme === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', state.theme);
+  document.querySelectorAll('[data-theme-choice]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.themeChoice === state.theme)));
+}
 function render() {
+  applyTheme();
   $('n-value').textContent = state.n;
   $('p-value').textContent = `${state.degree} · ${DEGREE_NAMES[state.degree]}`;
-  document.documentElement.style.setProperty('--active-color', seriesColor(state.degree));
+  document.documentElement.style.setProperty('--active-color', 'var(--ui-accent)');   // arayüz vurgusu grafik renginden bağımsız
   for (const side of ['left', 'right']) {
     $(`bc-${side}-value`).disabled = state[side].type === 'none';
-    $(`bc-${side}-value`).placeholder = state[side].type === 'both' ? 'u değeri' : 'değer';
+    $(`bc-${side}-value`).placeholder = state[side].type === 'both' ? 'u value' : 'value';
     $(`bc-${side}-slope-row`).hidden = state[side].type !== 'both';
   }
   renderTicks();
@@ -1828,12 +2397,14 @@ function render() {
   renderChips();                                 // hesaptan sonra: referans çipi analitik/ince ağ durumunu doğru göstersin
   /* Hiç geçerli problem yoksa boş durum; geçersiz girdide son geçerli grafikler soluk kalır (yazarken titremesin). */
   $('empty-state').hidden = !!view;
-  if (!computed) $('diagnostics').hidden = true;
-  for (const id of ['tiles', 'main-chart', 'chart-grid']) {
+  if (!computed) { $('diagnostics').hidden = true; $('diag-flag').hidden = true; }
+  for (const id of ['tiles', 'main-chart', 'chart-grid', 'diag-panel']) {
     $(id).hidden = !view;
     $(id).classList.toggle('outdated', !!view && !computed);
   }
   renderSheetPanel(computed);
+  renderBasis(computed);                         // Basis functions kartı (basis_core.js yoksa gizli)
+  renderSimulation(computed);                    // FEM Simulation paneli (fem_sim.js yoksa gizli)
   if (!computed) return;
   renderTiles();
   renderDiagnostics();
@@ -1853,14 +2424,14 @@ function renderSheetPanel(computed) {
   $('sheet-toggle').setAttribute('aria-expanded', String(open));
   const button = $('solve-btn');
   button.setAttribute('aria-expanded', String(open));
-  button.textContent = open ? (sheetBusy ? 'Kâğıt hesaplanıyor… (kapat)' : 'Çözüm kâğıdını kapat') : 'Çözüm kâğıdını aç';
+  button.textContent = open ? (sheetBusy ? 'Computing the sheet… (close)' : 'Close solution sheet') : 'Open solution sheet';
   button.disabled = !open && !computed;
   $('sheet-actions').hidden = !open || !state.sheet;
   if (!open) return;
   $('stale').hidden = !state.sheet || current || !computed;
   if (!computed) {
     $('sheet-hint').hidden = false;
-    $('sheet-hint').textContent = 'Geçerli bir problem yok: kâğıt son geçerli problemi gösteriyor.';
+    $('sheet-hint').textContent = 'No valid problem: the sheet shows the last valid problem.';
   } else if (!current && !sheetBusy && state.sheetFailedKey !== JSON.stringify(sheetPayload())) {
     clearTimeout(sheetTimer);
     sheetTimer = setTimeout(writeSolution, state.sheet ? SHEET_DEBOUNCE : 0);
@@ -1880,7 +2451,7 @@ async function writeSolution() {
   sheetBusy = true;
   $('solve-btn').setAttribute('aria-busy', 'true');
   hint.hidden = false;
-  hint.textContent = 'Çözüm kâğıdı hesaplanıyor… (sembolik integraller ve bağımsız doğrulama; büyük n ve p birkaç saniye sürebilir)';
+  hint.textContent = 'Computing the solution sheet… (symbolic integrals and independent verification; large n and p may take a few seconds)';
   render();
   try {
     const result = await requestSheet(payload);
@@ -1921,37 +2492,38 @@ function crossCheck(payload, sheet) {
     let gap = 0;
     for (const key of ['alpha', 'beta', 'gamma', 'f'])
       cs.points.forEach((x, k) => { gap = Math.max(gap, Math.abs(problem.coef[key].f(x) - cs[key][k]) / Math.max(1, Math.abs(cs[key][k]))); });
-    line(gap <= 1e-12, `problem tanımı: tarayıcı ayrıştırıcısı ↔ sunucu (iki ayrıştırıcı) α, β, γ, f aynı (en büyük göreli fark ${gap.toExponential(1)})`);
+    line(gap <= 1e-12, `problem definition: browser parser ↔ server (two parsers) agree on α, β, γ, f (largest relative difference ${gap.toExponential(1)})`);
   }
   const nodalGap = Math.max(...mine.c.map((v, i) => Math.abs(v - sheet.nodal[i])));
   const nodalTol = rel * maxAbs(sheet.nodal);
-  line(nodalGap <= nodalTol, `düğüm katsayıları a: en büyük fark ${nodalGap.toExponential(1)} (tolerans ${nodalTol.toExponential(0)})`);
+  line(nodalGap <= nodalTol, `nodal coefficients a: largest difference ${nodalGap.toExponential(1)} (tolerance ${nodalTol.toExponential(0)})`);
   if (sheet.K) {
     let gap = 0, scale = 1;
     sheet.K.forEach((row, i) => row.forEach((v, j) => { gap = Math.max(gap, Math.abs(v - mine.K[i][j])); scale = Math.max(scale, Math.abs(v)); }));
     /* K yükten (f) bağımsızdır; köşeli yük K toleransını gevşetmemeli. Yalnız katsayılar (α, β, γ) köşeliyse gevşer. */
     // constant[key] === null: değişken katsayı (0 da bir sabittir; !0 ile karıştırılmamalı)
     const roughK = ['alpha', 'beta', 'gamma'].some((key) => problem.constant[key] === null) && rough, relK = roughK ? 1e-5 : 1e-9;
-    line(gap <= relK * scale, `montajlı K matrisi: en büyük girdi farkı ${gap.toExponential(1)} (tolerans ${(relK * scale).toExponential(0)})`);
-  } else lines.push('<li>· K matrisi karşılaştırılmadı (65’ten çok bilinmeyen)</li>');
+    line(gap <= relK * scale, `assembled K matrix: largest entry difference ${gap.toExponential(1)} (tolerance ${(relK * scale).toExponential(0)})`);
+  } else lines.push('<li>· K matrix not compared (more than 65 unknowns)</li>');
   const bcGap = Math.max(0, ...Object.entries(sheet.fixed || {}).map(([i, v]) => Math.max(Math.abs(sheet.nodal[i] - v), Math.abs(mine.c[i] - v))));
-  if (Object.keys(sheet.fixed || {}).length) line(bcGap <= 1e-12 * maxAbs(Object.values(sheet.fixed)), `u = değer koşulu iki çözümde de sağlanıyor (fark ${bcGap.toExponential(1)})`);
+  if (Object.keys(sheet.fixed || {}).length) line(bcGap <= 1e-12 * maxAbs(Object.values(sheet.fixed)), `the u = value condition holds in both solutions (difference ${bcGap.toExponential(1)})`);
   const analytic = sheet.exact_js && parseExact(sheet.exact_js);
   if (analytic) {
     const nodalErr = Math.max(...sheet.nodal.map((v, i) => Math.abs(analytic.u(mesh.nodeX(i)) - v)));
-    lines.push(`<li>· analitik çözüme göre düğüm hatası max|u(x<sub>i</sub>) − a<sub>i</sub>| = ${nodalErr.toExponential(2)} (bu bir uyuşmazlık değil, yöntemin hatasıdır)</li>`);
+    lines.push(`<li>· nodal error against the analytical solution max|u(x<sub>i</sub>) − a<sub>i</sub>| = ${nodalErr.toExponential(2)} (this is not a mismatch but the error of the method)</li>`);
   }
   if (mine.diagnostics.firstOrder && sheet.first_order_residual !== null && sheet.first_order_residual !== undefined) {
     const gap = Math.abs(mine.diagnostics.firstOrder.residual - sheet.first_order_residual);
-    line(gap <= rel * Math.max(1, Math.abs(sheet.first_order_residual), ...sheet.nodal.map(Math.abs)), `1. mertebe atılan denklem kalıntısı r: fark ${gap.toExponential(1)}`);
+    line(gap <= rel * Math.max(1, Math.abs(sheet.first_order_residual), ...sheet.nodal.map(Math.abs)), `first-order dropped-equation residual r: difference ${gap.toExponential(1)}`);
   }
-  if (rough) lines.push('<li>· kuadratür uyarısı: tarayıcı integralleri yaklaşık, tolerans 1e-5’e gevşetildi</li>');
-  const mark = { 'geçti': '✓', 'başarısız': '✗', 'uyarı': '!', 'yapılmadı': '–' };
+  if (rough) lines.push('<li>· quadrature warning: browser integrals approximate, tolerance relaxed to 1e-5</li>');
+  const mark = { passed: '✓', failed: '✗', warning: '!', not_run: '–' };
+  const label = { passed: 'Passed', failed: 'Failed', warning: 'Warning', not_run: 'Not run' };   // makine değeri → ekranda görünen
   const escape = (t) => t.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
   const verified = (sheet.verification || []).map((it) =>
-    `<li class="${it.status === 'başarısız' ? 'bad' : ''}">${mark[it.status] || '·'} ${escape(it.name)} (${it.status}): ${escape(it.detail)}</li>`).join('');
-  return `Çapraz kontrol (tarayıcı ↔ SymPy):<ul class="check-list">${lines.join('')}</ul>`
-    + (verified ? `Bağımsız doğrulama (sunucu, Katman 4):<ul class="check-list">${verified}</ul>` : '');
+    `<li class="${it.status === 'failed' ? 'bad' : ''}">${mark[it.status] || '·'} ${escape(it.name)} (${label[it.status] || it.status}): ${escape(it.detail)}</li>`).join('');
+  return `Cross-check (browser ↔ SymPy):<ul class="check-list">${lines.join('')}</ul>`
+    + (verified ? `Independent verification (server, layer 4):<ul class="check-list">${verified}</ul>` : '');
 }
 
 function download(blob, filename) {
@@ -1990,6 +2562,67 @@ function init() {
     $(`bc-${side}-slope`).addEventListener('input', (e) => { state[side].slope = e.target.value; changed(); });
   }
   $('method').addEventListener('change', (e) => { state.method = e.target.value; render(); });
+  $('basis-node').addEventListener('input', (e) => { state.basisNode = Number(e.target.value); render(); });
+  document.querySelectorAll('[data-theme-choice]').forEach((b) => b.addEventListener('click', () => {
+    state.theme = b.dataset.themeChoice;
+    try { if (state.theme === 'auto') localStorage.removeItem('fem-theme'); else localStorage.setItem('fem-theme', state.theme); } catch {}
+    render();
+  }));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'auto') render(); });   // Auto: sistem değişince anında
+  $('basis-toggle').addEventListener('click', () => { state.basisOpen = !state.basisOpen; render(); });
+  $('diag-toggle').addEventListener('click', () => { state.diagOpen = !state.diagOpen; render(); });
+  $('tiles').addEventListener('click', (e) => {
+    const id = e.target.closest('[data-metric]')?.dataset.metric;
+    if (id) { state.openMetric = state.openMetric === id ? null : id; render(); }
+  });
+  if (SIM) {
+    if (typeof IntersectionObserver === 'function') {
+      const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting) && !simSheetWanted) { simSheetWanted = true; render(); } }, { threshold: 0.1 });
+      io.observe($('sim-panel')); io.observe($('sol-panel'));
+    } else simSheetWanted = true;
+  }
+  if (SIM) for (const { pk, panel } of SIM_PANELS) {
+    const ps = state.sim.panels[pk];
+    $(`${pk}-play`).addEventListener('click', () => {
+      const total = SIM.locateStep(simCache.by[panel], Infinity).total;
+      if (!ps.playing && ps.step >= total - 1) ps.step = 0;   // sondan Play: baştan oynat
+      ps.playing = !ps.playing;
+      render(); scheduleSimulation(pk, panel);
+    });
+    $(`${pk}-restart`).addEventListener('click', () => { ps.step = 0; render(); scheduleSimulation(pk, panel); });
+    $(`${pk}-prev`).addEventListener('click', () => simJumpStage(pk, panel, -1));
+    $(`${pk}-next`).addEventListener('click', () => simJumpStage(pk, panel, 1));
+    $(`${pk}-timeline`).addEventListener('input', (e) => { ps.step = Number(e.target.value); render(); });
+    $(`${pk}-speed`).addEventListener('change', (e) => { ps.speed = Number(e.target.value); render(); scheduleSimulation(pk, panel); });
+    $(`${pk}-mesh`).addEventListener('change', (e) => { state.sim.showMesh = e.target.checked; for (const q of SIM_PANELS) $(`${q.pk}-mesh`).checked = e.target.checked; render(); });
+    $(`${pk}-labels`).addEventListener('change', (e) => { state.sim.showLabels = e.target.checked; for (const q of SIM_PANELS) $(`${q.pk}-labels`).checked = e.target.checked; render(); });
+    for (const b of document.querySelectorAll(`[data-sim-view][data-panel="${pk}"]`)) b.addEventListener('click', () => setSimulationView(pk, b.dataset.simView));
+    $(`${pk}-camera`).addEventListener('click', () => sim3ds[pk]?.resetCamera());
+    $(`${pk}-stages`).addEventListener('click', (e) => {
+      const i = e.target.closest('[data-sim-stage]')?.dataset.simStage;
+      if (i !== undefined) { ps.step = simCache.by[panel][Number(i)].offset; render(); }
+    });
+    /* Kare içi seçim: düğüm (N_j, Basis kartıyla ortak), eleman, matris hücresi ya da fonksiyon aşamalarında x sorgusu. */
+    $(`${pk}-chart`).addEventListener('click', (e) => {
+      const node = e.target.closest('[data-node]'), element = e.target.closest('[data-element]'), cell = e.target.closest('[data-cell]');
+      if (node) { state.basisNode = Number(node.dataset.node); render(); return; }
+      if (element) { state.sim.element = Number(element.dataset.element); render(); return; }
+      if (cell) {                                   // eleman matrisi hücresi → o hücrenin hesap adımı
+        const [ci, cj] = cell.dataset.cell.split(',').map(Number), st = simCache.by[panel].find((q) => q.id === 'elementK');
+        if (st) ps.step = st.offset + 1 + ci * (simCache.data.discretization.polynomialDegree + 1) + cj;
+        render(); return;
+      }
+      const svg = e.target.closest('svg'), stage = SIM.locateStep(simCache.by[panel], ps.step).stage.id;
+      if (!svg || !['domain', 'approx', 'reference', 'error'].includes(stage)) return;
+      const box = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, px = (e.clientX - box.left) * vb.width / box.width;
+      /* Karenin bildirdiği piksel aralıkları (girdi panellerinde her panelin kendi aralığı) → x. */
+      const [x0, x1] = simCache.data.problem.domain;
+      const range = (svg.dataset.xranges || '').split(';').map((r) => r.split(',').map(Number)).find(([l, r]) => px >= l && px <= r);
+      if (!range) return;
+      state.sim.probe = x0 + (px - range[0]) / (range[1] - range[0]) * (x1 - x0);
+      render();
+    });
+  }
   $('n-slider').addEventListener('input', (e) => { state.n = Number(e.target.value); render(); });
   $('n-tick-labels').addEventListener('click', (e) => {
     const value = e.target.closest('button[data-n]')?.dataset.n;
@@ -2017,13 +2650,13 @@ function init() {
   $('sheet-toggle').addEventListener('click', toggleSheet);
   /* PDF: sunucuda pdflatex varsa gerçek LaTeX çıktısı indirilir; yoksa tarayıcının yazdır → "PDF olarak kaydet" yolu kullanılır. */
   $('pdf-btn').addEventListener('click', async () => {
-    try { download(await requestPdf(state.sheet.payload), 'fem-cozum-kagidi.pdf'); } catch { window.print(); }
+    try { download(await requestPdf(state.sheet.payload), 'fem-lab-solution-sheet.pdf'); } catch { window.print(); }
   });
-  $('tex-btn').addEventListener('click', () => download(new Blob([state.sheet.tex], { type: 'application/x-tex' }), 'fem-cozum-kagidi.tex'));
+  $('tex-btn').addEventListener('click', () => download(new Blob([state.sheet.tex], { type: 'application/x-tex' }), 'fem-lab-solution-sheet.tex'));
   $('copy-btn').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(state.sheet.text); $('copy-btn').textContent = 'Kopyalandı'; }
-    catch { $('copy-btn').textContent = 'Kopyalanamadı'; }
-    setTimeout(() => { $('copy-btn').textContent = 'LaTeX kaynağını kopyala'; }, 1600);
+    try { await navigator.clipboard.writeText(state.sheet.text); $('copy-btn').textContent = 'Copied'; }
+    catch { $('copy-btn').textContent = 'Copy failed'; }
+    setTimeout(() => { $('copy-btn').textContent = 'Copy LaTeX source'; }, 1600);
   });
   window.addEventListener('resize', render);
 

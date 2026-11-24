@@ -128,21 +128,21 @@ def sheet_number(text, pattern):
 
 MATRIX = ('tarayıcı ↔ sunucu', 'FEM Lab ↔ ifem', 'scikit-fem eleman', 'scikit-fem global K', 'scikit-fem düğüm', 'analitik çözüm',
           'sürekli varlık', 'sürekli teklik', 'uyumluluk', 'L²/H¹ yeniden hesap', 'sınır koşulu')
-APP_ITEM = {'geçti': 'PASS', 'uyarı': 'WARN', 'başarısız': 'FAIL', 'yapılmadı': 'NOT_RUN'}
+APP_ITEM = {'passed': 'PASS', 'warning': 'WARN', 'failed': 'FAIL', 'not_run': 'NOT_RUN'}   # uygulamanın makine durum değerleri
 
 
 def app_verdict(code, sheet):
     """Uygulamanın sürekli düzey hükmü: 'solved' · 'K1' · 'K2' (sürekli) · 'discrete' (yalnız ayrık hüküm) · 'other'."""
     if code == 200:
         return 'solved'
-    msg = sheet.get('error', '') if isinstance(sheet, dict) else ''
-    # Kategori işareti mesajın başındaki "— ayrık sistem:" / "— sürekli problem:" kısmıdır; ayrık mesaj da sonunda
-    # "sürekli problem hakkında" der, bu yüzden düz alt dize araması yanlış sınıflar (C69).
-    head = msg[:msg.find(':') + 1]          # kategori ilk ':' ile biter
-    if '— ayrık sistem:' in head:
+    sheet = sheet if isinstance(sheet, dict) else {}
+    # Uygulamanın makine alanları (fem_sheet.main: category, level). Mesaj metni ayrıştırılmaz: arayüz dili değişse de
+    # hüküm aynı okunur (önceki sürüm "— ayrık sistem:" gibi Türkçe işaretlere bakıyordu).
+    level, category = sheet.get('level'), sheet.get('category')
+    if level == 'discrete':
         return 'discrete'
-    if '— sürekli problem:' in head:
-        return 'K1' if msg.startswith('Çözüm yok') else 'K2' if msg.startswith('Tek olmayan') else 'other'
+    if level == 'continuous':
+        return category if category in ('K1', 'K2') else 'other'
     return 'other'
 
 
@@ -267,11 +267,11 @@ def run_case(case):
     add('kâğıt bütünlüğü', 'PASS' if ('nan' not in text.lower().replace('sınan', '') and 'None' not in text and '\\mathbf{a} =' in text)
         else 'FAIL', 'NaN/None yok, a vektörü yazılı', None)
     for name, it in items.items():
-        if it['status'] == 'başarısız':
+        if it['status'] == 'failed':
             add(f'uygulama doğrulaması: {name}', 'FAIL', it['detail'][:240], 'independent verification (uygulama Katman 4)')
-        elif it['status'] == 'uyarı':
+        elif it['status'] == 'warning':
             add(f'uygulama doğrulaması: {name}', 'WARN', it['detail'][:240])
-    ifem_item = next((it for n, it in items.items() if n.startswith('bağımsız yeniden montaj')), None)
+    ifem_item = next((it for n, it in items.items() if n.startswith('independent re-assembly')), None)
     M['FEM Lab ↔ ifem'] = APP_ITEM.get(ifem_item['status'], 'NOT_RUN') if ifem_item else 'NOT_RUN'
     fixed = {int(k): v for k, v in sheet.get('fixed', {}).items()}
     if fixed:

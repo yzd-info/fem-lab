@@ -11,7 +11,7 @@ Motorun (fem_sheet.fem_engine) bildirdiği başarıya güvenmez; çıktısını 
   - dağılımsal kalıntı: eleman içi klasik kalıntı + iç düğümlerdeki akı sıçramaları J_k = [α u_h']
   - hata ölçüleri (düğüm, noktasal, L², H¹; mutlak ve göreli) ve yakınsama çalışması (ifem ile ardışık ağlar)
   - kararlılık göstergeleri (eleman Péclet sayısı, dalga sayısı × h)
-Her madde 'geçti' / 'başarısız' / 'uyarı' / 'yapılmadı' durumu taşır; yapılamayan doğrulama yapılmış gibi sunulmaz.
+Her madde 'passed' / 'failed' / 'warning' / 'not_run' durumu taşır; yapılamayan doğrulama yapılmış gibi sunulmaz.
 
 Bağımlılık kuralı: bu dosya fem_sheet'ten yalnız temel tipleri, sembolleri ve eşikleri alır; motorun hesap fonksiyonlarını
 (fem_engine, lagrange_basis, integral, formulation_data, solve_reduced …) ÇAĞIRMAZ. tests.py bunu kaynakta denetler.
@@ -40,7 +40,7 @@ import ifem                     # noqa: E402  bağımsız FEM (uygulamanın hiç
 mpmath.mp.dps = _dps            # ifem içe aktarılırken mp.dps = 30 yapar; uygulamanın kalanı varsayılan hassasiyette kalsın
 
 GAUSS = ifem.NODES              # 24 noktalı Gauss–Legendre, [-1, 1], 30 basamak
-REFERENCE_LIMIT = 129           # bağımsız çözüm (yoğun 30 basamak LU) bu kadar bilinmeyene kadar (≈ 2 s); üstünde 'yapılmadı'
+REFERENCE_LIMIT = 129           # bağımsız çözüm (yoğun 30 basamak LU) bu kadar bilinmeyene kadar (≈ 2 s); üstünde 'not_run'
 SOLVER_LIMIT = 129              # κ_∞ için ters matris bu boyuta kadar
 NONSMOOTH = (sp.Abs, sp.Piecewise, sp.sign, sp.Heaviside, sp.Min, sp.Max)
 # Sezgisel eşikler (evrensel değil; testlerle sınandı, README'de belgeli):
@@ -102,12 +102,12 @@ def classify_problem(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, i
         try:
             box['res'] = _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, degeneracy)
         except Exception as error:
-            box['res'] = {'kind': 'undetermined', 'reason': 'kapalı biçimde genel çözüm bulunamadı' if isinstance(error, NotImplementedError)
-                          else f'sembolik hesap tamamlanamadı ({type(error).__name__})'}
+            box['res'] = {'kind': 'undetermined', 'reason': 'no closed-form general solution found' if isinstance(error, NotImplementedError)
+                          else f'symbolic computation did not complete ({type(error).__name__})'}
     thread = threading.Thread(target=work, daemon=True)
     thread.start()
     thread.join(timeout)
-    return box.get('res', {'kind': 'undetermined', 'reason': f'zaman aşımı ({timeout} s)'})
+    return box.get('res', {'kind': 'undetermined', 'reason': f'timed out ({timeout} s)'})
 
 
 # Sembolik rank kararının bağımsız sayısal karşılığı (60 basamak SVD). Modül düzeyinde: doğrudan sınanabilsin diye.
@@ -127,20 +127,20 @@ def numerical_rank(mat):
 
 def _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, degeneracy):
     if order not in (1, 2):
-        return {'kind': 'unsupported', 'reason': 'yalnız 1. ve 2. mertebe sınıflandırılır'}
+        return {'kind': 'unsupported', 'reason': 'only first and second order are classified'}
     if degeneracy['interior']:
-        return {'kind': 'undetermined', 'reason': 'önde gelen katsayının iç sıfırı var (x* ≈ '
-                + ', '.join(f'{float(pt):.4g}' for pt in degeneracy['interior']) + '); sınıflandırma iki yanda ayrı sabit gerektirir, bu sürümde yapılmıyor'}
+        return {'kind': 'undetermined', 'reason': 'the leading coefficient has an interior zero (x* ≈ '
+                + ', '.join(f'{float(pt):.4g}' for pt in degeneracy['interior']) + '); classification would need separate constants on each side and is not done in this version'}
     u = sp.Function('u')
     ode = sp.Eq(sp.diff(alpha * u(x).diff(x), x) + beta * u(x).diff(x) + gamma * u(x), f)
     general = sp.dsolve(ode, u(x)).rhs
     constants = sorted(general.free_symbols - {x}, key=str)
     if general.has(sp.Integral) or len(constants) != order:
-        return {'kind': 'undetermined', 'reason': 'kapalı biçimde genel çözüm bulunamadı'}
+        return {'kind': 'undetermined', 'reason': 'no closed-form general solution found'}
     particular = general.subs({c: 0 for c in constants})
     basis_fns = [sp.diff(general, c) for c in constants]
     if sp.simplify(general - particular - sum(c * e for c, e in zip(constants, basis_fns))) != 0:
-        return {'kind': 'undetermined', 'reason': 'genel çözüm sabitlerde doğrusal değil'}
+        return {'kind': 'undetermined', 'reason': 'the general solution is not linear in the constants'}
     equations, assumptions = [], []
     for side, point in (('left', x0), ('right', x1)):
         if point in degeneracy['endpoints']:
@@ -148,12 +148,12 @@ def _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, deg
             limits = [sp.limit(e, x, point, direction) for e in basis_fns]
             lp = sp.limit(particular, x, point, direction)
             if lp.is_finite is not True or any(L.is_finite is None for L in limits):
-                return {'kind': 'undetermined', 'reason': f'x = {sp.latex(point)} dejenere ucunda sınırlılık analizi yapılamadı'}
+                return {'kind': 'undetermined', 'reason': f'boundedness analysis at the degenerate end x = {sp.latex(point)} could not be performed'}
             unbounded = [c for c, L in zip(constants, limits) if L.is_finite is False]
             for c in unbounded:
-                equations.append((f'sınırlılık x={sp.latex(point)}', c))
+                equations.append((f'boundedness x={sp.latex(point)}', c))
             if unbounded:                                   # varsayım yalnız gerçekten bir denklem eklediyse beyan edilir
-                assumptions.append(f'x = {sp.latex(point)} dejenere uç: çözüm sınırlı varsayıldı (sonsuza giden temel çözüm dışlandı)')
+                assumptions.append(f'x = {sp.latex(point)} degenerate end: the solution is assumed bounded (the unbounded fundamental solution is excluded)')
     zeroed = {expr: 0 for label, expr in equations if expr in constants}
     reduced = general.subs(zeroed)
     for side, point in (('left', x0), ('right', x1)):
@@ -173,11 +173,11 @@ def _classify(alpha, beta, gamma, f, x0, x1, conditions, slopes, order, ivp, deg
     M, rhs = sp.linear_eq_to_matrix([e for _, e in equations], constants)
     rank_m, rank_a = M.rank(simplify=True), M.row_join(rhs).rank(simplify=True)
     numeric = (numerical_rank(M), numerical_rank(M.row_join(rhs)))   # bağımsız sayısal kontrol (SVD): sembolik rank kararının karşılığı
-    method = 'sembolik' if numeric == (rank_m, rank_a) else 'sayısal (50 basamak)'
-    if method != 'sembolik':
+    method = 'symbolic' if numeric == (rank_m, rank_a) else 'numeric_50'
+    if method != 'symbolic':
         rank_m, rank_a = numeric
     m = len(constants)
-    evidence = f'rank M = {rank_m}, rank [M|r] = {rank_a}, m = {m} ({len(equations)} koşul)'
+    evidence = f'rank M = {rank_m}, rank [M|r] = {rank_a}, m = {m} ({len(equations)} conditions)'
     result = {'method': method, 'evidence': evidence, 'assumptions': assumptions,
               'equations': [label for label, _ in equations], 'general': general}
     if rank_a > rank_m:
@@ -197,12 +197,12 @@ def classify(r):
 
 # Sembolik olarak KANITLANMIŞ "çözüm yok" / "tek değil" hattı durdurur (sayısal kanıt yalnız raporlanır).
 def continuous_diagnosis(c):
-    if c['kind'] not in ('no_solution', 'non_unique') or c.get('method') != 'sembolik':
+    if c['kind'] not in ('no_solution', 'non_unique') or c.get('method') != 'symbolic':
         return None
     note = ('; ' + '; '.join(c['assumptions'])) if c['assumptions'] else ''
     if c['kind'] == 'no_solution':
-        return Diagnosis('K1', 'sürekli problem', f"koşullar denklemle uyumsuz ({c['evidence']}{note}).")
-    return Diagnosis('K2', 'sürekli problem', f"u + c·({sp.sstr(c['null_function'])}) de çözüm ({c['evidence']}{note}).")
+        return Diagnosis('K1', 'continuous', f"the conditions are inconsistent with the equation ({c['evidence']}{note}).")
+    return Diagnosis('K2', 'continuous', f"u + c·({sp.sstr(c['null_function'])}) is also a solution ({c['evidence']}{note}).")
 
 
 # Aday analitik çözümün doğrulanması. Sınananlar: (i) R[u] = (αu')' + βu' + γu − f ≡ 0; (ii) her u koşulu; (iii) her u'
@@ -216,16 +216,16 @@ def verify_exact(r, candidate, timeout=8):
     # name = (düz metin, LaTeX): arayüz düz metni, kâğıt LaTeX'i kullanır (pdflatex Unicode simge derlemez).
     def record(name, value, symbolic_zero):
         if symbolic_zero:
-            box['checks'].append((name, True, 'sembolik'))
+            box['checks'].append((name, True, 'symbolic'))
             return True
         try:
             with mpmath.workdps(50):
                 v = abs(complex(sp.N(value, 50)))
         except Exception:
-            box['checks'].append((name, False, 'değerlendirilemedi'))
+            box['checks'].append((name, False, 'not_evaluable'))
             return False
         ok = v <= 1e-30 * box['scale']
-        box['checks'].append((name, ok, 'sayısal (50 basamak)' if ok else f'= {num(v)} ≠ 0'))
+        box['checks'].append((name, ok, 'numeric_50' if ok else f'= {num(v)} ≠ 0'))
         return ok
 
     def zero(expr):
@@ -240,11 +240,11 @@ def verify_exact(r, candidate, timeout=8):
         try:
             values = [abs(complex(sp.N(candidate.subs(x, pt), 30))) for pt in samples]
         except Exception:
-            box['checks'].append((('u aralıkta sonlu', 'u\\ \\text{sonlu}'), False, 'değerlendirilemedi')); return
+            box['checks'].append((('u finite on the interval', 'u\\ \\text{finite}'), False, 'not_evaluable')); return
         box['scale'] = max([1.0] + values)
         residual = sp.diff(r['alpha'] * candidate.diff(x), x) + r['beta'] * candidate.diff(x) + r['gamma'] * candidate - r['f']
         if zero(residual):
-            box['checks'].append((('R[u] ≡ 0', 'R[u] \\equiv 0'), True, 'sembolik'))
+            box['checks'].append((('R[u] ≡ 0', 'R[u] \\equiv 0'), True, 'symbolic'))
         else:
             worst = max(samples, key=lambda pt: abs(complex(sp.N(residual.subs(x, pt), 50))))
             if not record(('R[u] ≡ 0', 'R[u] \\equiv 0'), residual.subs(x, worst), False):
@@ -268,7 +268,7 @@ def verify_exact(r, candidate, timeout=8):
                     return
             if kind == 'none' and r['order'] == 2 and not r['ivp']:
                 if r['alpha'].subs(x, point) == 0:
-                    box['checks'].append(((f'x = {point} dejenere uç: u sınırlı', f'x = {sp.latex(point)}\\ \\text{{dejenere uç: }} u\\ \\text{{sınırlı}}'), True, 'sembolik'))
+                    box['checks'].append(((f'x = {point} degenerate end: u bounded', f'x = {sp.latex(point)}\\ \\text{{degenerate end: }} u\\ \\text{{bounded}}'), True, 'symbolic'))
                 else:
                     flux = sp.limit(r['alpha'] * candidate.diff(x), x, point, direction)
                     if not record((f"α u′({point}) = 0", f"\\alpha u'({sp.latex(point)}) = 0"), flux, zero(flux)):
@@ -281,8 +281,8 @@ def verify_exact(r, candidate, timeout=8):
     if 'done' not in box:
         failed = next((c for c in checks if not c[1]), None)
         return {'status': 'rejected' if failed else 'timeout', 'checks': checks,
-                'reason': f'{failed[0][0]}: {failed[2]}' if failed else f'doğrulama {timeout} s içinde bitmedi'}
-    status = 'verified_symbolic' if all(c[2] == 'sembolik' for c in checks) else 'verified_numeric'
+                'reason': f'{failed[0][0]}: {failed[2]}' if failed else f'verification did not finish within {timeout} s'}
+    status = 'verified_symbolic' if all(c[2] == 'symbolic' for c in checks) else 'verified_numeric'
     return {'status': status, 'checks': checks, 'reason': ''}
 
 
@@ -305,10 +305,10 @@ def real_form(candidate, x0, x1):
             scale = max([1.0] + [abs(complex(sp.N(candidate.subs(x, pt), 50))) for pt in points])
             worst = max(abs(float(sp.N(im_part.subs(x, pt), 50))) for pt in points)
     except Exception:
-        return None, 'karmaşık biçimli aday: sanal kısım değerlendirilemedi'
+        return None, 'complex-valued candidate: the imaginary part could not be evaluated'
     if worst <= 1e-40 * scale:
         return re_part, ''
-    return None, f'karmaşık biçimli aday: sanal kısım sıfır gösterilemedi (max |Im u| = {num(worst)})'
+    return None, f'complex-valued candidate: the imaginary part could not be shown to vanish (max |Im u| = {num(worst)})'
 
 
 # Analitik çözüm: sınıflandırmanın genel çözüm + koşul sisteminden bulduğu TEK çözüm. Aday verify_exact'ten geçmezse
@@ -316,10 +316,10 @@ def real_form(candidate, x0, x1):
 def exact_solution(r, c=None):
     c = c or r.get('classification') or classify(r)
     if c['kind'] != 'unique':
-        return {'u': None, 'status': 'not_found', 'checks': [], 'reason': c.get('reason', 'sürekli problem tek çözümlü değil')}
+        return {'u': None, 'status': 'not_found', 'checks': [], 'reason': c.get('reason', 'the continuous problem does not have a unique solution')}
     candidate = c['solution']
     if candidate.has(sp.Integral) or candidate.free_symbols - {x}:
-        return {'u': None, 'status': 'not_found', 'checks': [], 'reason': 'kapalı biçimde değil'}
+        return {'u': None, 'status': 'not_found', 'checks': [], 'reason': 'not in closed form'}
     if candidate.has(sp.I):
         candidate, why = real_form(candidate, r['x0'], r['x1'])
         if candidate is None:
@@ -389,31 +389,31 @@ def operator_consistency(r):
         tol_F = OPERATOR_TOL + 10 * float(est_F / scale_F)
     ok = gap_K <= tol_K and gap_F <= tol_F
     rough = max(float(est_K / scale_K), float(est_F / scale_F)) > 1e-8
-    status = 'geçti' if ok and not rough else 'uyarı' if ok else 'başarısız'
-    detail = (f'uₚ = 1 + t + … + tᵖ (p = {p}): max|Ka − ref|/ölçek = {float(gap_K):.1e}, max|Fₗ − ref|/ölçek = {float(gap_F):.1e}'
-              + (' (katsayı/yük köşeli: kuadratür tahmini büyük, tolerans genişledi)' if rough else ''))
-    return item('operatör tutarlılığı (yama testi)', status, detail, probe=sp.sstr(u), gap_K=float(gap_K), gap_F=float(gap_F))
+    status = 'passed' if ok and not rough else 'warning' if ok else 'failed'
+    detail = (f'uₚ = 1 + t + … + tᵖ (p = {p}): max|Ka − ref|/scale = {float(gap_K):.1e}, max|Fₗ − ref|/scale = {float(gap_F):.1e}'
+              + (' (non-smooth coefficient/load: large quadrature estimate, tolerance widened)' if rough else ''))
+    return item('operator consistency (patch test)', status, detail, probe=sp.sstr(u), gap_K=float(gap_K), gap_F=float(gap_F))
 
 
 # Motorun çözümünü, AYRI montajlanmış ve 30 basamakta çözülmüş bağımsız FEM'le (ifem) düğüm düğüm karşılaştırır.
 # 1. mertebede atılan satırın kalıntısı bağımsız K ve F ile yeniden hesaplanır ve motorunkiyle karşılaştırılır.
 def independent_solution(r, condition):
     if r['dofs'] > REFERENCE_LIMIT:
-        return item('bağımsız yeniden montaj ve çözüm (ifem)', 'yapılmadı', f"{r['dofs']} bilinmeyen > {REFERENCE_LIMIT} (süre sınırı)"), None
+        return item('independent re-assembly and solve (ifem)', 'not_run', f"{r['dofs']} unknowns > {REFERENCE_LIMIT} (time limit)"), None
     with mpmath.workdps(30):
         try:
             ref = ifem.solve(ifem_problem(r), r['n'], r['degree'])
         except ZeroDivisionError:
-            return item('bağımsız yeniden montaj ve çözüm (ifem)', 'başarısız', 'bağımsız sistem tekil (motor çözdü)'), None
+            return item('independent re-assembly and solve (ifem)', 'failed', 'the independent system is singular (the engine solved it)'), None
         a = [mp(v) for v in r['a']]
         scale = max([mpmath.mpf(1)] + [abs(v) for v in ref['c']])
         gap = float(max(abs(a[i] - ref['c'][i]) for i in range(r['dofs'])) / scale)
     tol = max(REFERENCE_TOL, (condition or 1) * 1e-14)
     rough = any(e.has(*NONSMOOTH) for e in (r['alpha'], r['beta'], r['gamma'], r['f']))
-    status = 'geçti' if gap <= tol else 'uyarı' if rough else 'başarısız'
-    detail = (f'Vandermonde tabanı, Gauss–Legendre 24, 30 basamak LU: max|a − a(ifem)|/max|a(ifem)| = {gap:.1e} (tolerans {tol:.0e})'
-              + ('; köşeli katsayı/yük: Gauss kuralı yaklaşık, fark kuadratürden' if rough and gap > tol else ''))
-    return item('bağımsız yeniden montaj ve çözüm (ifem)', status, detail, gap=gap), ref
+    status = 'passed' if gap <= tol else 'warning' if rough else 'failed'
+    detail = (f'Vandermonde basis, Gauss–Legendre 24, 30-digit LU: max|a − a(ifem)|/max|a(ifem)| = {gap:.1e} (tolerance {tol:.0e})'
+              + ('; non-smooth coefficient/load: the Gauss rule is approximate, the difference comes from quadrature' if rough and gap > tol else ''))
+    return item('independent re-assembly and solve (ifem)', status, detail, gap=gap), ref
 
 
 def first_order_check(r, ref):
@@ -421,7 +421,7 @@ def first_order_check(r, ref):
     if fo is None:
         return None
     if ref is None:
-        return item('1. mertebe atılan satır (bağımsız)', 'yapılmadı', 'bağımsız çözüm yok')
+        return item('first order: dropped row (independent)', 'not_run', 'no independent solution')
     d = fo['row'] - 1
     with mpmath.workdps(30):
         a = [mp(v) for v in r['a']]
@@ -430,9 +430,9 @@ def first_order_check(r, ref):
         scale = max([mpmath.mpf(1), abs(residual)] + [abs(ref['F'][i]) for i in range(r['dofs'])])
         gap = float(abs(residual - engine) / scale)
     ok = gap <= 1e-9
-    return item('1. mertebe atılan satır (bağımsız)', 'geçti' if ok else 'başarısız',
-                f'r{SUBSCRIPT(fo["row"])}: motor {num(engine)}, bağımsız K ve F ile {num(residual)} (göreli fark {gap:.1e}); '
-                + ('tam sistem uyumlu' if fo['compatible'] else 'tam sistem UYUMSUZ: başka satır seçimi başka a verir' if fo['compatible'] is False
+    return item('first order: dropped row (independent)', 'passed' if ok else 'failed',
+                f'r{SUBSCRIPT(fo["row"])}: engine {num(engine)}, with independent K and F {num(residual)} (relative difference {gap:.1e}); '
+                + ('the full system is consistent' if fo['compatible'] else 'the full system is INCONSISTENT: a different row choice gives a different a' if fo['compatible'] is False
                    else 'uyumluluk belirlenemedi'), residual=float(residual))
 
 
@@ -440,7 +440,7 @@ def first_order_check(r, ref):
 # sıfırsa) ya da ∞. κ_∞ = ‖K‖‖K⁻¹‖ 30 basamakta. Motorun "çözdüm" demesine güvenilmez; kalıntı yeniden hesaplanır.
 def solver_check(r):
     if not r['free']:
-        return item('çözücü kalıntısı', 'geçti', 'serbest bilinmeyen yok'), 1.0
+        return item('solver residual', 'passed', 'no free unknowns'), 1.0
     with mpmath.workdps(30):
         A = mpmath.matrix(_matrix(r['K_ff']))
         b = mpmath.matrix([mp(v) for v in r['F_f']])
@@ -451,15 +451,16 @@ def solver_check(r):
         kappa = None
         if A.rows <= SOLVER_LIMIT:
             try:
-                kappa = float(mpmath.mnorm(A, mpmath.inf) * mpmath.mnorm(A ** -1, mpmath.inf))
+                # A**-1 ile aynı aritmetik, bant içinde (ifem.band_inverse): yoğun ters O(n³) CI'da süre sınırını aşıyordu
+                kappa = float(mpmath.mnorm(A, mpmath.inf) * mpmath.mnorm(ifem.band_inverse(A.tolist()), mpmath.inf))
             except ZeroDivisionError:
                 kappa = float('inf')
-    status = ('başarısız' if not eta <= BACKWARD_TOL or (kappa is not None and kappa > COND_SINGULAR)
-              else 'uyarı' if kappa is not None and kappa > COND_WARN else 'geçti')
-    detail = (f'‖F − K a‖∞ = {num(res)}, η = {eta:.1e} (eşik {BACKWARD_TOL:.0e})'
-              + (f', κ∞ (indirgenmiş K) = {kappa:.2e}' if kappa is not None else ', κ hesaplanmadı (boyut)')
-              + (f' > {COND_WARN:.0e}: kötü koşullu, son basamaklar güvenilmez' if kappa is not None and kappa > COND_WARN else ''))
-    return item('çözücü kalıntısı ve koşul sayısı', status, detail, eta=eta, kappa=kappa), kappa
+    status = ('failed' if not eta <= BACKWARD_TOL or (kappa is not None and kappa > COND_SINGULAR)
+              else 'warning' if kappa is not None and kappa > COND_WARN else 'passed')
+    detail = (f'‖F − K a‖∞ = {num(res)}, η = {eta:.1e} (threshold {BACKWARD_TOL:.0e})'
+              + (f', κ∞ (reduced K) = {kappa:.2e}' if kappa is not None else ', κ not computed (size)')
+              + (f' > {COND_WARN:.0e}: ill-conditioned, the last digits are unreliable' if kappa is not None and kappa > COND_WARN else ''))
+    return item('solver residual and condition number', status, detail, eta=eta, kappa=kappa), kappa
 
 
 # ---------- 4. ÇÖZÜM KALİTESİ ----------
@@ -507,10 +508,10 @@ def distributional_residual(r):
     tol = 1e-9 + 10 * float(est / scale)
     rough = float(est / scale) > 1e-8
     ok = float(worst / scale) <= tol
-    return item('dağılımsal kalıntı (eleman içi + düğüm sıçramaları)', 'başarısız' if not ok else 'uyarı' if rough else 'geçti',
+    return item('distributional residual (element interiors + nodal jumps)', 'failed' if not ok else 'warning' if rough else 'passed',
                 f'max|Rₑ| = {num(Rmax)}, max|Jₖ| = {num(max([abs(j) for j in jumps] or [0]))}, '
-                f'iç satırlarda max|∫φᵢRₑ + φᵢJ| = {float(worst):.1e}'
-                + (' (katsayı/yük köşeli: kuadratür tahmini büyük, tolerans genişledi)' if rough else ''),
+                f'interior rows: max|∫φᵢRₑ + φᵢJ| = {float(worst):.1e}'
+                + (' (non-smooth coefficient/load: large quadrature estimate, tolerance widened)' if rough else ''),
                 jumps=[float(j) for j in jumps], interior_max=float(Rmax), identity=[(i, float(v)) for i, v in identity],
                 ends=ends)
 
@@ -557,7 +558,7 @@ def error_measures(r, solution):
 # değer problemi, dejenere/işaret değiştiren katsayı) beklenen hız bu sürümde iddia edilmez; yalnız gözlenen hız yazılır.
 def expected_rates(r):
     if r['order'] == 2 and not r['ivp'] and r['degeneracy']['kind'] == 'uniform':
-        return {'l2': r['degree'] + 1, 'h1': r['degree'], 'basis': '2. mertebe sınır değer problemi, α ≠ 0, düzgün çözüm varsayımı'}
+        return {'l2': r['degree'] + 1, 'h1': r['degree'], 'basis': 'second-order boundary value problem, α ≠ 0, smooth solution assumed'}
     return None
 
 
@@ -572,7 +573,7 @@ def convergence_study(r, solution):
         m //= 2
     levels = [k for k in (m, 2 * m, 4 * m) if k * p + 1 <= REFERENCE_LIMIT]
     if len(levels) < 3:
-        return item('yakınsama çalışması', 'yapılmadı', f'üç ağ seviyesi {REFERENCE_LIMIT} bilinmeyen sınırına sığmıyor'), None
+        return item('convergence study', 'not_run', f'three mesh levels do not fit the {REFERENCE_LIMIT}-unknown limit'), None
     uf, duf = lam(solution), lam(sp.diff(solution, x))
     N, dN, _ = basis(p)
     rows = []
@@ -583,7 +584,7 @@ def convergence_study(r, solution):
             try:
                 sol = ifem.solve(prob, k, p)
             except ZeroDivisionError:
-                return item('yakınsama çalışması', 'yapılmadı', f'n = {k} ağında bağımsız sistem tekil'), None
+                return item('convergence study', 'not_run', f'the independent system is singular on the n = {k} mesh'), None
             H = sol['h']
             l2 = h1 = un = mpmath.mpf(0)
             for e in range(k):
@@ -608,23 +609,23 @@ def convergence_study(r, solution):
     for norm in ('l2', 'h1'):
         r1, r2 = rows[1].get(f'rate_{norm}'), rows[2].get(f'rate_{norm}')
         if r1 is None or r2 is None:
-            verdicts.append((norm, 'tanımsız', 'hata ölçüm tabanında (yaklaşım tam ya da yuvarlama düzeyinde)'))
+            verdicts.append((norm, 'undefined', 'error at the measurement floor (exact approximation or round-off level)'))
             continue
         consistent = abs(r2 - r1) <= RATE_CONSISTENT
         if not consistent:
-            verdicts.append((norm, 'kurulamadı', f'ardışık hızlar {r1:.2f}, {r2:.2f}: asimptotik bölgeye girilmedi; hız iddiası yok'))
+            verdicts.append((norm, 'not_established', f'successive rates {r1:.2f}, {r2:.2f}: not in the asymptotic range; no rate is claimed'))
         elif expected is None:
-            verdicts.append((norm, 'gözlendi', f'gözlenen hız ≈ {r2:.2f} (bu sınıf için kuramsal hız iddia edilmiyor)'))
+            verdicts.append((norm, 'observed', f'observed rate ≈ {r2:.2f} (no theoretical rate is claimed for this class)'))
         else:
             target = expected[norm]
             match = abs(r2 - target) <= RATE_MATCH
-            verdicts.append((norm, 'uyumlu' if match else 'uyumsuz', f'gözlenen ≈ {r2:.2f}, beklenen {target}' + (
-                '' if match else ': beklenen hız gözlenmedi (ağlar ön-asimptotik olabilir, ör. kaba kh/Pe, ya da düzgünlük varsayımı sağlanmıyor)')))
+            verdicts.append((norm, 'consistent' if match else 'inconsistent', f'observed ≈ {r2:.2f}, expected {target}' + (
+                '' if match else ': the expected rate was not observed (the meshes may be pre-asymptotic, e.g. coarse kh/Pe, or the smoothness assumption fails)')))
     # Uyumsuz hız tek başına "yöntem hatalı" kanıtı değildir (ön-asimptotik bölge); hata kanıtı yama testi ve bağımsız
-    # çözümden gelir. Bu yüzden durum 'uyarı'dır, 'başarısız' değil.
-    status = 'geçti' if all(v[1] in ('uyumlu', 'gözlendi', 'tanımsız') for v in verdicts) else 'uyarı'
+    # çözümden gelir. Bu yüzden durum 'warning'dır, 'failed' değil.
+    status = 'passed' if all(v[1] in ('consistent', 'observed', 'undefined') for v in verdicts) else 'warning'
     detail = '; '.join(f'{"L²" if nm == "l2" else "H¹"}: {text}' for nm, _, text in verdicts)
-    return item('yakınsama çalışması (ifem, analitik çözüme karşı)', status, detail, rows=rows, expected=expected,
+    return item('convergence study (ifem, against the analytical solution)', status, detail, rows=rows, expected=expected,
                 verdicts=verdicts), rows
 
 
@@ -644,37 +645,37 @@ def stability_indicators(r):
         if any(b != 0 for b in Bv):
             peclets = [abs(b) * h / (2 * abs(a)) for a, b in zip(A, Bv) if a != 0]
             if len(peclets) < len(A):
-                out.append(item('Péclet sayısı', 'uyarı', 'α aralıkta sıfırlanıyor: Pe orada tanımsız (taşınım baskın bölge)'))
+                out.append(item('Péclet number', 'warning', 'α vanishes in the interval: Pe is undefined there (convection-dominated region)'))
             if peclets:
                 pe = max(peclets)
-                status = 'uyarı' if pe / p > PECLET_WARN else 'geçti'
-                out.append(item('Péclet sayısı', status, f'Pe = max|β|h/(2|α|) = {pe:.3g}, Pe/p = {pe / p:.3g}'
-                                + (' > 1: standart Galerkin salınım üretebilir (taşınım baskın, ağ kaba)' if status == 'uyarı' else ' ≤ 1'),
+                status = 'warning' if pe / p > PECLET_WARN else 'passed'
+                out.append(item('Péclet number', status, f'Pe = max|β|h/(2|α|) = {pe:.3g}, Pe/p = {pe / p:.3g}'
+                                + (' > 1: standard Galerkin may oscillate (convection-dominated, coarse mesh)' if status == 'warning' else ' ≤ 1'),
                                 value=pe))
         waves = [g / a for a, g in zip(A, G) if a != 0 and g / a > 0]
         if waves:
             k = max(waves) ** 0.5
             ppw = 2 * 3.141592653589793 / (k * h / p)
-            status = 'uyarı' if ppw < PPW_WARN else 'geçti'
-            out.append(item('dalga çözünürlüğü (kh)', status, f'k = {k:.3g}, kh = {k * h:.3g}, dalga boyu başına {ppw:.3g} aralık'
-                            + (' < 4: ağ dalgayı çözemiyor, sonuç fiziksel olarak güvenilmez' if ppw < PPW_SEVERE
-                               else ' < 10: faz (kirlilik) hatası beklenir' if ppw < PPW_WARN else ''), value=k * h))
+            status = 'warning' if ppw < PPW_WARN else 'passed'
+            out.append(item('wave resolution (kh)', status, f'k = {k:.3g}, kh = {k * h:.3g}, {ppw:.3g} intervals per wavelength'
+                            + (' < 4: the mesh cannot resolve the wave; the result is physically unreliable' if ppw < PPW_SEVERE
+                               else ' < 10: phase (pollution) error expected' if ppw < PPW_WARN else ''), value=k * h))
     else:
         Bv, G = val(r['beta']), val(r['gamma'])
         rates = [abs(g / b) for b, g in zip(Bv, G) if b != 0]
         if rates and max(rates) > 0:
             lh = max(rates) * h / p
-            out.append(item('1. mertebe adım göstergesi', 'uyarı' if lh > 1 else 'geçti',
+            out.append(item('first-order step indicator', 'warning' if lh > 1 else 'passed',
                             f'λ = max|γ/β| = {max(rates):.3g}, λh/p = {lh:.3g}'
-                            + (' > 1: büyük adım; standart Galerkin bu sınıfta kararlılık garantisi vermez' if lh > 1 else ''), value=lh))
+                            + (' > 1: large step; standard Galerkin gives no stability guarantee for this class' if lh > 1 else ''), value=lh))
     return out
 
 
 # ---------- 5. HEPSİ ----------
 # Katman 4'ün girişi: motor çıktısı r (yapılandırılmış veri). Sembolik olarak kanıtlanmış sürekli çözümsüzlük/teksizlik
-# hattı durdurur (Diagnosis). Diğer her madde durum bilgisiyle döner; 'yapılmadı' maddeleri açıkça listelenir.
-# İsteğe bağlı her denetim yalıtılmış çalışır: biri istisna atarsa o madde 'başarısız' olarak, istisnanın türü ve metniyle
-# raporlanır (asla 'geçti' sayılmaz) ve FEM sonucu ile diğer denetimler yine raporlanır. İstisna yutulmaz, görünür kalır.
+# hattı durdurur (Diagnosis). Diğer her madde durum bilgisiyle döner; 'not_run' maddeleri açıkça listelenir.
+# İsteğe bağlı her denetim yalıtılmış çalışır: biri istisna atarsa o madde 'failed' olarak, istisnanın türü ve metniyle
+# raporlanır (asla 'passed' sayılmaz) ve FEM sonucu ile diğer denetimler yine raporlanır. İstisna yutulmaz, görünür kalır.
 # pair=True: denetim (madde, ek veri) çifti döndürür; hata halinde ek veri None olur (sonraki denetim onu "yok" sayar).
 def guarded(name, fn, *args, pair=False):
     try:
@@ -682,7 +683,7 @@ def guarded(name, fn, *args, pair=False):
     except Diagnosis:
         raise
     except Exception as error:
-        failed = item(name, 'başarısız', f'denetim çalışırken hata: {type(error).__name__}: {error}')
+        failed = item(name, 'failed', f'error while running the check: {type(error).__name__}: {error}')
         return (failed, None) if pair else failed
 
 
@@ -694,12 +695,12 @@ def verify(r):
         raise stop
     exact = exact_solution(r, c)
     solution = exact['u']
-    solver, kappa = guarded('çözücü kalıntısı ve koşul sayısı', solver_check, r, pair=True)
-    reference, ref = guarded('bağımsız yeniden montaj ve çözüm (ifem)', independent_solution, r, kappa or r.get('condition'), pair=True)
-    V = {'classification': c, 'exact': exact, 'operator': guarded('operatör tutarlılığı (yama testi)', operator_consistency, r),
-         'reference': reference, 'solver': solver, 'first_order': guarded('1. mertebe atılan satır (bağımsız)', first_order_check, r, ref),
-         'distributional': guarded('dağılımsal kalıntı (eleman içi + düğüm sıçramaları)', distributional_residual, r),
-         'stability': guarded('kararlılık göstergeleri', stability_indicators, r)}
+    solver, kappa = guarded('solver residual and condition number', solver_check, r, pair=True)
+    reference, ref = guarded('independent re-assembly and solve (ifem)', independent_solution, r, kappa or r.get('condition'), pair=True)
+    V = {'classification': c, 'exact': exact, 'operator': guarded('operator consistency (patch test)', operator_consistency, r),
+         'reference': reference, 'solver': solver, 'first_order': guarded('first order: dropped row (independent)', first_order_check, r, ref),
+         'distributional': guarded('distributional residual (element interiors + nodal jumps)', distributional_residual, r),
+         'stability': guarded('stability indicators', stability_indicators, r)}
     if not isinstance(V['stability'], list):
         V['stability'] = [V['stability']]
     if solution is not None:
@@ -707,16 +708,16 @@ def verify(r):
             V['errors'] = error_measures(r, solution)
         except Exception as error:                 # hata ölçüsü hesaplanamadı: kâğıt "hesaplanmadı" yazar, madde başarısız
             V['errors'] = None
-            V['errors_failure'] = item('hata ölçüleri', 'başarısız', f'denetim çalışırken hata: {type(error).__name__}: {error}')
-        V['convergence'], _ = guarded('yakınsama çalışması (ifem, analitik çözüme karşı)', convergence_study, r, solution, pair=True)
+            V['errors_failure'] = item('error measures', 'failed', f'error while running the check: {type(error).__name__}: {error}')
+        V['convergence'], _ = guarded('convergence study (ifem, against the analytical solution)', convergence_study, r, solution, pair=True)
     else:
-        why = exact['reason'] or 'doğrulanmış analitik çözüm yok'
+        why = exact['reason'] or 'no verified analytical solution'
         V['errors'] = None
-        V['convergence'] = item('yakınsama çalışması', 'yapılmadı', f'doğrulanmış analitik çözüm yok ({why})')
-    exact_item = (item('analitik çözüm', 'geçti', 'denklem ve tüm koşullar ' + ('sembolik' if exact['status'] == 'verified_symbolic' else 'sayısal (50 basamak; kanıt değil)') + ' doğrulandı')
+        V['convergence'] = item('convergence study', 'not_run', f'no verified analytical solution ({why})')
+    exact_item = (item('analytical solution', 'passed', 'the equation and all conditions ' + ('symbolically' if exact['status'] == 'verified_symbolic' else 'numerically (50 digits; not a proof)') + ' verified')
                   if solution is not None else
-                  item('analitik çözüm', 'başarısız' if exact['status'] == 'rejected' else 'yapılmadı',
-                       ('aday reddedildi: ' if exact['status'] == 'rejected' else 'bulunamadı: ') + exact['reason']))
+                  item('analytical solution', 'failed' if exact['status'] == 'rejected' else 'not_run',
+                       ('candidate rejected: ' if exact['status'] == 'rejected' else 'not found: ') + exact['reason']))
     V['items'] = [exact_item, V['operator'], V['reference'], V['solver']] + [v for v in (V['first_order'], V['distributional']) if v] \
         + [V['convergence']] + V['stability'] + ([V['errors_failure']] if V.get('errors_failure') else [])
     return V
