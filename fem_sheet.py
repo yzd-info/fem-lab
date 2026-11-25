@@ -1178,7 +1178,7 @@ def build_sheet(valid, r, V):
       'a_j&:\\ \\text{unknown global nodal coefficient} & a^{(e)}_k&:\\ \\text{local coefficient of element } e \\\\ '
       'c_m&:\\ \\text{coefficient of the element polynomial} & R(u_h, x)&:\\ \\text{residual} \\\\ '
       'K_{ij},\\ F_i&:\\ \\text{system matrix and load vector entries} & Q&:\\ \\text{end flux } \\alpha u\' \\end{aligned}'
-      '\\qquad \\text{(Heinrich \\& Pepper notation)}')
+      '\\qquad \\text{(Pepper \\& Heinrich notation)}')
     D('N_j(x) = \\begin{cases} N_k^{(e)}(x), & x \\in \\Omega_e,\\ j = (e-1)p + k \\\\ 0, & \\text{on the other elements} \\end{cases},\\qquad '
       'a^{(e)}_k = a_{(e-1)p+k},\\qquad \\phi_i = N_i\\ \\text{(Bubnov–Galerkin)}')
 

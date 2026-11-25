@@ -2186,7 +2186,7 @@ function renderBasisDerivation(grid, mesh, a, j, sel) {
   const p = mesh.p, book = BASIS.BOOK[p], src = book || BASIS.SOLVER_P4, e = sel.support[0], h = mesh.h;
   const xe = mesh.a + (e - 1) * h, nodes = grid.connectivity[e - 1], num = (v) => fmtNum(Math.abs(v) < 1e-300 ? 0 : v);
   const xiNodes = BASIS.localNodes(p).map((t) => fmtNum(t)).join(',\\ ');
-  const srcNote = book ? (book.naturalSource === 'book' ? `\\text{(Heinrich–Pepper ${book.naturalEq})}` : '\\text{(from (3.25) with } x = h(1+\\xi)/2 \\text{; the } \\xi \\text{ form is not in the book)}')
+  const srcNote = book ? (book.naturalSource === 'book' ? `\\text{(Pepper–Heinrich ${book.naturalEq})}` : '\\text{(from (3.25) with } x = h(1+\\xi)/2 \\text{; the } \\xi \\text{ form is not in the book)}')
     : '\\text{(no P4 in the book: the solver’s equally spaced Lagrange definition)}';
   const pieces = sel.segs.filter((sg) => sg.local !== null);
   const blocks = [

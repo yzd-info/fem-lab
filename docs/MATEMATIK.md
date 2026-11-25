@@ -71,7 +71,7 @@ Admissible combinations:
 - Global numbering: local node $k$ of element $e$ (both 0-based) is global node $e\,p + k$.
 - Local coordinate $s = x - x_e \in [0, h]$, so $dx = ds$ (the Jacobian is 1).
 
-Notation used throughout (following Heinrich & Pepper, *The Finite Element Method*: $N$ for shape/interpolation
+Notation used throughout (following Pepper & Heinrich [1]: $N$ for shape/interpolation
 functions, Ch. 3; $\phi$ for Galerkin weighting functions, Ch. 2):
 
 | Symbol | Meaning |
@@ -306,3 +306,8 @@ integrals (integration steps are then omitted).
 
 Equally spaced nodes become ill-conditioned for degrees above 4; extending beyond $p = 4$ would require
 Gauss–Lobatto nodes.
+
+## Reference
+
+[1] D. W. Pepper and J. C. Heinrich, *The Finite Element Method: Basic Concepts and Applications with MATLAB®, MAPLE,
+and COMSOL*, 3rd ed., Boca Raton, FL: CRC Press, 2017. ISBN 978-1-4987-3860-6.

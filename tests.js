@@ -203,8 +203,8 @@ check("α(x₀)=0 ucunda u' koşulu reddedilir", throws(() => problem('x', '0', 
 
 // 5k. Birinci mertebe uyumluluk (madde 3): atılan satır kalıntısı ve sol sıfır uzayı; yᵀb = −r özdeşliği
 { const fo = (f, n, p, g = '0', x1 = 2) => solve(problem('0', '1', g, f, D(g === '0' ? 0 : 1), NONE, 0, x1), n, p).diagnostics.firstOrder;
-  const hw = fo('2x', 2, 1);
-  check("u'=2x [0,2] n=2 P1 (ödev): r = 0, uyumlu", Math.abs(hw.residual) < 1e-14 && hw.compatible && hw.row === 1, `r ${hw.residual}`);
+  const bench = fo('2x', 2, 1);
+  check("u'=2x [0,2] n=2 P1 (kıyas): r = 0, uyumlu", Math.abs(bench.residual) < 1e-14 && bench.compatible && bench.row === 1, `r ${bench.residual}`);
   const cubic = fo('3x^2', 2, 1);
   check("u'=3x² [0,2] n=2 P1: r = −1, uyumsuz", Math.abs(cubic.residual + 1) < 1e-13 && !cubic.compatible, `r ${cubic.residual}`);
   for (const [f, n, p, g] of [['2x', 2, 1, '0'], ['3x^2', 8, 1, '0'], ['0', 8, 1, '2'], ['3x^2', 4, 3, '0']]) {

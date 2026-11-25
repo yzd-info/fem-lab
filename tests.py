@@ -155,7 +155,7 @@ sheet = fem_sheet.make_sheet(problem('', '1', '', '3x^2', D(0), NONE, 2, 1, 0, 2
 check('kâğıt: 1. mertebede r₁ ve yᵀb satırı, uyumsuzluk açıklaması', 'r_{1} = ' in sheet and 'the full system is inconsistent' in sheet)
 check("kâğıt: 2. mertebede r satırı yok", 'r_{1} = ' not in fem_sheet.make_sheet(problem('1', '', '', '1', D(0), D(0), 2, 1))['text'])
 
-# 1h. Öğretici türetmeler (kâğıt): şekil fonksiyonu türetmesi hesapla aynı; ödev kıyası adımları; formülasyona göre ayrım
+# 1h. Öğretici türetmeler (kâğıt): şekil fonksiyonu türetmesi hesapla aynı; kıyas problemi adımları; formülasyona göre ayrım
 for p_ in (1, 2, 3, 4):
     for h_ in (sp.Integer(1), sp.Rational(1, 2), sp.Rational(1, 3)):
         Ns_, _ = fem_sheet.lagrange_basis(p_, h_)
@@ -164,17 +164,17 @@ for p_ in (1, 2, 3, 4):
         except RuntimeError:
             ok = False
         check(f'şekil türetmesi P{p_}, h={h_}: Vandermonde yolu hesaptaki N ile aynı', ok and any('\\mathbf{V}\\mathbf{c}' in b_ for b_ in blocks))
-hw = fem_sheet.make_sheet(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2))['text']
+bench = fem_sheet.make_sheet(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2))['text']
 for label, needle in [('polinom u^e(s) = c₀ + c₁s', 'u^{e}(s) = c_{0} + c_{1} s'), ('koşul c₀ = a₁⁽ᵉ⁾', 'u^{e}(s_{1}) &= c_{0} = a^{(e)}_{1}'),
                       ('çözüm c₁ = â₂ − â₁', 'c_{1} &= - a^{(e)}_{1} + a^{(e)}_{2}'), ('gruplama â₁(1 − s) + â₂(s)', 'a^{(e)}_{1}\\left(1 - s\\right) + a^{(e)}_{2}\\left(s\\right)'),
                       ('global N⁽²⁾ = 2 − x, x − 1', 'N_{1}^{(2)}(x) = 2 - x,\\quad N_{2}^{(2)}(x) = x - 1'), ('u_h⁽¹⁾ = a₁(1 − x) + a₂x', 'u_h^{(1)}(x) = a_{1}\\left(1 - x\\right) + a_{2}\\left(x\\right)'),
                       ('kalıntı R⁽¹⁾ = a₂ − a₁ − 2x', 'R(u_h, x)\\big|_{\\Omega_{1}} = - a_{1} + a_{2} - 2 x'), ('Dirichlet → φ₁ ağırlık uzayında yok', '\\phi_{1} = N_{1}\\ \\text{removed: } u(x_0)\\ \\text{is given (essential condition)'),
-                      ('i = 2 denklemi −a₁/2 + a₃/2 − 2 = 0 (ödev 2. satır)', '- \\frac{a_{1}}{2} + \\frac{a_{3}}{2} - 2 = 0'),
+                      ('i = 2 denklemi −a₁/2 + a₃/2 − 2 = 0 (kıyas, 2. satır)', '- \\frac{a_{1}}{2} + \\frac{a_{3}}{2} - 2 = 0'),
                       ('i = 3 denklemi −a₂/2 + a₃/2 − 5/3 = 0', '- \\frac{a_{2}}{2} + \\frac{a_{3}}{2} - \\frac{5}{3} = 0'),
                       ('yerine koyma (0)(1 − x) + (2/3)(x) = 2x/3', '\\left(0\\right)\\left(1 - x\\right) + \\left(\\frac{2}{3}\\right)\\left(x\\right) = \\frac{2 x}{3}'),
                       ('δ_ij doğrulaması', 'N_i(s_j) = \\delta_{ij}')]:
-    check(f'ödev kâğıdı: {label}', needle in hw, needle)
-check('1. mertebede kısmi integrasyon yapay olarak eklenmez', 'no integration by parts is needed' in hw and 'v\\,(\\alpha u\')\'' not in hw)
+    check(f'kıyas kâğıdı: {label}', needle in bench, needle)
+check('1. mertebede kısmi integrasyon yapay olarak eklenmez', 'no integration by parts is needed' in bench and 'v\\,(\\alpha u\')\'' not in bench)
 bvp = fem_sheet.make_sheet(problem('1', '', '1', 'x', D(0), D(0), 2, 1))['text']
 check('2. mertebe: C⁰ gerekçesi + kısmi integrasyon + satır denklemi', 'undefined there in the classical sense' in bvp and '(integration by parts)' in bvp
       and '\\frac{11 a_{2}}{3}' in bvp and 'R_{1}(x) = a_{1} \\left(1 - 2 x\\right) + 2 a_{2} x - x' in bvp and 'distributional residual' in bvp)
@@ -182,29 +182,29 @@ ivp = fem_sheet.make_sheet(problem('1', '', '1', '0', B(0, 1), NONE, 2, 1))['tex
 check('IVP: akısı bilinmeyen uçtaki test fonksiyonu gerekçesiyle dışarıda', '\\text{unknown: in the weighting space }' in ivp and 'Petrov–Galerkin' in ivp)
 
 # 1i. Matematiksel çözüm kâğıdı standardı: başlık mertebeye göre; boyutlar; montaj eşlemesi; sınır terimi gerekçesi; hata ölçüleri
-check('1. mertebe: "Weak Formulation" başlığı YOK, ağırlıklı kalıntı başlığı var', 'Weak Formulation' not in hw and 'Galerkin Weighted-Residual Formulation' in hw)
+check('1. mertebe: "Weak Formulation" başlığı YOK, ağırlıklı kalıntı başlığı var', 'Weak Formulation' not in bench and 'Galerkin Weighted-Residual Formulation' in bench)
 check('2. mertebe: "Weak Formulation (Integration by Parts)" var ve ağırlıklı kalıntıdan sonra', 'Weak Formulation (Integration by Parts)' in bvp
       and bvp.index('Galerkin Weighted-Residual') < bvp.index('Weak Formulation (Integration by Parts)'))
-check('kâğıt (Heinrich & Pepper): φ_i = N_i ağırlık, u_h = Σ a_j N_j, yerel a_k⁽ᵉ⁾', '\\phi_i(x) = N_i(x)' in hw and 'u_h(x) = \\sum_{j=1}^{3} a_j\\,N_j(x)' in hw
-      and 'a^{(e)}_k = a_{(e-1)p+k}' in hw and 'w_i' not in hw and '\\hat{a}' not in hw)
-check('kâğıt: a, K, F boyutları ve satır/sütun anlamı', '\\mathbf{K} \\in \\mathbb{R}^{3\\times3}' in hw and 'row } i \\leftrightarrow \\phi_i' in hw)
-check('ödev: montajda K₂₂ = K⁽¹⁾₂₂ + K⁽²⁾₁₁ = 0 ve F₂ = 2/3 + 4/3', 'K_{22} = K^{(1)}_{22} + K^{(2)}_{11}' in hw and 'F_{l,2} = F^{(1)}_{l,2} + F^{(2)}_{l,1}' in hw)
+check('kâğıt (Pepper & Heinrich): φ_i = N_i ağırlık, u_h = Σ a_j N_j, yerel a_k⁽ᵉ⁾', '\\phi_i(x) = N_i(x)' in bench and 'u_h(x) = \\sum_{j=1}^{3} a_j\\,N_j(x)' in bench
+      and 'a^{(e)}_k = a_{(e-1)p+k}' in bench and 'w_i' not in bench and '\\hat{a}' not in bench)
+check('kâğıt: a, K, F boyutları ve satır/sütun anlamı', '\\mathbf{K} \\in \\mathbb{R}^{3\\times3}' in bench and 'row } i \\leftrightarrow \\phi_i' in bench)
+check('kıyas: montajda K₂₂ = K⁽¹⁾₂₂ + K⁽²⁾₁₁ = 0 ve F₂ = 2/3 + 4/3', 'K_{22} = K^{(1)}_{22} + K^{(2)}_{11}' in bench and 'F_{l,2} = F^{(1)}_{l,2} + F^{(2)}_{l,1}' in bench)
 check('2. mertebe: her uçta sınır terimi gerekçesi', bvp.count('x = 0:\\quad') == 1 and bvp.count('x = 1:\\quad') == 1 and '\\phi_i(0) = 0' in bvp)
 neu = fem_sheet.make_sheet(problem('-1', '', '', 'sin(pi*x)', D(0), {'type': 'neumann', 'value': '1'}, 2, 2))['text']
 check('Neumann ucu: Q = α u\' bilinen akı olarak yazılır', 'Q_1 = \\alpha(1)\\,u\'(1) = -1' in neu and 'Q_1 = -1\\ \\text{(natural)}' in neu)
 check('karşılaştırma: düğüm, noktasal, L² ve H¹ ayrı', all(k in neu for k in ('(nodal error)', '(pointwise error', '_{L^2}', '_{H^1}')))
 em = fem_verify.error_measures(fem_sheet.solve_problem(problem('', '1', '', '2x', D(0), NONE, 2, 1, 0, 2)), fem_sheet.x**2)
-check("ödev hata ölçüleri elle hesaba eşit: düğüm 1/3, |e|_H¹ = √(8/9)", abs(em['nodal'] - 1 / 3) < 1e-12 and abs(em['h1'] - (8 / 9) ** 0.5) < 1e-12, f"{em['nodal']} {em['h1']}")
+check("kıyas hata ölçüleri elle hesaba eşit: düğüm 1/3, |e|_H¹ = √(8/9)", abs(em['nodal'] - 1 / 3) < 1e-12 and abs(em['h1'] - (8 / 9) ** 0.5) < 1e-12, f"{em['nodal']} {em['h1']}")
 numeric_sheet = fem_sheet.build_sheet(*fem_sheet.run_pipeline(problem('1', '', '', 'abs(x-0.3)', D(0), D(0), 2, 1), symbolic=False))
 exact_sheet = fem_sheet.make_sheet(problem('1', '', '', 'x', D(0), D(0), 2, 1))['text']
 check('integral kuralı yazılır: sayısal yolda tanh–sinh, tam yolda SymPy', 'tanh–sinh' in numeric_sheet and 'time limit' in numeric_sheet
       and 'exactly (symbolically) with SymPy' in exact_sheet and 'tanh–sinh' not in exact_sheet)
 
 # 1i-b. Kâğıt sunumu: düğüm sayısı ≠ bilinmeyen sayısı; eleman integrali x'ten s'ye dönüşümüyle (J = 1); hata ölçülerinin anlamı
-check('kâğıt: N = np + 1 düğüm ile temel koşuldan sonraki bilinmeyen sayısı ayrı', 'unknowns after essential conditions: } 2' in hw and 'toplam düğüm = bilinmeyen' not in hw)
-check('kâğıt: eleman integrali önce x üzerinde, sonra s = x − x_e ile (J = 1)', 'K^{(e)}_{ij} = \\int_{x_e}^{x_e + h}' in hw and 'J = \\frac{dx}{ds} = 1' in hw
-      and '\\int_{1}^{2}(\\cdots)\\,dx = \\int_0^{1}(\\cdots)\\big|_{x = s + 1}\\,ds' in hw)
-check('kâğıt: her hata ölçüsünün ne ölçtüğü yazılır', 'nodal error: at the nodes only' in hw and 'error of the derivative' in hw)
+check('kâğıt: N = np + 1 düğüm ile temel koşuldan sonraki bilinmeyen sayısı ayrı', 'unknowns after essential conditions: } 2' in bench and 'toplam düğüm = bilinmeyen' not in bench)
+check('kâğıt: eleman integrali önce x üzerinde, sonra s = x − x_e ile (J = 1)', 'K^{(e)}_{ij} = \\int_{x_e}^{x_e + h}' in bench and 'J = \\frac{dx}{ds} = 1' in bench
+      and '\\int_{1}^{2}(\\cdots)\\,dx = \\int_0^{1}(\\cdots)\\big|_{x = s + 1}\\,ds' in bench)
+check('kâğıt: her hata ölçüsünün ne ölçtüğü yazılır', 'nodal error: at the nodes only' in bench and 'error of the derivative' in bench)
 same_sheet = fem_sheet.make_sheet(problem('1', '', '1', '1', D(0), D(0), 3, 1))['text']
 check('kâğıt: aynı eleman matrisi sessizce atlanmaz (gerekçe + e = 2, 3 satırı)', 'J = 1 \\Rightarrow \\text{the integrand in } s' in same_sheet
       and 'e = 2,\\ 3:\\qquad \\mathbf{K}^{(e)} = \\mathbf{K}^{(1)}' in same_sheet)
@@ -388,7 +388,7 @@ for name, data in [('tekil (koşulsuz u\'\'=1)', problem('1', '0', '0', '1', NON
     except fem_sheet.UserError as error:
         check(f'reddeder: {name}', True, str(error))
 
-# 5b. Korpus düzeltmelerinin regresyonları (verification/ENGINEERING_NOTES.md, D1–D3; sürekli düzey doğrulaması).
+# 5b. Korpus düzeltmelerinin regresyonları (D1–D3; sürekli düzey doğrulaması).
 #     Hiçbiri uygulamanın kendi çıktısını beklenen değer olarak kullanmaz: beklenenler elle ya da kapalı biçimden gelir.
 # D1: serbest bilinmeyen yok (C46) → eskiden HTTP 500. Kâğıt üretilmeli, doğrulama maddeleri bulunmalı, hiçbiri 'failed' olmamalı.
 zero = fem_sheet.make_sheet(problem('1', '', '', '1', D(0), D(0), 1, 1))
