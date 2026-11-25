@@ -5,6 +5,7 @@
 
 Görevi küçük ve net: sayfayı sunar, çözüm kâğıdını fem_sheet.py'ye hesaplatır, istenirse PDF'e derler.
   GET  /            → index.html
+  GET  /basis_core.js, /fem_sim.js, /fem_sim3d.js → Basis functions kartı, FEM Simulation (2B) ve 3B görünümü
   POST /api/sheet   → { text, tex, nodal, exact }   (fem_sheet.py ayrı süreçte, süre sınırıyla çalışır)
   POST /api/pdf     → aynı girdiden üretilen .tex'in pdflatex ile derlenmiş hali
   POST /api/exact   → { exact_js }  yalnızca analitik çözüm (grafiklerde bağımsız referans olarak kullanılır)
@@ -43,14 +44,14 @@ def compute_sheet(payload):
         try:
             result = json.loads(run.stdout)
         except ValueError:
-            return {'error': 'Çözüm kâğıdı üretilemedi: ' + (run.stderr.strip().splitlines() or ['bilinmeyen hata'])[-1]}, 500
+            return {'error': 'The solution sheet could not be generated: ' + (run.stderr.strip().splitlines() or ['unknown error'])[-1]}, 500
         if 'error' in result:
             return result, 400                         # kullanıcının düzeltebileceği girdi hatası
         if len(cache) >= 16:
             cache.pop(next(iter(cache)))
         cache[key] = result
         return result, 200
-    return {'error': 'Hesap süre sınırını aştı. Eleman sayısını ya da polinom derecesini düşür.'}, 504
+    return {'error': 'The computation exceeded the time limit. Reduce the number of elements or the polynomial degree.'}, 504
 
 
 def compute_exact(payload):
@@ -95,16 +96,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ('/', '/index.html'):
             self.send(200, (ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+        elif self.path in ('/basis_core.js', '/fem_sim.js', '/fem_sim3d.js'):   # sayfanın eklenti betikleri; sabit beyaz liste, yol girdisi kabul edilmez
+            self.send(200, (ROOT / self.path[1:]).read_bytes(), 'text/javascript; charset=utf-8')
         else:
-            self.send(404, {'error': 'bulunamadı'})
+            self.send(404, {'error': 'not found'})
 
     def do_POST(self):
         try:
             payload = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
         except ValueError:
-            return self.send(400, {'error': 'Geçersiz istek.'})
+            return self.send(400, {'error': 'Invalid request.'})
         if not isinstance(payload, dict):
-            return self.send(400, {'error': 'Geçersiz istek.'})
+            return self.send(400, {'error': 'Invalid request.'})
         if self.path == '/api/exact':
             return self.send(200, compute_exact(payload))
         if self.path == '/api/sheet':
@@ -112,7 +115,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(status, result)
         if self.path == '/api/pdf':
             if not LATEX:
-                return self.send(501, {'error': 'pdflatex kurulu değil.'})
+                return self.send(501, {'error': 'pdflatex is not installed.'})
             result, status = compute_sheet(payload)
             if status != 200:
                 return self.send(status, result)
@@ -120,13 +123,13 @@ class Handler(BaseHTTPRequestHandler):
                 pdf = compile_pdf(result['tex'])
             except subprocess.TimeoutExpired:
                 pdf = None
-            return self.send(200, pdf, 'application/pdf') if pdf else self.send(500, {'error': 'LaTeX derlemesi başarısız.'})
-        self.send(404, {'error': 'bulunamadı'})
+            return self.send(200, pdf, 'application/pdf') if pdf else self.send(500, {'error': 'LaTeX compilation failed.'})
+        self.send(404, {'error': 'not found'})
 
     def log_message(self, *args):       # her istekte terminali doldurmasın
         pass
 
 
 if __name__ == '__main__':
-    print(f'FEM Lab: http://localhost:{PORT}   (PDF: {"pdflatex bulundu" if LATEX else "pdflatex yok, tarayıcıdan yazdırılır"})')
+    print(f'FEM LAB: http://localhost:{PORT}   (PDF: {"pdflatex found" if LATEX else "no pdflatex, print from the browser"})')
     ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()

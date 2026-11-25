@@ -1,6 +1,6 @@
 # Verification, diagnostics and testing
 
-This document describes how FEM Lab checks its own results: well-posedness diagnostics, analytical-solution
+This document describes how FEM LAB checks its own results: well-posedness diagnostics, analytical-solution
 validation, the reference solutions used for error measurement, the independent verification layer, the error
 measures and their interpretation, and the automated tests. The mathematics is in [MATEMATIK.md](MATEMATIK.md); the
 software structure in [MIMARI.md](MIMARI.md).
@@ -30,12 +30,12 @@ solution is printed separately; it is the method's error, not a disagreement bet
 
 ## 2. Reference solution: analytical or fine mesh
 
-Measuring an error requires a reference. FEM Lab uses one of two, and labels which one:
+Measuring an error requires a reference. FEM LAB uses one of two, and labels which one:
 
 | Reference | When | What the error means |
 |---|---|---|
-| **Analytical** | The server finds a closed-form solution with SymPy (`/api/exact`) and it passes validation (§4) | The true error $E = u - u_h$. Tile: "Referans u: analitik". |
-| **Fine mesh** | No validated analytical solution, or the page is used without the server | The same method on $n = 128$, $p = 4$. The measures are differences $D = u_{\mathrm{ref}} - u_h$ (labelled $D_{L^2}$, $D_{\max}$, …), not errors. Tile: "Referans u_ref: ince ağ". |
+| **Analytical** | The server finds a closed-form solution with SymPy (`/api/exact`) and it passes validation (§4) | The true error $E = u - u_h$. Tile: "Reference solution: Analytical". |
+| **Fine mesh** | No validated analytical solution, or the page is used without the server | The same method on $n = 128$, $p = 4$. The measures are differences $D = u_{\mathrm{ref}} - u_h$ (labelled $D_{L^2}$, $D_{\max}$, …), not errors. Tile: "Reference solution: Fine mesh". |
 
 Consequences of the fine-mesh reference:
 
@@ -174,8 +174,8 @@ not computed.
 
 ## 6. Independent verification layer (`fem_verify.py`)
 
-Each solution sheet runs these checks. Every item carries a status — passed (`geçti`), failed (`başarısız`),
-warning (`uyarı`) or not performed (`yapılmadı`) — on the sheet and above it. A check that could not be performed is
+Each solution sheet runs these checks. Every item carries a status — `Passed`, `Failed`,
+`Warning` or `Not run` — on the sheet and above it. A check that could not be performed is
 never presented as performed. The module does not call any function of the FEM engine; `tests.py` verifies this from
 the source code.
 
@@ -216,8 +216,10 @@ The same definitions and thresholds are used in the browser's diagnostics box.
 
 | Command | What it checks |
 |---|---|
-| `node tests.js` | the browser kernel (167 checks): quadrature, shape functions, solutions against analytical results, rates, diagnostics categories, scaling, flux conditions, stability indicators |
-| `python3 tests.py` | the server pipeline (228 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
+| `node tests.js` | the browser kernel (188 checks): quadrature, shape functions, solutions against analytical results, rates, diagnostics categories, scaling, flux conditions, stability indicators |
+| `node tests_basis.js` | the basis-function data (58 checks) against textbook expressions and the solver |
+| `node tests_sim.js` | the simulation views (130 checks): their data against the solver and the sheet, and the interface |
+| `python3 tests.py` | the server pipeline (231 checks): hand-derived matrices, SymPy ↔ JavaScript ↔ analytical solution, the sheet's structure and notation, analytical-solution validation, diagnostics categories, layer boundaries, LaTeX compilation of every sheet; it also runs `verification/run_verification.py --quick` and `--compare` |
 | `python3 verification/run_verification.py --full` | the browser kernel against the independent solver and analytical solutions for benchmarks T1–T16 and edge cases E1–E4b, $n = 4 \dots 32$ |
 | `python3 verification/run_corpus.py` | the 80-case input-only corpus (§7a); needs `pip install -r verification/requirements-verify.txt` (scikit-fem) |
 
@@ -256,7 +258,7 @@ the browser kernel (`node tests.js --solve`), and evaluates the results independ
 - valid inputs are compared with **scikit-fem** (`verification/skfem_reference.py`, version pinned in
   `verification/requirements-verify.txt`), which assembles the documented weak form itself with `ElementLineP1`,
   `ElementLineP2` and `ElementLinePp(p)`. Its interior DOFs for $p \ge 3$ are hierarchical, so results are mapped to
-  FEM Lab's equispaced nodal basis with $\Phi_{Jm} = \psi_m(x_J)$: $K_{\text{Lagrange}} = \Phi^{-\mathsf T} K\,\Phi^{-1}$.
+  FEM LAB's equispaced nodal basis with $\Phi_{Jm} = \psi_m(x_J)$: $K_{\text{Lagrange}} = \Phi^{-\mathsf T} K\,\Phi^{-1}$.
   Quadrature: Gauss–Legendre of order $2p + 40$, with order $2p + 8$ as an error estimate;
 - an analytical solution found by the application is re-checked against the equation and every condition with a separate
   parser, and the $L^2$ / $H^1$ errors written on the sheet are recomputed independently;
@@ -277,7 +279,7 @@ Results (`verification/corpus_results/`: `results.json`, `skfem_results.json`, `
 changes and the reference of the baseline comparison. Case statuses: PASS, WARN, LIMITATION (warning on an
 intentionally challenging case), DIAGNOSED (a valid input rejected with a diagnosis that is consistent with independent
 evidence), REJECTED_OK, FAIL, RUNNER_ERROR (a defect of the runner itself, reported separately). Each valid case also
-gets a cross-verification matrix row (browser ↔ server, FEM Lab ↔ ifem, scikit-fem element / global / nodal, analytical
+gets a cross-verification matrix row (browser ↔ server, FEM LAB ↔ ifem, scikit-fem element / global / nodal, analytical
 solution, continuous existence / uniqueness / compatibility, L²/H¹ recomputation, boundary condition) with
 PASS / FAIL / WARN / UNSUPPORTED / INCONCLUSIVE / NOT_RUN; only PASS counts as verified. scikit-fem
 uses the same documented weak form, so agreement does not exclude a common-mode error in that formulation; the

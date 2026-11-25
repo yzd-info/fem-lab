@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" width="920" height="470" role="img" aria-labelledby="t d" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="15">
+<title id="t">The finite element idea</title><desc id="d">Five linear elements. Each basis function is scaled by its computed nodal coefficient; their sum is the piecewise linear approximation, compared with the exact solution sin(pi x).</desc>
+<rect width="920" height="470" rx="10" fill="#ffffff"/>
+<text x="64.0" y="30.0" text-anchor="start" fill="#5b6472" >−u″ = π² sin(πx),  u(0) = u(1) = 0   ·   5 linear elements (P1)</text>
+<line x1="64.0" y1="396.0" x2="806.0" y2="396.0" stroke="#5b6472" stroke-width="1" />
+<line x1="64.0" y1="396.0" x2="64.0" y2="60.0" stroke="#5b6472" stroke-width="1" />
+<text x="814.0" y="401.0" text-anchor="start" fill="#0a0a0a" >x</text>
+<text x="54.0" y="54.0" text-anchor="end" fill="#0a0a0a" >u</text>
+<text x="54.0" y="251.9" text-anchor="end" fill="#5b6472" >0.5</text>
+<line x1="60.0" y1="246.9" x2="64.0" y2="246.9" stroke="#5b6472" stroke-width="1" />
+<text x="54.0" y="102.9" text-anchor="end" fill="#5b6472" >1</text>
+<line x1="60.0" y1="97.9" x2="64.0" y2="97.9" stroke="#5b6472" stroke-width="1" />
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="64.0,396.0 205.2,396.0"/>
+<line x1="64.0" y1="396.0" x2="64.0" y2="396.0" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="64.0,396.0 205.2,220.8 346.4,396.0"/>
+<line x1="205.2" y1="396.0" x2="205.2" y2="220.8" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="205.2,396.0 346.4,112.4 487.6,396.0"/>
+<line x1="346.4" y1="396.0" x2="346.4" y2="112.4" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="346.4,396.0 487.6,112.4 628.8,396.0"/>
+<line x1="487.6" y1="396.0" x2="487.6" y2="112.4" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="487.6,396.0 628.8,220.8 770.0,396.0"/>
+<line x1="628.8" y1="396.0" x2="628.8" y2="220.8" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#00A676" stroke-width="1.5" points="628.8,396.0 770.0,396.0"/>
+<line x1="770.0" y1="396.0" x2="770.0" y2="396.0" stroke="#c9ced6" stroke-width="1" stroke-dasharray="2 4"/>
+<polyline fill="none" stroke="#E5372A" stroke-width="3.2" stroke-linejoin="round" points="64.0,396.0 205.2,220.8 346.4,112.4 487.6,112.4 628.8,220.8 770.0,396.0"/>
+<polyline fill="none" stroke="#1F6FEB" stroke-width="2.4" stroke-dasharray="7 5" points="64.0,396.0 67.5,391.3 71.1,386.6 74.6,382.0 78.1,377.3 81.7,372.6 85.2,367.9 88.7,363.3 92.2,358.6 95.8,354.0 99.3,349.4 102.8,344.7 106.4,340.1 109.9,335.5 113.4,331.0 116.9,326.4 120.5,321.9 124.0,317.3 127.5,312.8 131.1,308.3 134.6,303.9 138.1,299.4 141.7,295.0 145.2,290.6 148.7,286.2 152.2,281.9 155.8,277.6 159.3,273.3 162.8,269.1 166.4,264.8 169.9,260.6 173.4,256.5 177.0,252.4 180.5,248.3 184.0,244.2 187.6,240.2 191.1,236.2 194.6,232.3 198.1,228.4 201.7,224.6 205.2,220.8 208.7,217.0 212.3,213.3 215.8,209.6 219.3,206.0 222.8,202.4 226.4,198.8 229.9,195.3 233.4,191.9 237.0,188.5 240.5,185.2 244.0,181.9 247.6,178.7 251.1,175.5 254.6,172.4 258.1,169.3 261.7,166.3 265.2,163.3 268.7,160.4 272.3,157.6 275.8,154.8 279.3,152.1 282.9,149.4 286.4,146.8 289.9,144.3 293.5,141.8 297.0,139.4 300.5,137.0 304.0,134.7 307.6,132.5 311.1,130.3 314.6,128.3 318.2,126.2 321.7,124.3 325.2,122.4 328.8,120.5 332.3,118.8 335.8,117.1 339.3,115.5 342.9,113.9 346.4,112.4 349.9,111.0 353.5,109.7 357.0,108.4 360.5,107.2 364.1,106.1 367.6,105.0 371.1,104.0 374.6,103.1 378.2,102.3 381.7,101.5 385.2,100.8 388.8,100.2 392.3,99.7 395.8,99.2 399.3,98.8 402.9,98.4 406.4,98.2 409.9,98.0 413.5,97.9 417.0,97.9 420.5,97.9 424.1,98.0 427.6,98.2 431.1,98.4 434.7,98.8 438.2,99.2 441.7,99.7 445.2,100.2 448.8,100.8 452.3,101.5 455.8,102.3 459.4,103.1 462.9,104.0 466.4,105.0 469.9,106.1 473.5,107.2 477.0,108.4 480.5,109.7 484.1,111.0 487.6,112.4 491.1,113.9 494.7,115.5 498.2,117.1 501.7,118.8 505.2,120.5 508.8,122.4 512.3,124.3 515.8,126.2 519.4,128.3 522.9,130.3 526.4,132.5 530.0,134.7 533.5,137.0 537.0,139.4 540.5,141.8 544.1,144.3 547.6,146.8 551.1,149.4 554.7,152.1 558.2,154.8 561.7,157.6 565.3,160.4 568.8,163.3 572.3,166.3 575.8,169.3 579.4,172.4 582.9,175.5 586.4,178.7 590.0,181.9 593.5,185.2 597.0,188.5 600.6,191.9 604.1,195.3 607.6,198.8 611.1,202.4 614.7,206.0 618.2,209.6 621.7,213.3 625.3,217.0 628.8,220.8 632.3,224.6 635.9,228.4 639.4,232.3 642.9,236.2 646.4,240.2 650.0,244.2 653.5,248.3 657.0,252.4 660.6,256.5 664.1,260.6 667.6,264.8 671.2,269.1 674.7,273.3 678.2,277.6 681.8,281.9 685.3,286.2 688.8,290.6 692.3,295.0 695.9,299.4 699.4,303.9 702.9,308.3 706.5,312.8 710.0,317.3 713.5,321.9 717.1,326.4 720.6,331.0 724.1,335.5 727.6,340.1 731.2,344.7 734.7,349.4 738.2,354.0 741.8,358.6 745.3,363.3 748.8,367.9 752.4,372.6 755.9,377.3 759.4,382.0 762.9,386.6 766.5,391.3 770.0,396.0"/>
+<line x1="64.0" y1="396.0" x2="770.0" y2="396.0" stroke="#0a0a0a" stroke-width="4" />
+<circle cx="64.0" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="64.0" cy="396.0" r="4" fill="#E5372A"/>
+<text x="64.0" y="421.0" text-anchor="middle" fill="#5b6472" >x₁</text>
+<circle cx="205.2" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="205.2" cy="220.8" r="4" fill="#E5372A"/>
+<text x="205.2" y="421.0" text-anchor="middle" fill="#5b6472" >x₂</text>
+<circle cx="346.4" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="346.4" cy="112.4" r="4" fill="#E5372A"/>
+<text x="346.4" y="421.0" text-anchor="middle" fill="#5b6472" >x₃</text>
+<circle cx="487.6" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="487.6" cy="112.4" r="4" fill="#E5372A"/>
+<text x="487.6" y="421.0" text-anchor="middle" fill="#5b6472" >x₄</text>
+<circle cx="628.8" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="628.8" cy="220.8" r="4" fill="#E5372A"/>
+<text x="628.8" y="421.0" text-anchor="middle" fill="#5b6472" >x₅</text>
+<circle cx="770.0" cy="396.0" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+<circle cx="770.0" cy="396.0" r="4" fill="#E5372A"/>
+<text x="770.0" y="421.0" text-anchor="middle" fill="#5b6472" >x₆</text>
+<line x1="134.6" y1="400.0" x2="134.6" y2="436.0" stroke="#5b6472" stroke-width="1" />
+<text x="134.6" y="452.0" text-anchor="middle" fill="#0a0a0a" >element Ωₑ</text>
+<line x1="487.6" y1="404.0" x2="522.9" y2="436.0" stroke="#5b6472" stroke-width="1" />
+<text x="522.9" y="452.0" text-anchor="middle" fill="#0a0a0a" >node</text>
+<line x1="64.0" y1="112.4" x2="346.4" y2="112.4" stroke="#5b6472" stroke-width="1" stroke-dasharray="2 4"/>
+<text x="276.4" y="104.4" text-anchor="end" fill="#0a0a0a" >nodal value a₃</text>
+<line x1="600.6" y1="255.8" x2="788.0" y2="211.1" stroke="#5b6472" stroke-width="1" />
+<text x="792.0" y="209.1" text-anchor="start" fill="#00A676" >aⱼ Nⱼ(x)</text>
+<text x="792.0" y="228.1" text-anchor="start" fill="#5b6472" >scaled basis</text>
+<line x1="586.4" y1="52.0" x2="620.4" y2="52.0" stroke="#1F6FEB" stroke-width="2.4" stroke-dasharray="7 5"/>
+<text x="630.4" y="57.0" text-anchor="start" fill="#0a0a0a" >exact u(x)</text>
+<line x1="586.4" y1="76.0" x2="620.4" y2="76.0" stroke="#E5372A" stroke-width="3.2" />
+<text x="630.4" y="81.0" text-anchor="start" fill="#0a0a0a" >uₕ = Σ aⱼ Nⱼ</text>
+</svg>

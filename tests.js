@@ -142,7 +142,7 @@ check("α(x₀)=0 ucunda u' koşulu reddedilir", throws(() => problem('x', '0', 
 // Kaba ağdaki IVP tekilliği "çözüm tek değil" diye değil, ağ uyarısıyla bildirilir (p = 2, ω²h² = 10 ayrık rezonansı yakını)
 { let message = '';
   try { solve(problem('1', '0', '1', '0', B(0, 1), NONE, 0, 64 * 8), 64, 1); } catch (err) { message = err.message; }
-  check('IVP kaba ağ: doğru mesaj (tekil değil, ağ kaba)', message.includes('ağ bu çözüm için fazla kaba') && !message.includes('En az bir uçta'), message.slice(0, 60)); }
+  check('IVP kaba ağ: doğru mesaj (tekil değil, ağ kaba)', message.includes('the mesh is too coarse for this solution') && !message.includes('At least one end'), message.slice(0, 60)); }
 // u'(x₀) koşulu zayıf (doğal) biçimde girer: u_h'(x₀) ≠ s₀ ama ağ inceldikçe yaklaşır
 { const pr = ivpCases[0][1], g = [8, 32].map((n) => { const s = solve(pr, n, 2); return Math.abs(derivativeAt(s, 0) - 1); });
   check("IVP: |u_h'(x₀) − u'(x₀)| ağla küçülür (zayıf koşul)", g[0] > 1e-4 && g[1] < g[0] / 8, g.map((v) => v.toExponential(1)).join(' → ')); }
@@ -197,7 +197,7 @@ check("α(x₀)=0 ucunda u' koşulu reddedilir", throws(() => problem('x', '0', 
   const good = api.parseExact(payload('x-1', '1', (x) => x - 1, () => 1), problem('x', '0', '0', '1', NONE, D(0)));
   check('parseExact: dejenere serbest uçta akı sınanmaz, aday kabul', good && !good.rejected && typeof good.u === 'function');
   const nat = api.parseExact(payload('x', '1', (x) => x, () => 1), problem('1', '0', '0', '0', NONE, D(1)));
-  check('parseExact: doğal koşul α u′(0) = 1 ≠ 0 reddedilir', nat && nat.rejected && nat.rejected.includes('doğal'));
+  check('parseExact: doğal koşul α u′(0) = 1 ≠ 0 reddedilir', nat && nat.rejected && nat.rejected.includes('natural'));
   const ivp = api.parseExact(payload('2*sin(x)', '2*cos(x)', (x) => 2 * Math.sin(x), (x) => 2 * Math.cos(x)), problem('1', '0', '1', '0', B(0, 1), NONE));
   check('parseExact: IVP eğimi u′(0) = 2 ≠ 1 reddedilir', ivp && ivp.rejected && ivp.rejected.startsWith('u′(0)')); }
 
@@ -269,17 +269,67 @@ check('equationTex', api.equationTex(cases[0][1]) === "u'' + u = x" && api.equat
 { const message = (fn) => { try { fn(); return ''; } catch (e) { return e.message; } };
   const withU = message(() => solve(problem('x-0.5', '0', '0', '1', D(0), D(0)), 4, 1));
   const pureNeumann = message(() => solve(problem('1', '0', '0', '1', NONE, NONE), 4, 1));
-  check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('AYRIK') && !withU.includes('saf Neumann'), withU.slice(0, 70));
-  check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('AYRIK') && pureNeumann.includes('saf Neumann')); }
+  check('ayrık K1: u verilmişken saf Neumann örneği yok, "AYRIK sistemin hükmü" yazıyor', withU.includes('DISCRETE') && !withU.includes('pure Neumann'), withU.slice(0, 70));
+  check('ayrık K1: koşulsuz problemde saf Neumann örneği var', pureNeumann.includes('DISCRETE') && pureNeumann.includes('pure Neumann')); }
 // 11. Ağ girdisi çekirdekte denetlenir (C76/C77): sahte çözüm yok, TypeError yok, Türkçe mesaj; iç referans (n = 128) çalışır
 { const pr = problem('1', '0', '0', '1', D(0), D(0));
   const outcome = (fn) => { try { const r = fn(); return { ok: true, r }; } catch (e) { return { ok: false, type: e.constructor.name, msg: e.message }; } };
   const bad = [[0, 1], [-1, 1], [65, 1], [2.5, 1], [NaN, 1], [undefined, 1], ['4', 1], [4, 0], [4, 5], [4, 2.5], [4, undefined], [4, null]];
   const results = bad.map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
   check('geçersiz n/p (0, −1, 65, 2.5, NaN, eksik, metin; p 0, 5, 2.5, eksik) hep temiz ret',
-    results.every((o) => !o.ok && o.type === 'Error' && /n ve p tam sayı olmalı|aralığında olmalı/.test(o.msg)), JSON.stringify(results.map((o) => o.ok ? 'KABUL' : o.type)));
+    results.every((o) => !o.ok && o.type === 'Error' && /n and p must be integers|must be in 1–/.test(o.msg)), JSON.stringify(results.map((o) => o.ok ? 'KABUL' : o.type)));
   const good = [[1, 1], [64, 1], [1, 4], [64, 4]].map(([n, p]) => outcome(() => api.METHODS.galerkin.solve(pr, api.userMesh(0, 1, n, p))));
   check('sınır değerler n = 1, 64 ve p = 1, 4 kabul edilir', good.every((o) => o.ok));
   check('iç ince ağ referansı (n = 128) makeMesh ile hâlâ kurulur', outcome(() => api.makeMesh(0, 1, 128, 4)).ok && !outcome(() => api.userMesh(0, 1, 128, 4)).ok);
   check('makeMesh boş/ters aralığı reddeder', !outcome(() => api.makeMesh(1, 1, 4, 1)).ok && !outcome(() => api.makeMesh(1, 0, 4, 1)).ok); }
+// 12. Grafik penceresi (index.html AXIS bloğu: saf eksen hesabı, DOM yok). Veriye dokunmadığı ve hiçbir değeri pencere dışında
+//     bırakmadığı burada sınanır; çizimin kendisi tarayıcıda denetlenir.
+{ const axisSrc = html.split('/*AXIS-START*/')[1].split('/*AXIS-END*/')[0];
+  const ax = new Function(axisSrc + '; return { niceTicks, minSpan, limitSpan, autoRange, zoomRange, panRange, fitRange, parseAxisRange, logTicks, AXIS_LIMITS };')();
+  const inside = (r, vs) => vs.every((v) => v >= r[0] && v <= r[1]);
+  const mixed = [-3e-3, 1e-4, 2e-3, -1e-3];
+  const r1 = ax.autoRange(mixed, { include: [0] });
+  check('autoRange: işaretli hata (+ ve −) ve sıfır pencerede, kırpma yok', inside(r1, [...mixed, 0]) && r1[0] < -3e-3 && r1[1] > 2e-3);
+  const neg = [-5, -2, -1e-6];
+  check('autoRange: yalnız negatif değerde sıfır çizgisi dahil', inside(ax.autoRange(neg, { include: [0] }), [...neg, 0]));
+  const tiny = [1.2e-15, -8.9e-16, 4.4e-16, 0], floor = 4e-11, r2 = ax.autoRange(tiny, { include: [0, -floor, floor] });
+  check('autoRange: ±taban dahil edilince 1e-15 kalıntı pencerenin < 1e-4 ü (salınım gibi büyütülmez)', inside(r2, tiny) && Math.max(...tiny.map(Math.abs)) / (r2[1] - r2[0]) < 1e-4);
+  const fitTiny = ax.fitRange(tiny.map((v, i) => [i, v]), [0, 3], (v) => v, (v) => v, false);
+  check('fitRange: 1e-15 kalıntılar silinmeden kendi ölçeğinde görünür', inside(fitTiny, tiny) && fitTiny[1] - fitTiny[0] < 1e-14 && fitTiny[1] - fitTiny[0] > 2e-15);
+  check('fitRange: yalnız görünür x penceresi', JSON.stringify(ax.fitRange([[0, 1], [1, 5], [2, 100]], [0.5, 1.5], (v) => v, (v) => v, false)) === JSON.stringify(ax.autoRange([5])));
+  check('fitRange: log eksende ≤ 0 değer yer almaz, pencere boşsa null', ax.fitRange([[0, 0], [1, -1]], [0, 1], (v) => v, Math.log10, true) === null);
+  const lg = ax.autoRange([Math.log10(3e-7), Math.log10(2e-2), Math.log10(1e-30)], { log: true, lower: Math.log10(1e-12) });
+  check('autoRange log: tam onluk uçlar; alt uç yalnız otomatik ölçekte sınırlı', lg[0] === -12 && lg[1] === -1);
+  check('autoRange top: veri tabanın altındaysa taban çizgisi görünür, üstündeyse pencere değişmez',
+    ax.autoRange([-15, -14], { log: true, top: -10.4 })[1] === -10 && JSON.stringify(ax.autoRange([-6, -2], { log: true, top: -10.4 })) === JSON.stringify([-6, -2]));
+  const base = [-2, 6], zin = ax.zoomRange(base, 0.5, 4), zback = ax.zoomRange(zin, 2, 4);
+  check('zoomRange: çapa sabit, yakınlaştır + uzaklaştır başa döner', Math.abs(zin[0] - 1) < 1e-15 && Math.abs(zin[1] - 5) < 1e-15 && Math.abs(zback[0] + 2) < 1e-14 && Math.abs(zback[1] - 6) < 1e-14);
+  let deep = [-1e-10, 1e-10];
+  for (let i = 0; i < 2000; i++) deep = ax.zoomRange(deep, 0.5, 3e-11);
+  check('zoomRange: sonsuz yakınlaştırma alt sınırda durur, NaN yok, çizgiler ayrık', deep.every(isFinite) && deep[1] > deep[0]
+    && new Set(ax.niceTicks(deep[0], deep[1], 5).map(String)).size >= 2);
+  let wide = [0, 1];
+  for (let i = 0; i < 2000; i++) wide = ax.zoomRange(wide, 2);
+  check('zoomRange: uzaklaştırma üst sınırda durur', wide.every(isFinite) && wide[1] - wide[0] <= ax.AXIS_LIMITS.maxSpan * 1.0001);
+  const pr2 = ax.panRange([1, 3], -0.25);
+  check('panRange: genişlik korunur', pr2[0] === 0.75 && pr2[1] === 2.75);
+  check('niceTicks: dar pencere büyük merkezde takılmaz (≤ 50 çizgi)', ax.niceTicks(1e6, 1e6 + 1e-2, 6).length <= 50 && ax.niceTicks(5, 5, 6).length === 0);
+  const lt = ax.logTicks(-15.3, -14.9);
+  check('logTicks: bir onluktan dar pencerede pencere içi doğrusal çizgiler', lt.length >= 2 && lt.every((t) => t.power === null && Math.log10(t.value) >= -15.3 && Math.log10(t.value) <= -14.9));
+  check('logTicks: geniş pencerede 10^k', JSON.stringify(ax.logTicks(-12, -1).map((t) => t.power)) === JSON.stringify([-12, -10, -8, -6, -4, -2]));
+  const ok = ax.parseAxisRange('-2e-15', '3,5e-15', false);
+  check('parseAxisRange: bilimsel gösterim ve virgül', ok.range && ok.range[0] === -2e-15 && ok.range[1] === 3.5e-15);
+  check('parseAxisRange: ters, boş, sayı olmayan, log ≤ 0, çok dar → Türkçe hata',
+    ['1|0', '|1', 'a|1'].every((t) => ax.parseAxisRange(...t.split('|'), false).error) && ax.parseAxisRange('0', '1', true).error
+    && ax.parseAxisRange('1', '1.000000000001', false).error.includes('narrow'));
+  check('parseAxisRange log: gerçek değer → log10 penceresi', JSON.stringify(ax.parseAxisRange('1e-15', '1e-3', true).range) === JSON.stringify([-15, -3]));
+  // Doğrulama durumları (çekirdek değişmeden): A: y' = 2x → hata yuvarlama düzeyinde; B: y' = e^x → gerçek hata.
+  const xsAB = Array.from({ length: 401 }, (_, i) => 2 * i / 400);
+  const signedErr = (f, exactU) => { const pr = problem('0', '1', '0', f, D(0), NONE, 0, 2), s = solve(pr, 2, 2); return xsAB.map((x) => exactU(x) - api.evaluate(s.mesh, s.c, x)); };
+  const eA = signedErr('2x', (x) => x * x), eB = signedErr('e^x', (x) => Math.exp(x) - 1);
+  const floorA = 1e-11 * 4, floorB = 1e-11 * (Math.exp(2) - 1), ampA = Math.max(...eA.map(Math.abs)), ampB = Math.max(...eB.map(Math.abs));
+  const rA = ax.autoRange(eA, { include: [0, -floorA, floorA] }), rB = ax.autoRange(eB, { include: [0, -floorB, floorB] });
+  check('durum A (y\' = 2x, n = 2, p = 2): hata yuvarlama düzeyinde, otomatik ölçekte düz (< %0.1 yükseklik)', ampA < 1e-12 && ampA / (rA[1] - rA[0]) < 1e-3, `max|e| = ${ampA.toExponential(1)}`);
+  check('durum A: kalıntılar silinmedi; veriye sığdırınca kendi ölçeğinde', eA.some((v) => v !== 0) ? inside(ax.fitRange(eA.map((v, i) => [xsAB[i], v]), [0, 2], (v) => v, (v) => v, false), eA) : true);
+  check('durum B (y\' = e^x, n = 2, p = 2): gerçek hata görünür (> %40 yükseklik), değerler pencerede', ampB > 1e-4 && ampB / (rB[1] - rB[0]) > 0.4 && inside(rB, eB), `max|e| = ${ampB.toExponential(2)}`); }
 process.exit(fail ? 1 : 0);

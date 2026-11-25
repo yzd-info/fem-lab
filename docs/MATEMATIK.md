@@ -1,13 +1,13 @@
 # Mathematical formulation
 
-This document describes the mathematics that FEM Lab actually implements: the problem class, the boundary
+This document describes the mathematics that FEM LAB actually implements: the problem class, the boundary
 conditions, the Galerkin and weak formulations, the treatment of first-order and initial-value problems, and the
 structure of the generated solution sheet. Verification, well-posedness diagnostics and error measurement are
 described in [DOGRULAMA.md](DOGRULAMA.md); the software structure in [MIMARI.md](MIMARI.md).
 
 ## 1. Problem class
 
-FEM Lab solves one-dimensional, linear, first- or second-order ordinary differential equations of the form
+FEM LAB solves one-dimensional, linear, first- or second-order ordinary differential equations of the form
 
 ```math
 \mathcal{L}(u) \equiv \big(\alpha(x)\,u'\big)' + \beta(x)\,u' + \gamma(x)\,u = f(x), \qquad x \in \Omega = (x_0, x_1).
@@ -28,7 +28,7 @@ Examples of entering equations:
 | $-u'' = \sin(\pi x)$ | `-1` | | | `sin(pi*x)` | e.g. $u(0) = u(1) = 0$ |
 | $u' + 2u = 0$ | | `1` | `2` | | one condition $u(x_b) = g$ |
 | $dy/dx = x^2$, $y(0) = 0$ | | `1` | | `x^2` | `u =` `0` at $x_0$ |
-| spring $u'' + u = 0$, $u(0) = 0$, $u'(0) = 1$ on $[0, 10]$ (→ $u = \sin x$) | `1` | | `1` | | `u ve u′` at $x_0$: $u = 0$, $u' = 1$; $x_1$ not given |
+| spring $u'' + u = 0$, $u(0) = 0$, $u'(0) = 1$ on $[0, 10]$ (→ $u = \sin x$) | `1` | | `1` | | `u and u′` at $x_0$: $u = 0$, $u' = 1$; $x_1$ `not given` |
 
 Not supported: nonlinear equations, equations of order higher than two, systems of equations, time-dependent
 (partial) differential equations, and more than one space dimension.
@@ -43,8 +43,8 @@ $Q = \alpha(x_b)\,u'(x_b)$; $Q_0$ and $Q_1$ denote the fluxes at $x_0$ and $x_1$
 | `u =` | $u(x_b) = g$ | essential; the nodal value is known, the flux $Q$ is unknown and computed after the solve |
 | `u′ =` | $u'(x_b) = g$ (derivative condition) | natural; enters the load vector as $Q = \alpha(x_b)\,g$ |
 | `α u′ =` | $\alpha(x_b)\,u'(x_b) = q$ (flux condition) | natural; enters the load vector as $Q = q$ |
-| `u ve u′` | $u(x_b) = g$ and $u'(x_b) = s$ at the same end | initial (or terminal) value problem; see §5 |
-| `verilmedi` (not given) | none | boundary value problem: natural condition $\alpha u' = 0$; initial value problem: free end |
+| `u and u′` | $u(x_b) = g$ and $u'(x_b) = s$ at the same end | initial (or terminal) value problem; see §5 |
+| `not given` | none | boundary value problem: natural condition $\alpha u' = 0$; initial value problem: free end |
 
 **Derivative and flux conditions are different and are never converted into each other.** For $\alpha = 1 + x$,
 the derivative condition $u'(1) = 4$ means $Q_1 = \alpha(1)\cdot 4 = 8$, while the flux condition $(1+x)\,u'(1) = 4$
@@ -53,7 +53,7 @@ means $Q_1 = 4$.
 Admissible combinations:
 
 - **Second order, boundary value problem:** the two conditions are given at different end points.
-- **Second order, initial/terminal value problem:** `u ve u′` at one end, the other end left free. Three conditions
+- **Second order, initial/terminal value problem:** `u and u′` at one end, the other end left free. Three conditions
   (for example $u$ and $u'$ at $x_0$ and $u$ at $x_1$) over-determine the problem and are rejected.
 - **First order:** exactly one condition of the form $u(x_b) = g$.
 - A derivative or flux condition requires $\alpha(x_b) \neq 0$. Otherwise the condition cannot enter the weak form

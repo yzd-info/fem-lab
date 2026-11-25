@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use FEM LAB in teaching or research, please cite it using this metadata."
+title: "FEM LAB: interactive one-dimensional Galerkin finite elements"
+type: software
+authors:
+  - name: "yzd-info"
+repository-code: "https://github.com/yzd-info/fem-lab"
+license: MIT
+abstract: >-
+  Interactive teaching tool for one-dimensional linear differential equations solved with the Galerkin finite element
+  method (Lagrange P1-P4), with step-by-step visualization, a symbolic solution sheet and independent verification.
+keywords:
+  - finite element method
+  - Galerkin
+  - numerical analysis
+  - education

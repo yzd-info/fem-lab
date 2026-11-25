@@ -1,6 +1,8 @@
 # FEM Lab sürekli entegrasyon: depodaki üç test grubunu yerelde çalıştırılan komutların aynısıyla koşar.
 #   python3 tests.py                                 (kâğıt testleri; LaTeX derlemesi ve verification --quick/--compare dahil)
 #   node tests.js                                    (tarayıcı çekirdeği testleri; npm bağımlılığı yok, yalnız Node)
+#   node tests_basis.js                              (Basis functions kartı ve basis_core.js)
+#   node tests_sim.js                                (FEM Simulation paneli ve fem_sim.js)
 #   python3 verification/run_verification.py --full (bağımsız doğrulama, n = 4…32)
 #   python3 verification/run_corpus.py               (80 vakalık girdi korpusu + scikit-fem bağımsız referansı)
 # Herhangi biri sıfırdan farklı çıkış kodu verirse iş başarısız olur.
@@ -67,6 +69,10 @@ jobs:
 
       - name: JavaScript testleri (tests.js)
         run: node tests.js
+      - name: Basis functions testleri (tests_basis.js)
+        run: node tests_basis.js
+      - name: FEM Simulation testleri (tests_sim.js)
+        run: node tests_sim.js
 
       - name: Bağımsız doğrulama (--full)
         run: python verification/run_verification.py --full
