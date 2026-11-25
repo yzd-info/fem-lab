@@ -375,7 +375,7 @@ python3 verification/run_corpus.py
 |---|---|
 | `tests.js` (188 checks) | browser solver |
 | `tests_basis.js` (58 checks) | basis functions against textbook expressions |
-| `tests_sim.js` (127 checks) | simulation data against the solver and the sheet; interface |
+| `tests_sim.js` (130 checks) | simulation data against the solver and the sheet; interface |
 | `tests.py` (231 checks) | server pipeline, solution sheet, documented example; LaTeX compilation is skipped without `pdflatex` |
 | `run_verification.py --full` | browser solver against an independent solver and analytical solutions |
 | `run_corpus.py` | 80 input-only cases through server and browser, cross-checked with scikit-fem |
@@ -415,8 +415,7 @@ Details: [docs/MATEMATIK.md](docs/MATEMATIK.md) and [docs/DOGRULAMA.md](docs/DOG
 
 ## Documentation
 
-These documents cover the mathematics, the verification and the server design in more depth. Their descriptions of the
-interface still use the labels of the earlier Turkish interface.
+These documents cover the mathematics, the verification and the design in more depth.
 
 | Document | Contents |
 |---|---|

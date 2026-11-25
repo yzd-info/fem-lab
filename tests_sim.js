@@ -514,5 +514,19 @@ check('kısmi toplam "u_h" diye etiketlenmez (yalnız son adımda u_h)', partial
   check('yazdırma koyu seçiliyken de beyaz zemin + siyah yazı', /@media print \{[\s\S]*?:root, :root\[data-theme\] \{ --ink: #000;[\s\S]*?color-scheme: light/.test(html));
 }
 
+// 16. Paylaşım öncesi hata düzeltmeleri geri gelmesin: İngilizce kâğıtta Türkçe yok, uç etiketleri sığar, matris başlığı ayrı satırda
+{
+  const r = spawnSync('python3', ['fem_sheet.py'], { cwd: __dirname, input: JSON.stringify({ ...PROBLEMS[0].inputs, n: 3, degree: 2, symbolic: true }), encoding: 'utf8', timeout: 240000 });
+  const sheet = JSON.parse(r.stdout).text, tr = sheet.match(/[çğışÇĞİŞ]|\b(mertebe|interpolasyon|matrisi|sonlu|uyumluluk)\b/g);
+  check('İngilizce çözüm kâğıdında Türkçe sözcük yok', sheet.includes('interpolation matrix') && !tr, String(tr && tr.slice(0, 5)));
+  check('yakınsama grafiğinin sağ boşluğu en uzun uç etiketine göre (sabit 62 px "theory h^3" yazısını kesiyordu)', /const endChars = Math\.max\(0, \.\.\.cfg\.series\.map/.test(html) && /Math\.max\(62, Math\.ceil\(endChars \* 6\.7\) \+ 14\)/.test(html));
+  const b = (() => { const pr = PROBLEMS[0], problem = F.buildProblem(pr.inputs), mesh = F.makeMesh(pr.inputs.x0, pr.inputs.x1, 4, 2), res = F.METHODS.galerkin.solve(problem, mesh);
+    return SIMA.buildSimulationData({ problem, mesh, c: res.c, xs: F.sampleXs(mesh), solved: { K: res.K, F: res.F, condition: res.diagnostics.condition }, reference: null, tex: { equation: 'a', conditions: 'b' } }); })();
+  const stages = SIMA.stagesFor(SIMA.buildStages(b), 'solution'), st = stages.find((q) => q.id === 'elementK');
+  const svg = SIMA.renderFrame(b, stages, st.offset + 2, { width: 700 }).svg, yOf = (re) => Number((svg.match(re) || [])[1]);
+  const title = yOf(/<text[^>]*\sy="([\d.]+)"[^>]*>K⁽\d+⁾<\/text>/), column = Math.min(...[...svg.matchAll(/<text[^>]*\sy="([\d.]+)"[^>]*class="sim-node"[^>]*>2<\/text>/g)].map((m) => Number(m[1])));   // "2" hem satır hem sütun numarasıdır; sütun olanı en üsttekidir
+  check('eleman matrisi başlığı sütun numaralarının üstünde ayrı satırda (≥ 13 px)', column - title >= 13, `başlık y=${title}, sütun y=${column}`);
+}
+
 console.log(`\n${failures ? failures + ' BAŞARISIZ' : 'Tümü geçti'}`);
 process.exit(failures ? 1 : 0);

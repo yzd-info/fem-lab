@@ -414,7 +414,7 @@ def validate_problem(raw):
     present = ', '.join(f'{name} {"≢" if coef[key] != 0 else "≡"} 0' for key, name in (('alpha', 'α'), ('beta', 'β'), ('gamma', 'γ'), ('f', 'f')))
     trace.append({'item': 'operator', 'raw': f"(({shown(raw['alpha']) or '0'}) u')' + ({shown(raw['beta']) or '0'}) u' + "
                   f"({shown(raw['gamma']) or '0'}) u = {shown(raw['f']) or '0'}",
-                  'internal': tex_equation(alpha, beta, gamma, f), 'ok': True, 'how': f'{present}; mertebe {order}'})
+                  'internal': tex_equation(alpha, beta, gamma, f), 'ok': True, 'how': f'{present}; order {order}'})
     trace.append({'item': 'mesh', 'raw': f"n = {raw['n']}, p = {raw['degree']}", 'internal': f'n = {n},\\ p = {degree}',
                   'ok': True, 'how': 'integer'})
 
@@ -1042,7 +1042,7 @@ def format_shape(c):
     B.append('\\begin{aligned} ' + ' \\\\ '.join(f'u^{{e}}(s_{{{k + 1}}}) &= {sp.latex(cond)} = {sp.latex(hats[k])}'
                                                for k, cond in enumerate(c['conds'])) + ' \\end{aligned}\\qquad \\text{(interpolation conditions)}')
     B.append(f'{tex_matrix(c["V"].tolist())}\\,{tex_column(cs)} = {tex_column(hats)}\\qquad \\mathbf{{V}}\\mathbf{{c}} = \\mathbf{{a}}^{{(e)}}'
-             f'\\quad \\text{{(interpolasyon matrisi }} \\mathbf{{V}}\\text{{, }} V_{{km}} = s_k^{{\\,m}}\\text{{)}}')
+             f'\\quad \\text{{(interpolation matrix }} \\mathbf{{V}}\\text{{, }} V_{{km}} = s_k^{{\\,m}}\\text{{)}}')
     B.append(f's_1 = 0 \\;\\Rightarrow\\; c_0 = {sp.latex(c["sol"][cs[0]])}')
     B.append(f'{tex_matrix(c["W"].tolist())}\\,{tex_column(cs[1:])} = {tex_column(c["rhs"])}\\qquad \\text{{(remaining {degree} equations, }} c_0 \\text{{ substituted)}}')
     B.append('\\begin{aligned} ' + ' \\\\ '.join(f'{sp.latex(cm)} &= {sp.latex(sp.collect(sp.expand(c["sol"][cm]), hats))}' for cm in cs)

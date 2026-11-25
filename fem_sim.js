@@ -331,7 +331,7 @@ function femSimulation(deps) {
       { panel: 'approx', id: 'domain', title: 'Continuous problem', steps: 3,
         text: 'The differential problem as entered: the input functions α, β, γ, f, then the interval and its boundary conditions; nothing is discretized yet.' },
       { panel: 'approx', id: 'mesh', title: 'Mesh generation', steps: Math.min(n, 16) + 1,
-        text: `The interval is divided into ${many(n, 'element')} of equal size h; the ${nodeCount} nodes carry the unknowns.` },
+        text: `The interval is divided into ${many(n, 'element')} of equal size h; each of the ${nodeCount} nodes carries one coefficient a_j (known where u is prescribed, otherwise unknown).` },
       { panel: 'approx', id: 'element', title: 'Element structure', steps: 2,
         text: `Each element is the reference element s ∈ [0, h] shifted to x = x_e + s, and has p + 1 = ${p + 1} local nodes.` },
       { panel: 'approx', id: 'local', title: 'Local shape functions', steps: p + 1,
@@ -693,8 +693,8 @@ function femSimulation(deps) {
       const filledF = (i) => kPhase === 'final' || (kPhase === 'F' && i <= fIndex);
       const wide = W >= 520;
       if (!wide) H = Hreq ? Hreq + 220 : 520;
-      const cell = Math.min(46, wide ? (H - pad.t - 60) / (p + 1) : (W - 40 - 28 - 46) / (p + 1)), ox = 54, oy = pad.t + 22;
-      body += text(ox + (p + 1) * cell / 2, oy - 12, `K⁽${selEl}⁾`, 'middle', 'axis-title') + text(ox + (p + 1) * cell + 28 + cell / 2, oy - 12, `F⁽${selEl}⁾`, 'middle', 'axis-title');
+      const cell = Math.min(46, wide ? (H - pad.t - 60) / (p + 1) : (W - 40 - 28 - 46) / (p + 1)), ox = 54, oy = pad.t + 30;   // başlık ile sütun numaraları ayrı satırda
+      body += text(ox + (p + 1) * cell / 2, oy - 21, `K⁽${selEl}⁾`, 'middle', 'axis-title') + text(ox + (p + 1) * cell + 28 + cell / 2, oy - 21, `F⁽${selEl}⁾`, 'middle', 'axis-title');
       body += heat((i, j) => (filledK(i, j) ? Ke[i][j] : null), p + 1, p + 1, ox, oy, cell,
         { max: maxOf(Ke), hit: true, zeros: true, hi: kPhase === 'K' ? [cc.i, cc.j] : null, rowLabel: (i) => String(i + 1), colLabel: (j) => String(j + 1), isNew: (i, j) => kPhase === 'K' && i === cc.i && j === cc.j });
       body += heat((i) => (filledF(i) ? Fe[i] : null), p + 1, 1, ox + (p + 1) * cell + 28, oy, cell,

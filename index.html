@@ -1460,7 +1460,10 @@ function markerSvg(cx, cy, r, shape, hollow, color) {
 function drawChart(host, cfg) {
   const labelled = cfg.series.some((s) => s.endLabel);
   const W = Math.max(host.clientWidth, 260), H = cfg.height;
-  const pad = { l: 58, r: labelled ? 62 : 14, t: cfg.yTitle ? 22 : 10, b: 28 };
+  /* Sağ boşluk en uzun uç etiketine göre: sabit 62 px "rate 2.00" / "theory h^3" yazılarını kesiyordu. 11 px eş aralıklı yazıda
+     karakter ≈ 6.7 px; etiket çizim alanından 8 px sonra başlar. */
+  const endChars = Math.max(0, ...cfg.series.map((s) => (s.endLabel ? s.endLabel.length : 0)));
+  const pad = { l: 58, r: labelled ? Math.max(62, Math.ceil(endChars * 6.7) + 14) : 14, t: cfg.yTitle ? 22 : 10, b: 28 };
   const fx = cfg.xLog ? Math.log2 : (v) => v;
   const fy = cfg.yLog ? (v) => Math.log10(Math.max(v, LOG_FLOOR)) : (v) => v;
   const finite = cfg.series.flatMap((s) => s.points).filter((pt) => isFinite(pt[1]));

@@ -254,7 +254,7 @@ def verify_exact(r, candidate, timeout=8):
             direction = '+' if side == 'left' else '-'
             u_b = sp.limit(candidate, x, point, direction)
             if not u_b.is_finite:
-                box['checks'].append(((f'u({point}) sonlu', f'u({sp.latex(point)})\\ \\text{{sonlu}}'), False, f'limit = {u_b}')); return
+                box['checks'].append(((f'u({point}) finite', f'u({sp.latex(point)})\\ \\text{{finite}}'), False, f'limit = {u_b}')); return
             if kind in ('dirichlet', 'both') and not record((f'u({point}) = {value}', f'u({sp.latex(point)}) = {sp.latex(value)}'), u_b - value, zero(u_b - value)):
                 return
             if kind in ('neumann', 'both'):
@@ -433,7 +433,7 @@ def first_order_check(r, ref):
     return item('first order: dropped row (independent)', 'passed' if ok else 'failed',
                 f'r{SUBSCRIPT(fo["row"])}: engine {num(engine)}, with independent K and F {num(residual)} (relative difference {gap:.1e}); '
                 + ('the full system is consistent' if fo['compatible'] else 'the full system is INCONSISTENT: a different row choice gives a different a' if fo['compatible'] is False
-                   else 'uyumluluk belirlenemedi'), residual=float(residual))
+                   else 'compatibility could not be determined'), residual=float(residual))
 
 
 # Çözücü kalıntısı ve geriye hata (Rigal–Gaches, ∞-norm): η = ‖F − K a‖ / (‖K‖‖a‖ + ‖F‖); payda sıfırsa η = 0 (kalıntı da
