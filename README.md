@@ -123,7 +123,7 @@ and 1.17 ($H^1$), measured between $n = 32$ and $n = 64$, while the sheet's stud
 
 ![The finite element idea: hat functions scaled by their computed nodal coefficients add up to a piecewise linear approximation of sin(pi x)](docs/img/fem-idea.svg)
 
-*The coefficients in this figure were computed by the application's browser solver. Here ($-u'' = f$, linear elements,
+*The coefficients in this figure were computed by the application's browser solver. Here ($`-u'' = f`$, linear elements,
 one dimension, accurately integrated load) the nodal values coincide with the exact solution, while the values between
 the nodes do not. Exact nodal values are not a general property of FEM. In the two end elements $`u_h`$ covers the
 scaled basis function lying underneath it.*
