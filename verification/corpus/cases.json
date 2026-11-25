@@ -6,7 +6,7 @@
    "meta": {
     "name": "u' = 2x, u(0)=0 on [0,2]",
     "category": "first_order_ivp",
-    "purpose": "ders ödevi; tam çözüm P1'in uzayında değil",
+    "purpose": "kıyas problemi; tam çözüm P1'in uzayında değil",
     "validity": "valid"
    },
    "input": {

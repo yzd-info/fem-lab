@@ -7,7 +7,7 @@
    shapeDerivatives (eşit aralıklı Lagrange, ξ ∈ [−1, 1], düğümler soldan sağa) parametre olarak alınır; kartta çizilen
    fonksiyonlar çözücünün kullandığı fonksiyonların ta kendisidir. DOM'a dokunmaz: node (tests_basis.js) ve tarayıcı aynı kodu çalıştırır.
 
-   Kaynak: Heinrich & Pepper, The Finite Element Method: Basic Concepts and Applications, 3. baskı.
+   Kaynak: Pepper & Heinrich, The Finite Element Method: Basic Concepts and Applications, 3. baskı (CRC Press, 2017).
      3.2.1–3.2.3  yerel şekil fonksiyonları N_i^(e)(x), x ∈ [0, h^(e)]  (3.14)–(3.15), (3.19), (3.25)
      3.5          doğal koordinat ξ ∈ [−1, 1]: (3.65) dönüşüm, (3.66) lineer, (3.75)–(3.77) kuadratik, (3.79)–(3.80) Jacobian
    P4 kitapta yoktur: çözücünün Lagrange tanımı olarak (SOLVER_P4) ayrıca etiketlenir.

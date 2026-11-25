@@ -9,6 +9,21 @@ license: MIT
 abstract: >-
   Interactive teaching tool for one-dimensional linear differential equations solved with the Galerkin finite element
   method (Lagrange P1-P4), with step-by-step visualization, a symbolic solution sheet and independent verification.
+references:
+  - type: book
+    title: "The Finite Element Method: Basic Concepts and Applications with MATLAB, MAPLE, and COMSOL"
+    authors:
+      - family-names: "Pepper"
+        given-names: "Darrell W."
+      - family-names: "Heinrich"
+        given-names: "Juan C."
+    edition: "3"
+    publisher:
+      name: "CRC Press"
+      city: "Boca Raton"
+      region: "FL"
+    year: 2017
+    isbn: "978-1-4987-3860-6"
 keywords:
   - finite element method
   - Galerkin

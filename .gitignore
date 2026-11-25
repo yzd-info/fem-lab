@@ -9,8 +9,16 @@ __pycache__/
 *.log
 *.out
 # Korpus çalıştırmasının her seferinde yeniden üretilen ham çıktıları (CI bunları artifact olarak saklar).
-# Kalıcı olanlar depoda: corpus_results/report.md (son rapor) ve corpus_results/baseline_v1/ (taban karşılaştırması).
+# Kalıcı olan depoda: corpus_results/baseline_v1/ (taban karşılaştırmasının ham verisi).
 verification/corpus_results/results.json
 verification/corpus_results/skfem_results.json
 verification/corpus_results/continuous_results.json
 verification/corpus_results/baseline_comparison.json
+# Yerel çalışma notları ve üretilen raporlar (yayımlanmaz)
+CLAUDE.md
+AGENTS.md
+AUDIT_V0.1.md
+PLAN_V0.1_DUZELTME.md
+verification/ENGINEERING_NOTES.md
+verification/corpus_results/report.md
+verification/corpus_results/baseline_v1/report.md

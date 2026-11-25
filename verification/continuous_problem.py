@@ -4,7 +4,7 @@ Neden ayrı: FEM Lab'ın ve scikit-fem'in sonuçları AYRIK sistem hakkındadır
 çözümü olduğunu, tekil bir matris çözüm olmadığını kanıtlamaz. Bu modül uygulamanın kendi sınıflandırıcısını (fem_verify) ve
 FEM motorunu ÇAĞIRMAZ; girdi metnini verification/ref_parser.expr ile okur (skfem_reference ile ortak) (üçüncü bir ayrıştırıcı yazılmaz).
 
-Problem: (α u')' + β u' + γ u = f,  x ∈ [a, b];  2. mertebe ⇔ α ≢ 0.  Matematik ve yöntem seçimi: ENGINEERING_NOTES.md §Phase 2.
+Problem: (α u')' + β u' + γ u = f,  x ∈ [a, b];  2. mertebe ⇔ α ≢ 0.
   (R) düzenlilik: α, β, γ, f [a, b]'de sürekli (SymPy continuous_domain) ve önde gelen katsayının [a, b]'de sıfırı yok (solveset).
   Yöntem 1  başlangıç değer problemi (2. mertebe 'u ve u′'; 1. mertebe tek 'u ='): (R) altında doğrusal ODE varlık-teklik teoremi.
   Yöntem 2  düzenli iki noktalı SDP: doğrulanmış temel çözüm sistemi (L[y_i] = 0, L[u_p] = f sembolik; Wronskian ≠ 0) ve sınır

@@ -30,7 +30,8 @@ $p = 3$ (frames captured from the running application):
 [Visual walkthrough](#visual-walkthrough) · [How the mathematics is built](#how-the-mathematics-is-built) ·
 [How it works](#how-it-works) · [Supported problems](#supported-problems) · [Quick start](#quick-start) ·
 [Worked example](#worked-example) · [Verification](#verification) · [Limitations](#limitations) ·
-[Architecture](#architecture) · [Documentation](#documentation) · [Citation](#citing-fem-lab) · [License](#license)
+[Architecture](#architecture) · [Documentation](#documentation) · [Citation](#citing-fem-lab) · [Reference](#reference) ·
+[License](#license)
 
 ## Purpose
 
@@ -239,7 +240,7 @@ value problems with $\alpha \neq 0$, one expects, once the mesh is fine enough, 
 $`|e|_{H^1} = O(h^{p})`$. FEM LAB **measures** rates; it does not impose them.
 
 The full treatment, including first-order compatibility and the three meanings of "residual", is in
-[docs/MATEMATIK.md](docs/MATEMATIK.md). Notation follows Heinrich & Pepper, *The Finite Element Method*.
+[docs/MATEMATIK.md](docs/MATEMATIK.md). Notation follows Pepper & Heinrich (see [Reference](#reference)).
 
 ## How it works
 
@@ -412,6 +413,7 @@ Details: [docs/MATEMATIK.md](docs/MATEMATIK.md) and [docs/DOGRULAMA.md](docs/DOG
 | `fem_sheet.py` | problem definition, validation, symbolic FEM engine (SymPy), sheet formatting |
 | `fem_verify.py` | independent verification; does not call the engine |
 | `verification/` | reference solver, benchmarks, regression baseline, 80-case input corpus |
+| `ornekler/` | example solution sheets (PDF) |
 
 ## Documentation
 
@@ -428,8 +430,15 @@ own solution sheet; degrees above 4 with Gauss–Lobatto nodes.
 
 ## Citing FEM LAB
 
-Citation metadata is in [CITATION.cff](CITATION.cff) (once it is on the default branch, GitHub offers "Cite this
-repository"). There is no associated publication or DOI. Please include the commit you used.
+Citation metadata for this software is in [CITATION.cff](CITATION.cff); use **Cite this repository** on the GitHub page.
+No publication or DOI is associated with it, so please include the commit you used.
+
+## Reference
+
+The formulation and the notation of FEM LAB are based on:
+
+> D. W. Pepper and J. C. Heinrich, *The Finite Element Method: Basic Concepts and Applications with MATLAB®, MAPLE,
+> and COMSOL*, 3rd ed., Boca Raton, FL: CRC Press, 2017. ISBN 978-1-4987-3860-6.
 
 ## License
 

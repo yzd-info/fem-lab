@@ -30,7 +30,7 @@ CASES = [
     # (kod, sınıf, uygulama girdisi, bağımsız girdi, u, u', beklenen L² hızı alt sınırları, not)
     ('T1', '1. mertebe', dict(alpha='', beta='1', gamma='', f='2x', x0=0, x1=2, left=D(0), right=NONE),
      dict(alpha=z, beta=lambda x: 1, gamma=z, f=lambda x: 2 * x, x0=0, x1=2, left=('dirichlet', 0), right=('none',), order=1),
-     lambda x: x ** 2, lambda x: 2 * x, [1.8, 'exact', 'exact', 'exact'], 'ödev kıyası'),
+     lambda x: x ** 2, lambda x: 2 * x, [1.8, 'exact', 'exact', 'exact'], 'kıyas problemi'),
     ('T2', '1. mertebe', dict(alpha='', beta='1', gamma='', f='3x^2', x0=0, x1=1, left=D(0), right=NONE),
      dict(alpha=z, beta=lambda x: 1, gamma=z, f=lambda x: 3 * x ** 2, x0=0, x1=1, left=('dirichlet', 0), right=('none',), order=1),
      lambda x: x ** 3, lambda x: 3 * x ** 2, [1.8, 1.8, 'exact', 'exact'], '1. mertebede P2 hızı 2 (garanti yok)'),
